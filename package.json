@@ -4,9 +4,9 @@
   "description": "ビルドなしで動くアプリの雛形 (進め方のルールつき)",
   "private": true,
   "scripts": {
-    "start": "node scripts/serve.js",
-    "test": "node --test test/*.test.js",
-    "test:ui": "node test/browser.js"
+    "start": "node serve.js",
+    "test": "node --test *.test.js",
+    "test:ui": "node browser-test.js"
   },
   "license": "MIT"
 }

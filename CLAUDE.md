@@ -24,12 +24,16 @@ npm run test:ui    # ブラウザで実際に動かすテスト (要 npm i -D pl
 
 ```
 index.html / styles.css   画面
-src/core.js               ロジック。DOM を触らない。ブラウザと node の両方で動く
-src/app.js                操作・描画
-test/core.test.js         ロジックのテスト (node --test)
-test/browser.js           ブラウザで動かすテスト
-scripts/serve.js          開発用サーバー
+core.js                   ロジック。DOM を触らない。ブラウザと node の両方で動く
+app.js                    操作・描画
+core.test.js              ロジックのテスト (node --test)
+browser-test.js           ブラウザで動かすテスト
+serve.js                  開発用サーバー
 ```
+
+ファイルはすべて直下に置く。スマホやタブレットからでも
+1 ファイルずつ差し替えられるようにするため。増えてきたら
+`src/` などに分けてよい (そのときは上の表と読み込み先も直す)。
 
 `window.__app` はテストから中身をのぞくための入口。`test/browser.js` が使う。
 
