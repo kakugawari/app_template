@@ -116,8 +116,12 @@ async function run() {
     // ------------------------------------------------ ここにアプリごとの確認を足す
     // hidden 属性の有無 (el.hidden) だけでは、CSS が display:flex で上書きして
     // 実際には表示されたままになる事故を見逃す。getComputedStyle で実際の見え方を見る。
+    // #side は display ではなく visibility で切り替える (高さを保つため) ので両方見る。
     const shownFlags = () => phone.evaluate(() => {
-      const isShown = (sel) => getComputedStyle(document.querySelector(sel)).display !== 'none';
+      const isShown = (sel) => {
+        const style = getComputedStyle(document.querySelector(sel));
+        return style.display !== 'none' && style.visibility !== 'hidden';
+      };
       return {
         warmupVisible: isShown('#screenWarmup'),
         runVisible: isShown('#screenRun'),
@@ -136,7 +140,7 @@ async function run() {
     })));
     ok(firstStep.runVisible && !firstStep.warmupVisible && !firstStep.doneVisible,
       '実行画面だけが表示され、準備・完了画面は本当に隠れている');
-    ok(firstStep.progress === '1 / 9', `進捗が 1 / 9 から始まる (${firstStep.progress})`);
+    ok(firstStep.progress === '1 / 10', `進捗が 1 / 10 から始まる (${firstStep.progress})`);
     ok(!firstStep.sideShown, `1 種目め (両足そろえて振る動き) では側バッジが出ない (${firstStep.side})`);
     ok(firstStep.reps === '20', `回数が 20 と出る (${firstStep.reps})`);
 
@@ -164,25 +168,35 @@ async function run() {
     await phone.locator('#btnStart').tap();
     await phone.waitForTimeout(60);
     const resumed = await phone.evaluate(() => document.getElementById('progress').textContent);
-    ok(resumed === '1 / 9', `準備画面から再開すると同じ最初のステップに戻る (${resumed})`);
+    ok(resumed === '1 / 10', `準備画面から再開すると同じ最初のステップに戻る (${resumed})`);
 
-    section('横向きに寝る種目は、手の左右にあわせて寝る向きも変わる');
-    await phone.locator('#btnDone').tap(); // 2 種目め (両足そろえて振る、側なし) を通過
-    await phone.locator('#btnDone').tap();
-    await phone.waitForTimeout(60);
-    const leftHandStep = await phone.evaluate(() => ({
+    section('横向きに寝る種目は、膝も手も左右にあわせて寝る向きが変わる');
+    const stepText = () => phone.evaluate(() => ({
       name: document.getElementById('exerciseName').textContent,
       side: document.getElementById('side').textContent
     }));
+
+    await phone.locator('#btnDone').tap();
+    await phone.waitForTimeout(60);
+    const leftKneeStep = await stepText();
+    ok(leftKneeStep.name.startsWith('左向きに寝て'), `左膝のときは「左向きに寝て」から始まる (${leftKneeStep.name})`);
+    ok(leftKneeStep.side === '左足', `側バッジは「左足」(${leftKneeStep.side})`);
+
+    await phone.locator('#btnDone').tap();
+    await phone.waitForTimeout(60);
+    const rightKneeStep = await stepText();
+    ok(rightKneeStep.name.startsWith('右向きに寝て'), `右膝のときは「右向きに寝て」から始まる (${rightKneeStep.name})`);
+    ok(rightKneeStep.side === '右足', `側バッジは「右足」(${rightKneeStep.side})`);
+
+    await phone.locator('#btnDone').tap();
+    await phone.waitForTimeout(60);
+    const leftHandStep = await stepText();
     ok(leftHandStep.name.startsWith('左向きに寝て'), `左手のときは「左向きに寝て」から始まる (${leftHandStep.name})`);
     ok(leftHandStep.side === '左手', `側バッジは「左手」(${leftHandStep.side})`);
 
     await phone.locator('#btnDone').tap();
     await phone.waitForTimeout(60);
-    const rightHandStep = await phone.evaluate(() => ({
-      name: document.getElementById('exerciseName').textContent,
-      side: document.getElementById('side').textContent
-    }));
+    const rightHandStep = await stepText();
     ok(rightHandStep.name.startsWith('右向きに寝て'), `右手のときは「右向きに寝て」から始まる (${rightHandStep.name})`);
     ok(rightHandStep.side === '右手', `側バッジは「右手」(${rightHandStep.side})`);
 
@@ -200,8 +214,8 @@ async function run() {
     const doneScreen = Object.assign(await shownFlags(), await phone.evaluate(() => ({
       finished: window.__app.state().session.index
     })));
-    ok(doneScreen.doneVisible && !doneScreen.runVisible, '9 ステップぶん進めると完了画面が本当に表示される');
-    ok(doneScreen.finished === 9, `ステップの index が 9 まで進んでいる (${doneScreen.finished})`);
+    ok(doneScreen.doneVisible && !doneScreen.runVisible, '10 ステップぶん進めると完了画面が本当に表示される');
+    ok(doneScreen.finished === 10, `ステップの index が 10 まで進んでいる (${doneScreen.finished})`);
 
     section('もう一度で最初からやり直せる');
     await phone.locator('#btnAgain').tap();

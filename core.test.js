@@ -2,9 +2,9 @@ const test = require('node:test');
 const assert = require('node:assert');
 const Core = require('./core.js');
 
-test('既定の種目は 7 種目、左右ぶんも合わせて 9 ステップになる', () => {
+test('既定の種目は 7 種目、左右ぶんも合わせて 10 ステップになる', () => {
   const steps = Core.buildSteps(Core.DEFAULT_EXERCISES);
-  assert.strictEqual(steps.length, 9);
+  assert.strictEqual(steps.length, 10);
 });
 
 test('左右のある種目は左→右の順で並ぶ', () => {
@@ -119,5 +119,5 @@ test('sessionProgress は current が total を超えない', () => {
 
 test('sessionProgress は 1 始まりで、途中経過を正しく返す', () => {
   const session = Core.createSession(Core.DEFAULT_EXERCISES);
-  assert.deepStrictEqual(Core.sessionProgress(session), { current: 1, total: 9 });
+  assert.deepStrictEqual(Core.sessionProgress(session), { current: 1, total: 10 });
 });

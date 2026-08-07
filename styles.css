@@ -189,6 +189,13 @@ body {
   padding: 4px 18px;
 }
 
+/* display:none で高さごと消すと、側バッジの有無でカードの高さが変わり
+   #stage が縦中央寄せのぶん、カード全体が上下に動いて見える。
+   visibility だけ切り替えて高さを常に確保する。 */
+.side.is-empty {
+  visibility: hidden;
+}
+
 .reps {
   margin: 0;
   display: flex;

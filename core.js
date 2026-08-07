@@ -30,8 +30,17 @@
   // 横向きに寝て左右で体の向きそのものが変わる種目は、sideNames で
   // 「左向きに寝て…」のように片側ごとに文面を変えられる。
   const DEFAULT_EXERCISES = [
-    { name: '仰向けに寝て、足を膝立ちにして右に倒す・左に倒す', reps: 20, sides: null },
-    { name: '横向きに寝て、膝を曲げて開く・閉じる', reps: 20, sides: null },
+    { name: '仰向けに寝て、両膝を立てて左右に倒す', reps: 20, sides: null },
+    {
+      name: '横向きに寝て、膝を曲げて開く・閉じる',
+      reps: 20,
+      sides: ['left', 'right'],
+      sideNoun: '足',
+      sideNames: {
+        left: '左向きに寝て、左膝を曲げて開く・閉じる',
+        right: '右向きに寝て、右膝を曲げて開く・閉じる'
+      }
+    },
     {
       name: '横向きに寝て、手を伸ばして開く・閉じる',
       reps: 20,

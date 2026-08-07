@@ -50,12 +50,8 @@
       els.illustration.classList.toggle('mirror', step.side === 'right');
       els.exerciseName.textContent = step.name;
       els.reps.textContent = String(step.reps);
-      if (step.side) {
-        els.side.hidden = false;
-        els.side.textContent = C.sideLabel(step);
-      } else {
-        els.side.hidden = true;
-      }
+      els.side.classList.toggle('is-empty', !step.side);
+      els.side.textContent = step.side ? C.sideLabel(step) : ' ';
     }
   }
 
