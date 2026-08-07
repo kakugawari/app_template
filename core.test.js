@@ -2,9 +2,9 @@ const test = require('node:test');
 const assert = require('node:assert');
 const Core = require('./core.js');
 
-test('既定の種目は 7 種目、左右ぶんも合わせて 11 ステップになる', () => {
+test('既定の種目は 7 種目、左右ぶんも合わせて 9 ステップになる', () => {
   const steps = Core.buildSteps(Core.DEFAULT_EXERCISES);
-  assert.strictEqual(steps.length, 11);
+  assert.strictEqual(steps.length, 9);
 });
 
 test('左右のある種目は左→右の順で並ぶ', () => {
@@ -20,17 +20,27 @@ test('左右の無い種目は 1 ステップだけで、side は null', () => {
   assert.strictEqual(steps[0].side, null);
 });
 
-test('セッションは index 0 から始まり、種目名と回数を引ける', () => {
-  const session = Core.createSession(Core.DEFAULT_EXERCISES);
-  const step = Core.currentStep(session);
-  assert.strictEqual(step.name, Core.DEFAULT_EXERCISES[0].name);
-  assert.strictEqual(step.reps, 20);
-  assert.strictEqual(step.side, 'left');
+test('sideNames があれば、side ごとに違う name を返す', () => {
+  const exercises = [{
+    name: '既定の名前',
+    reps: 10,
+    sides: ['left', 'right'],
+    sideNames: { left: '左向きに寝て', right: '右向きに寝て' }
+  }];
+  const steps = Core.buildSteps(exercises);
+  assert.strictEqual(steps[0].name, '左向きに寝て');
+  assert.strictEqual(steps[1].name, '右向きに寝て');
+});
+
+test('sideNames が無ければ既定の name を使う', () => {
+  const exercises = [{ name: '既定の名前', reps: 10, sides: ['left', 'right'] }];
+  const steps = Core.buildSteps(exercises);
+  assert.strictEqual(steps[0].name, '既定の名前');
+  assert.strictEqual(steps[1].name, '既定の名前');
 });
 
 test('sideLabel は部位つきで表示する (例: 左足)', () => {
-  const session = Core.createSession(Core.DEFAULT_EXERCISES);
-  assert.strictEqual(Core.sideLabel(Core.currentStep(session)), '左足');
+  assert.strictEqual(Core.sideLabel({ side: 'left', sideNoun: '足' }), '左足');
 });
 
 test('sideLabel は sideNoun が無ければ左右だけを返す', () => {
@@ -41,22 +51,39 @@ test('sideLabel は side が無ければ null を返す', () => {
   assert.strictEqual(Core.sideLabel({ side: null, sideNoun: '' }), null);
 });
 
+test('セッションは index 0 から始まり、最初の種目名と回数を引ける', () => {
+  const session = Core.createSession(Core.DEFAULT_EXERCISES);
+  const step = Core.currentStep(session);
+  assert.strictEqual(step.name, Core.DEFAULT_EXERCISES[0].name);
+  assert.strictEqual(step.reps, 20);
+});
+
 test('advanceSession でステップが 1 つずつ進む', () => {
-  let session = Core.createSession(Core.DEFAULT_EXERCISES);
-  session = Core.advanceSession(session);
-  assert.strictEqual(Core.currentStep(session).side, 'right');
+  const exercises = [
+    { name: 'A', reps: 10, sides: null },
+    { name: 'B', reps: 10, sides: ['left', 'right'] }
+  ];
+  let session = Core.createSession(exercises);
+  assert.strictEqual(Core.currentStep(session).exerciseIndex, 0);
   session = Core.advanceSession(session);
   assert.strictEqual(Core.currentStep(session).exerciseIndex, 1);
+  assert.strictEqual(Core.currentStep(session).side, 'left');
+  session = Core.advanceSession(session);
+  assert.strictEqual(Core.currentStep(session).side, 'right');
 });
 
 test('retreatSession でステップが 1 つずつ戻る', () => {
-  let session = Core.createSession(Core.DEFAULT_EXERCISES);
+  const exercises = [
+    { name: 'A', reps: 10, sides: null },
+    { name: 'B', reps: 10, sides: ['left', 'right'] }
+  ];
+  let session = Core.createSession(exercises);
   session = Core.advanceSession(session);
   session = Core.advanceSession(session);
   assert.strictEqual(session.index, 2);
   session = Core.retreatSession(session);
   assert.strictEqual(session.index, 1);
-  assert.strictEqual(Core.currentStep(session).side, 'right');
+  assert.strictEqual(Core.currentStep(session).side, 'left');
 });
 
 test('最初のステップより前には retreatSession しても戻らない', () => {
@@ -92,5 +119,5 @@ test('sessionProgress は current が total を超えない', () => {
 
 test('sessionProgress は 1 始まりで、途中経過を正しく返す', () => {
   const session = Core.createSession(Core.DEFAULT_EXERCISES);
-  assert.deepStrictEqual(Core.sessionProgress(session), { current: 1, total: 11 });
+  assert.deepStrictEqual(Core.sessionProgress(session), { current: 1, total: 9 });
 });

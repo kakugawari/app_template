@@ -136,8 +136,8 @@ async function run() {
     })));
     ok(firstStep.runVisible && !firstStep.warmupVisible && !firstStep.doneVisible,
       '実行画面だけが表示され、準備・完了画面は本当に隠れている');
-    ok(firstStep.progress === '1 / 11', `進捗が 1 / 11 から始まる (${firstStep.progress})`);
-    ok(firstStep.side === '左足', `最初は左足から、部位つきで表示される (${firstStep.side})`);
+    ok(firstStep.progress === '1 / 9', `進捗が 1 / 9 から始まる (${firstStep.progress})`);
+    ok(!firstStep.sideShown, `1 種目め (両足そろえて振る動き) では側バッジが出ない (${firstStep.side})`);
     ok(firstStep.reps === '20', `回数が 20 と出る (${firstStep.reps})`);
 
     section('もどるで1つ前のステップに、最初のステップからは準備画面に戻る');
@@ -164,10 +164,30 @@ async function run() {
     await phone.locator('#btnStart').tap();
     await phone.waitForTimeout(60);
     const resumed = await phone.evaluate(() => document.getElementById('progress').textContent);
-    ok(resumed === '1 / 11', `準備画面から再開すると同じ最初のステップに戻る (${resumed})`);
+    ok(resumed === '1 / 9', `準備画面から再開すると同じ最初のステップに戻る (${resumed})`);
+
+    section('横向きに寝る種目は、手の左右にあわせて寝る向きも変わる');
+    await phone.locator('#btnDone').tap(); // 2 種目め (両足そろえて振る、側なし) を通過
+    await phone.locator('#btnDone').tap();
+    await phone.waitForTimeout(60);
+    const leftHandStep = await phone.evaluate(() => ({
+      name: document.getElementById('exerciseName').textContent,
+      side: document.getElementById('side').textContent
+    }));
+    ok(leftHandStep.name.startsWith('左向きに寝て'), `左手のときは「左向きに寝て」から始まる (${leftHandStep.name})`);
+    ok(leftHandStep.side === '左手', `側バッジは「左手」(${leftHandStep.side})`);
+
+    await phone.locator('#btnDone').tap();
+    await phone.waitForTimeout(60);
+    const rightHandStep = await phone.evaluate(() => ({
+      name: document.getElementById('exerciseName').textContent,
+      side: document.getElementById('side').textContent
+    }));
+    ok(rightHandStep.name.startsWith('右向きに寝て'), `右手のときは「右向きに寝て」から始まる (${rightHandStep.name})`);
+    ok(rightHandStep.side === '右手', `側バッジは「右手」(${rightHandStep.side})`);
 
     section('左右のない種目 (6 種目め) では側の表示が隠れる');
-    for (let i = 0; i < 8; i++) await phone.locator('#btnDone').tap();
+    for (let i = 0; i < 3; i++) await phone.locator('#btnDone').tap();
     await phone.waitForTimeout(60);
     const noSideStep = Object.assign(await shownFlags(), await phone.evaluate(() => ({
       name: document.getElementById('exerciseName').textContent
@@ -180,8 +200,8 @@ async function run() {
     const doneScreen = Object.assign(await shownFlags(), await phone.evaluate(() => ({
       finished: window.__app.state().session.index
     })));
-    ok(doneScreen.doneVisible && !doneScreen.runVisible, '11 ステップぶん進めると完了画面が本当に表示される');
-    ok(doneScreen.finished === 11, `ステップの index が 11 まで進んでいる (${doneScreen.finished})`);
+    ok(doneScreen.doneVisible && !doneScreen.runVisible, '9 ステップぶん進めると完了画面が本当に表示される');
+    ok(doneScreen.finished === 9, `ステップの index が 9 まで進んでいる (${doneScreen.finished})`);
 
     section('もう一度で最初からやり直せる');
     await phone.locator('#btnAgain').tap();

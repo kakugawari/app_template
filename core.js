@@ -24,12 +24,24 @@
 
   // 左右のある種目は sides に ['left', 'right'] (または指定された順) を、無いものは null を入れる。
   // sideNoun を付けると「左足」のように部位つきで表示する (省略すると「左」だけ)。
-  // 扇風機の首振りや振り子のように、左右へ振るが止めて数えないような動きは
-  // 1 ステップ (sides: null) にする — 左右に分けると実際の動きと合わなくなる。
+  // 扇風機の首振りや振り子のように、両足(両手)をくっつけたまま左右へ振り続け、
+  // 止めて数えないような動きは 1 ステップ (sides: null) にする
+  // — 左右に分けると実際の動きと合わなくなる。
+  // 横向きに寝て左右で体の向きそのものが変わる種目は、sideNames で
+  // 「左向きに寝て…」のように片側ごとに文面を変えられる。
   const DEFAULT_EXERCISES = [
-    { name: '仰向けに寝て、足を膝立ちにして右に倒す・左に倒す', reps: 20, sides: ['left', 'right'], sideNoun: '足' },
-    { name: '横向きに寝て、膝を曲げて開く・閉じる', reps: 20, sides: ['left', 'right'], sideNoun: '足' },
-    { name: '横向きに寝て、手を伸ばして開く・閉じる', reps: 20, sides: ['left', 'right'], sideNoun: '手' },
+    { name: '仰向けに寝て、足を膝立ちにして右に倒す・左に倒す', reps: 20, sides: null },
+    { name: '横向きに寝て、膝を曲げて開く・閉じる', reps: 20, sides: null },
+    {
+      name: '横向きに寝て、手を伸ばして開く・閉じる',
+      reps: 20,
+      sides: ['left', 'right'],
+      sideNoun: '手',
+      sideNames: {
+        left: '左向きに寝て、左手を伸ばして開く・閉じる',
+        right: '右向きに寝て、右手を伸ばして開く・閉じる'
+      }
+    },
     { name: '椅子に浅く座り、バランスボールを抱えて体をひねる', reps: 20, sides: null },
     { name: '椅子に浅く座り、バランスボールを抱えて体を倒す', reps: 20, sides: null },
     { name: '椅子に浅く座り、バランスボールを持って上げ下げする', reps: 20, sides: null },
@@ -42,9 +54,10 @@
     exercises.forEach(function (exercise, exerciseIndex) {
       const sides = exercise.sides && exercise.sides.length ? exercise.sides : [null];
       sides.forEach(function (side) {
+        const name = (exercise.sideNames && side && exercise.sideNames[side]) || exercise.name;
         steps.push({
           exerciseIndex: exerciseIndex,
-          name: exercise.name,
+          name: name,
           reps: exercise.reps,
           side: side,
           sideNoun: exercise.sideNoun || ''
