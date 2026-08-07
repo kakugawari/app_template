@@ -140,6 +140,32 @@ async function run() {
     ok(firstStep.side === '右', `最初は右側から (${firstStep.side})`);
     ok(firstStep.reps === '20', `回数が 20 と出る (${firstStep.reps})`);
 
+    section('もどるで1つ前のステップに、最初のステップからは準備画面に戻る');
+    await phone.locator('#btnDone').tap();
+    await phone.locator('#btnDone').tap();
+    await phone.waitForTimeout(60);
+    const beforeBack = await phone.evaluate(() => window.__app.state().session.index);
+    ok(beforeBack === 2, `2 回できたを押すと index が 2 (${beforeBack})`);
+
+    await phone.locator('#btnBack').tap();
+    await phone.waitForTimeout(60);
+    const afterBack = await phone.evaluate(() => window.__app.state().session.index);
+    ok(afterBack === 1, `もどるで 1 つ前のステップに戻る (${afterBack})`);
+
+    await phone.locator('#btnBack').tap();
+    await phone.locator('#btnBack').tap();
+    await phone.waitForTimeout(60);
+    const atStart = Object.assign(await shownFlags(), await phone.evaluate(() => ({
+      index: window.__app.state().session.index
+    })));
+    ok(atStart.warmupVisible && !atStart.runVisible && atStart.index === 0,
+      `最初のステップでもどるを押すと準備画面に戻る (index ${atStart.index})`);
+
+    await phone.locator('#btnStart').tap();
+    await phone.waitForTimeout(60);
+    const resumed = await phone.evaluate(() => document.getElementById('progress').textContent);
+    ok(resumed === '1 / 13', `準備画面から再開すると同じ最初のステップに戻る (${resumed})`);
+
     section('左右のない種目 (6 種目め) では側の表示が隠れる');
     for (let i = 0; i < 10; i++) await phone.locator('#btnDone').tap();
     await phone.waitForTimeout(60);

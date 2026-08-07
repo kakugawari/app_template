@@ -21,6 +21,7 @@
     side: document.getElementById('side'),
     reps: document.getElementById('reps'),
     btnStart: document.getElementById('btnStart'),
+    btnBack: document.getElementById('btnBack'),
     btnDone: document.getElementById('btnDone'),
     btnAgain: document.getElementById('btnAgain'),
     btnRestart: document.getElementById('btnRestart')
@@ -77,8 +78,19 @@
     render();
   }
 
+  /** 最初のステップなら準備画面へ、それ以外は1つ前のステップへ戻る。 */
+  function goBack() {
+    if (state.session.index === 0) {
+      state.screen = 'warmup';
+    } else {
+      state.session = C.retreatSession(state.session);
+    }
+    render();
+  }
+
   function main() {
     els.btnStart.addEventListener('click', start);
+    els.btnBack.addEventListener('click', goBack);
     els.btnDone.addEventListener('click', complete);
     els.btnAgain.addEventListener('click', restart);
     els.btnRestart.addEventListener('click', restart);
@@ -90,6 +102,7 @@
       start: start,
       complete: complete,
       restart: restart,
+      goBack: goBack,
       render: render
     };
   }

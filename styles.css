@@ -142,6 +142,11 @@ body {
   transform: scaleX(-1);
 }
 
+.actions {
+  display: flex;
+  gap: 12px;
+}
+
 .badge {
   margin: 0;
   font-size: 12px;

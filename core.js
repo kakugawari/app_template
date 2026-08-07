@@ -68,6 +68,12 @@
     return Object.assign({}, session, { index: session.index + 1 });
   }
 
+  /** 最初のステップより前には戻らない。 */
+  function retreatSession(session) {
+    if (session.index <= 0) return session;
+    return Object.assign({}, session, { index: session.index - 1 });
+  }
+
   /** 進捗表示用。current は total を超えない。 */
   function sessionProgress(session) {
     const total = session.steps.length;
@@ -84,6 +90,7 @@
     isSessionFinished: isSessionFinished,
     currentStep: currentStep,
     advanceSession: advanceSession,
+    retreatSession: retreatSession,
     sessionProgress: sessionProgress
   };
 });

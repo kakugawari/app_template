@@ -36,6 +36,22 @@ test('advanceSession でステップが 1 つずつ進む', () => {
   assert.strictEqual(Core.currentStep(session).exerciseIndex, 1);
 });
 
+test('retreatSession でステップが 1 つずつ戻る', () => {
+  let session = Core.createSession(Core.DEFAULT_EXERCISES);
+  session = Core.advanceSession(session);
+  session = Core.advanceSession(session);
+  assert.strictEqual(session.index, 2);
+  session = Core.retreatSession(session);
+  assert.strictEqual(session.index, 1);
+  assert.strictEqual(Core.currentStep(session).side, 'left');
+});
+
+test('最初のステップより前には retreatSession しても戻らない', () => {
+  const session = Core.createSession(Core.DEFAULT_EXERCISES);
+  const retreated = Core.retreatSession(session);
+  assert.strictEqual(retreated.index, 0);
+});
+
 test('最後まで進むと isSessionFinished が true になり、currentStep は null', () => {
   let session = Core.createSession(Core.DEFAULT_EXERCISES);
   const total = session.steps.length;
