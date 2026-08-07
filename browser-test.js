@@ -136,12 +136,12 @@ async function run() {
     })));
     ok(firstStep.runVisible && !firstStep.warmupVisible && !firstStep.doneVisible,
       '実行画面だけが表示され、準備・完了画面は本当に隠れている');
-    ok(firstStep.progress === '1 / 11', `進捗が 1 / 11 から始まる (${firstStep.progress})`);
-    ok(firstStep.side === '左', `最初は左側から (${firstStep.side})`);
+    ok(firstStep.progress === '1 / 13', `進捗が 1 / 13 から始まる (${firstStep.progress})`);
+    ok(firstStep.side === '右', `最初は右側から (${firstStep.side})`);
     ok(firstStep.reps === '20', `回数が 20 と出る (${firstStep.reps})`);
 
-    section('左右のない種目 (5 種目め) では側の表示が隠れる');
-    for (let i = 0; i < 8; i++) await phone.locator('#btnDone').tap();
+    section('左右のない種目 (6 種目め) では側の表示が隠れる');
+    for (let i = 0; i < 10; i++) await phone.locator('#btnDone').tap();
     await phone.waitForTimeout(60);
     const noSideStep = Object.assign(await shownFlags(), await phone.evaluate(() => ({
       name: document.getElementById('exerciseName').textContent
@@ -154,8 +154,8 @@ async function run() {
     const doneScreen = Object.assign(await shownFlags(), await phone.evaluate(() => ({
       finished: window.__app.state().session.index
     })));
-    ok(doneScreen.doneVisible && !doneScreen.runVisible, '11 ステップぶん進めると完了画面が本当に表示される');
-    ok(doneScreen.finished === 11, `ステップの index が 11 まで進んでいる (${doneScreen.finished})`);
+    ok(doneScreen.doneVisible && !doneScreen.runVisible, '13 ステップぶん進めると完了画面が本当に表示される');
+    ok(doneScreen.finished === 13, `ステップの index が 13 まで進んでいる (${doneScreen.finished})`);
 
     section('もう一度で最初からやり直せる');
     await phone.locator('#btnAgain').tap();

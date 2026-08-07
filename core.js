@@ -22,8 +22,9 @@
 
   const SIDE_LABELS = { left: '左', right: '右' };
 
-  // 左右のある種目は sides に ['left', 'right'] を、無いものは null を入れる。
+  // 左右のある種目は sides に ['left', 'right'] (または指定された順) を、無いものは null を入れる。
   const DEFAULT_EXERCISES = [
+    { name: '仰向けに寝て、足を膝立ちにして右に倒す・左に倒す', reps: 20, sides: ['right', 'left'] },
     { name: '横向きに寝て、膝を曲げて開く・閉じる', reps: 20, sides: ['left', 'right'] },
     { name: '横向きに寝て、手を伸ばして開く・閉じる', reps: 20, sides: ['left', 'right'] },
     { name: '椅子に浅く座り、バランスボールを抱えて体をひねる', reps: 20, sides: ['left', 'right'] },
