@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>アプリの雛形</title>
-<meta name="description" content="ビルドなしで動くアプリの雛形">
-<meta name="theme-color" content="#151a2e">
+<title>ストレッチ ルーティン</title>
+<meta name="description" content="毎日のストレッチを、順番どおりに進めるためのアプリ">
+<meta name="theme-color" content="#efe1c1">
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="./styles.css">
 </head>
@@ -13,19 +13,34 @@
 
 <div id="app">
   <header id="topbar">
-    <h1 class="title">アプリの雛形</h1>
+    <h1 class="title">STRETCH ROUTINE</h1>
     <div class="topbar-actions">
-      <button type="button" id="btnAction" class="btn btn-primary">ためす</button>
+      <button type="button" id="btnRestart" class="btn">はじめから</button>
     </div>
   </header>
 
   <main id="stage">
-    <p class="lead">ここにアプリを作る。</p>
-    <p class="result" id="result">—</p>
-    <p class="note">
-      ロジックは <code>src/core.js</code> に、画面は <code>src/app.js</code> に書く。<br>
-      <code>npm test</code> でロジックを、<code>npm run test:ui</code> で画面を確かめる。
-    </p>
+
+    <section id="screenWarmup" class="screen">
+      <p class="badge">WARM UP</p>
+      <p class="lead" id="warmupText">—</p>
+      <button type="button" id="btnStart" class="btn btn-primary">はじめる</button>
+    </section>
+
+    <section id="screenRun" class="screen" hidden>
+      <p class="progress" id="progress">— / —</p>
+      <p class="exerciseName" id="exerciseName">—</p>
+      <p class="side" id="side" hidden>—</p>
+      <p class="reps"><span id="reps">—</span><span class="repsUnit">回</span></p>
+      <button type="button" id="btnDone" class="btn btn-primary">できた</button>
+    </section>
+
+    <section id="screenDone" class="screen" hidden>
+      <p class="badge">COMPLETE</p>
+      <p class="lead">おつかれさまでした。</p>
+      <button type="button" id="btnAgain" class="btn btn-primary">もう一度</button>
+    </section>
+
   </main>
 </div>
 

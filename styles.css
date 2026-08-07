@@ -1,30 +1,38 @@
-/* 見た目。色は :root にまとめ、明るい画面と暗い画面の両方を用意する。 */
+/* 見た目。アメリカンヴィンテージ(クリーム紙 + ラスト + マスタード + ネイビー)。
+   色は :root にまとめ、明るい画面と暗い画面の両方を用意する。 */
 
 :root {
-  --bg: #10142a;
-  --bg-2: #171d3a;
-  --line: #2e3868;
-  --text: #eef1ff;
-  --muted: #9aa3cf;
-  --accent: #ffd166;
-  --accent-ink: #2a2200;
-  color-scheme: dark;
+  --bg: #efe1c1;
+  --bg-2: #f8efd9;
+  --line: #8a6a3f;
+  --text: #3a2a18;
+  --muted: #7a6142;
+  --accent: #b0402c;
+  --accent-ink: #f8efd9;
+  --accent-2: #22415a;
+  color-scheme: light;
 }
 
-@media (prefers-color-scheme: light) {
+@media (prefers-color-scheme: dark) {
   :root {
-    --bg: #f3f5fb;
-    --bg-2: #ffffff;
-    --line: #dbe0f0;
-    --text: #1b1f36;
-    --muted: #666e93;
-    --accent: #ffb703;
-    --accent-ink: #2a1f00;
-    color-scheme: light;
+    --bg: #221a12;
+    --bg-2: #2b2118;
+    --line: #5c4630;
+    --text: #f1e3c2;
+    --muted: #b9a377;
+    --accent: #c1552e;
+    --accent-ink: #221a12;
+    --accent-2: #d3a039;
+    color-scheme: dark;
   }
 }
 
 * { box-sizing: border-box; }
+
+/* display を指定する author ルールは順序に関わらず [hidden] の display:none を
+   上書きしてしまう(UA スタイルより author スタイルが常に優先されるため)。
+   要素ごとに気をつけるのではなく、ここで一括して勝たせる。 */
+[hidden] { display: none !important; }
 
 html, body {
   margin: 0;
@@ -35,9 +43,10 @@ html, body {
 
 body {
   background: var(--bg);
+  background-image: radial-gradient(ellipse at 50% -10%, rgba(0, 0, 0, .06), transparent 60%);
   color: var(--text);
-  font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI",
-               system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: "Rockwell Nova", "Rockwell", "Roboto Slab", Georgia, "Hiragino Mincho ProN",
+               "Noto Serif JP", serif;
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
 }
@@ -55,16 +64,19 @@ body {
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
-  padding: 10px 14px;
+  padding: 14px 16px;
   background: var(--bg-2);
-  border-bottom: 1px solid var(--line);
+  border-bottom: 3px solid var(--accent-2);
+  box-shadow: 0 4px 0 -3px var(--line);
 }
 
 .title {
   margin: 0;
   font-size: 17px;
   font-weight: 800;
-  letter-spacing: .04em;
+  letter-spacing: .12em;
+  color: var(--accent);
+  text-transform: uppercase;
 }
 
 .topbar-actions { margin-left: auto; }
@@ -73,22 +85,24 @@ body {
   font: inherit;
   font-size: 13px;
   font-weight: 700;
+  letter-spacing: .04em;
   color: var(--text);
   background: var(--bg-2);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 8px 14px;
+  border: 2px solid var(--line);
+  border-radius: 4px;
+  padding: 9px 16px;
   cursor: pointer;
   transition: transform .08s ease, border-color .15s ease;
 }
 
-.btn:hover { border-color: var(--muted); }
+.btn:hover { border-color: var(--accent-2); }
 .btn:active { transform: translateY(1px); }
 
 .btn-primary {
   background: var(--accent);
-  border-color: transparent;
+  border-color: var(--accent-2);
   color: var(--accent-ink);
+  text-transform: uppercase;
 }
 
 #stage {
@@ -99,32 +113,85 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 14px;
   padding: 24px;
   text-align: center;
 }
 
-.lead { margin: 0; font-size: 18px; font-weight: 700; }
+.screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 26em;
+  padding: 36px 28px;
+  background: var(--bg-2);
+  border: 2px solid var(--line);
+  border-radius: 6px;
+  box-shadow: 6px 6px 0 var(--line);
+}
 
-.result {
+.badge {
   margin: 0;
-  font-size: 32px;
+  font-size: 12px;
   font-weight: 800;
+  letter-spacing: .22em;
+  color: var(--accent-2);
+  border: 2px solid var(--accent-2);
+  border-radius: 3px;
+  padding: 5px 12px;
+  transform: rotate(-1.5deg);
+}
+
+.lead { margin: 0; font-size: 18px; font-weight: 700; line-height: 1.7; }
+
+.progress {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  color: var(--muted);
   font-variant-numeric: tabular-nums;
+}
+
+.exerciseName {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 800;
+  line-height: 1.6;
+}
+
+.side {
+  margin: 0;
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: .1em;
+  color: var(--accent-ink);
+  background: var(--accent);
+  border-radius: 999px;
+  padding: 4px 18px;
+}
+
+.reps {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
   color: var(--accent);
 }
 
-.note {
-  margin: 0;
-  max-width: 34em;
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.9;
+#reps {
+  font-size: 48px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
 }
 
-code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: .95em;
+.repsUnit {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--muted);
 }
 
 @media (prefers-reduced-motion: reduce) {

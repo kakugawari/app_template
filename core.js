@@ -2,7 +2,11 @@
  * core.js — ロジック。DOM を触らないので node でテストできる。
  *
  * ブラウザでは <script> で読み込むと window.Core になり、
- * node からは require() できる。ここにアプリの中身を書く。
+ * node からは require() できる。
+ *
+ * このアプリは「決まった種目を、順番に、左右ぶんこなす」だけの
+ * 一本道。回数(20回など)は表示するだけで、アプリ側では数えない
+ * — 運動中はボールを抱えていたり寝転んでいたりでタップしづらいため。
  */
 (function (root, factory) {
   'use strict';
@@ -14,42 +18,71 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
-  /**
-   * 決まった順番で数を出す乱数 (mulberry32)。
-   * 同じ seed からは必ず同じ並びになるので、
-   * 「同じ状態を作り直せる」「テストで結果を固定できる」。
-   */
-  function mulberry32(seed) {
-    let a = seed >>> 0;
-    return function () {
-      a = (a + 0x6d2b79f5) >>> 0;
-      let t = a;
-      t = Math.imul(t ^ (t >>> 15), t | 1);
-      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-    };
+  const WARMUP_NOTE = '肩と膝の上を温めてから始めましょう。';
+
+  const SIDE_LABELS = { left: '左', right: '右' };
+
+  // 左右のある種目は sides に ['left', 'right'] を、無いものは null を入れる。
+  const DEFAULT_EXERCISES = [
+    { name: '横向きに寝て、膝を曲げて開く・閉じる', reps: 20, sides: ['left', 'right'] },
+    { name: '横向きに寝て、手を伸ばして開く・閉じる', reps: 20, sides: ['left', 'right'] },
+    { name: '椅子に浅く座り、バランスボールを抱えて体をひねる', reps: 20, sides: ['left', 'right'] },
+    { name: '椅子に浅く座り、バランスボールを抱えて体を倒す', reps: 20, sides: ['left', 'right'] },
+    { name: '椅子に浅く座り、バランスボールを持って上げ下げする', reps: 20, sides: null },
+    { name: '椅子に浅く座り、トゲトゲボールを足で踏んで転がす', reps: 20, sides: ['left', 'right'] }
+  ];
+
+  /** 種目リストを「1 ステップ = 1 回のできたボタン」の並びに崩す。 */
+  function buildSteps(exercises) {
+    const steps = [];
+    exercises.forEach(function (exercise, exerciseIndex) {
+      const sides = exercise.sides && exercise.sides.length ? exercise.sides : [null];
+      sides.forEach(function (side) {
+        steps.push({
+          exerciseIndex: exerciseIndex,
+          name: exercise.name,
+          reps: exercise.reps,
+          side: side
+        });
+      });
+    });
+    return steps;
   }
 
-  /** 配列をその場で混ぜる。rng を渡せば結果を再現できる。 */
-  function shuffle(array, rng) {
-    const random = rng || Math.random;
-    for (let i = array.length - 1; i > 0; i--) {
-      const j = Math.floor(random() * (i + 1));
-      const t = array[i];
-      array[i] = array[j];
-      array[j] = t;
-    }
-    return array;
+  function createSession(exercises) {
+    return { steps: buildSteps(exercises), index: 0 };
   }
 
-  /** 動作確認用のおまけ。作り始めたら消してよい。 */
-  function roll(rng) {
-    return 1 + Math.floor((rng || Math.random)() * 6);
+  function isSessionFinished(session) {
+    return session.index >= session.steps.length;
+  }
+
+  function currentStep(session) {
+    return isSessionFinished(session) ? null : session.steps[session.index];
+  }
+
+  /** 終わっていれば何もしない (index が範囲外に出るのを防ぐ)。 */
+  function advanceSession(session) {
+    if (isSessionFinished(session)) return session;
+    return Object.assign({}, session, { index: session.index + 1 });
+  }
+
+  /** 進捗表示用。current は total を超えない。 */
+  function sessionProgress(session) {
+    const total = session.steps.length;
+    const current = Math.min(session.index + 1, total);
+    return { current: current, total: total };
   }
 
   return {
-    mulberry32: mulberry32,
-    shuffle: shuffle,
-    roll: roll
+    WARMUP_NOTE: WARMUP_NOTE,
+    SIDE_LABELS: SIDE_LABELS,
+    DEFAULT_EXERCISES: DEFAULT_EXERCISES,
+    buildSteps: buildSteps,
+    createSession: createSession,
+    isSessionFinished: isSessionFinished,
+    currentStep: currentStep,
+    advanceSession: advanceSession,
+    sessionProgress: sessionProgress
   };
 });

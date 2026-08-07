@@ -114,18 +114,61 @@ async function run() {
     ok(fit.title.length > 0, `見出しが出ている (${fit.title})`);
 
     // ------------------------------------------------ ここにアプリごとの確認を足す
-    section('アプリの操作');
-    await phone.locator('#btnAction').tap();
-    await phone.waitForTimeout(120);
-    const after = await phone.evaluate(() => ({
-      count: window.__app.state().count,
-      shown: document.getElementById('result').textContent
-    }));
-    ok(after.count === 1 && after.shown !== '—', `ボタンを押すと結果が出る (${after.shown})`);
+    // hidden 属性の有無 (el.hidden) だけでは、CSS が display:flex で上書きして
+    // 実際には表示されたままになる事故を見逃す。getComputedStyle で実際の見え方を見る。
+    const shownFlags = () => phone.evaluate(() => {
+      const isShown = (sel) => getComputedStyle(document.querySelector(sel)).display !== 'none';
+      return {
+        warmupVisible: isShown('#screenWarmup'),
+        runVisible: isShown('#screenRun'),
+        doneVisible: isShown('#screenDone'),
+        sideShown: isShown('#side')
+      };
+    });
 
-    // 押した直後に表示が飛ばないか (CSS アニメーションの上書き事故よけ)
-    const jump = await measureJump(phone, '#result', 'document.getElementById("btnAction").click()');
-    ok(jump < 12, `押した直後に表示が飛ばない (最大ずれ ${jump}px)`);
+    section('準備画面 → 実行画面');
+    await phone.locator('#btnStart').tap();
+    await phone.waitForTimeout(120);
+    const firstStep = Object.assign(await shownFlags(), await phone.evaluate(() => ({
+      progress: document.getElementById('progress').textContent,
+      side: document.getElementById('side').textContent,
+      reps: document.getElementById('reps').textContent
+    })));
+    ok(firstStep.runVisible && !firstStep.warmupVisible && !firstStep.doneVisible,
+      '実行画面だけが表示され、準備・完了画面は本当に隠れている');
+    ok(firstStep.progress === '1 / 11', `進捗が 1 / 11 から始まる (${firstStep.progress})`);
+    ok(firstStep.side === '左', `最初は左側から (${firstStep.side})`);
+    ok(firstStep.reps === '20', `回数が 20 と出る (${firstStep.reps})`);
+
+    section('左右のない種目 (5 種目め) では側の表示が隠れる');
+    for (let i = 0; i < 8; i++) await phone.locator('#btnDone').tap();
+    await phone.waitForTimeout(60);
+    const noSideStep = Object.assign(await shownFlags(), await phone.evaluate(() => ({
+      name: document.getElementById('exerciseName').textContent
+    })));
+    ok(!noSideStep.sideShown, `左右のない種目では側バッジが出ない (${noSideStep.name})`);
+
+    section('最後まで進めると完了画面になる');
+    for (let i = 0; i < 3; i++) await phone.locator('#btnDone').tap();
+    await phone.waitForTimeout(120);
+    const doneScreen = Object.assign(await shownFlags(), await phone.evaluate(() => ({
+      finished: window.__app.state().session.index
+    })));
+    ok(doneScreen.doneVisible && !doneScreen.runVisible, '11 ステップぶん進めると完了画面が本当に表示される');
+    ok(doneScreen.finished === 11, `ステップの index が 11 まで進んでいる (${doneScreen.finished})`);
+
+    section('もう一度で最初からやり直せる');
+    await phone.locator('#btnAgain').tap();
+    await phone.waitForTimeout(120);
+    const restarted = Object.assign(await shownFlags(), await phone.evaluate(() => ({
+      index: window.__app.state().session.index
+    })));
+    ok(restarted.warmupVisible && restarted.index === 0, 'もう一度を押すと準備画面・最初のステップに戻る');
+
+    // 準備画面に戻った直後、見出しが飛ばないか (CSS アニメーションの上書き事故よけ)
+    await phone.locator('#btnStart').tap();
+    const jump = await measureJump(phone, '#exerciseName', 'document.getElementById("btnDone").click()');
+    ok(jump < 12, `「できた」を押した直後に種目名が飛ばない (最大ずれ ${jump}px)`);
 
     // ------------------------------------------------ 明るい画面・暗い画面
     section('明るい画面と暗い画面');
