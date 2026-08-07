@@ -51,42 +51,54 @@
       <line x1="80" y1="80" x2="82" y2="103"/>
     </g>
 
-    <!-- 0: 仰向けに寝て、膝を曲げて立て、左右に倒す -->
+    <!-- 寝る面。椅子から背もたれを取った形。3つの寝る種目で使い回す。
+         体はこの面の上に載せる (面から離すと宙に浮いて見える)。 -->
+    <g id="bedBase" stroke="currentColor" stroke-width="4" opacity=".45"
+       fill="none" stroke-linecap="round">
+      <line x1="10" y1="104" x2="110" y2="104"/>
+      <line x1="12" y1="88" x2="108" y2="88"/>
+      <line x1="16" y1="88" x2="14" y2="103"/>
+      <line x1="104" y1="88" x2="106" y2="103"/>
+    </g>
+
+    <!-- 0: 仰向けに寝て、膝を曲げて立て、左右に倒す。
+         膝立てなので足の裏は面についている (浮かせない)。 -->
     <symbol id="ex0" viewBox="0 0 120 120">
-      <line x1="10" y1="100" x2="110" y2="100" stroke="currentColor" stroke-width="4" opacity=".45"/>
+      <use href="#bedBase"/>
       <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="68" y1="78" x2="90" y2="44"/>
-        <line x1="90" y1="44" x2="66" y2="36"/>
-        <line x1="44" y1="82" x2="54" y2="97"/>
+        <line x1="70" y1="78" x2="88" y2="48"/>
+        <line x1="88" y1="48" x2="100" y2="82"/>
+        <line x1="100" y1="84" x2="109" y2="84"/>
+        <line x1="38" y1="68" x2="16" y2="56"/>
       </g>
-      <circle cx="20" cy="78" r="11" fill="currentColor"/>
-      <rect x="34" y="70" width="36" height="16" rx="8" fill="currentColor"/>
+      <circle cx="20" cy="76" r="11" fill="currentColor"/>
+      <rect x="32" y="68" width="40" height="16" rx="8" fill="currentColor"/>
     </symbol>
 
     <!-- 1: 横向きに寝て、上の膝を曲げて開く・閉じる -->
     <symbol id="ex1" viewBox="0 0 120 120">
-      <line x1="10" y1="100" x2="110" y2="100" stroke="currentColor" stroke-width="4" opacity=".45"/>
+      <use href="#bedBase"/>
       <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="74" y1="56" x2="94" y2="64"/>
-        <line x1="94" y1="64" x2="102" y2="84"/>
-        <line x1="74" y1="52" x2="94" y2="32"/>
-        <line x1="94" y1="32" x2="70" y2="26"/>
-        <line x1="40" y1="58" x2="30" y2="74"/>
+        <line x1="74" y1="80" x2="94" y2="84"/>
+        <line x1="94" y1="84" x2="108" y2="86"/>
+        <line x1="74" y1="70" x2="98" y2="50"/>
+        <line x1="98" y1="50" x2="106" y2="70"/>
+        <line x1="38" y1="68" x2="16" y2="56"/>
       </g>
-      <circle cx="22" cy="52" r="11" fill="currentColor"/>
-      <rect x="34" y="44" width="42" height="16" rx="8" fill="currentColor"/>
+      <circle cx="20" cy="76" r="11" fill="currentColor"/>
+      <rect x="32" y="68" width="42" height="16" rx="8" fill="currentColor"/>
     </symbol>
 
     <!-- 2: 横向きに寝て、上の腕を伸ばして開く・閉じる -->
     <symbol id="ex2" viewBox="0 0 120 120">
-      <line x1="10" y1="100" x2="110" y2="100" stroke="currentColor" stroke-width="4" opacity=".45"/>
+      <use href="#bedBase"/>
       <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="74" y1="56" x2="96" y2="66"/>
-        <line x1="96" y1="66" x2="104" y2="86"/>
-        <line x1="46" y1="46" x2="46" y2="14"/>
+        <line x1="74" y1="78" x2="92" y2="82"/>
+        <line x1="92" y1="82" x2="108" y2="86"/>
+        <line x1="44" y1="68" x2="44" y2="36"/>
       </g>
-      <circle cx="22" cy="52" r="11" fill="currentColor"/>
-      <rect x="34" y="44" width="42" height="16" rx="8" fill="currentColor"/>
+      <circle cx="20" cy="76" r="11" fill="currentColor"/>
+      <rect x="32" y="68" width="42" height="16" rx="8" fill="currentColor"/>
     </symbol>
 
     <!-- 3: 椅子に浅く座り、ボールを抱えて体をひねる (ボールを横に送る) -->
