@@ -131,15 +131,28 @@ body {
   box-shadow: 6px 6px 0 var(--line);
 }
 
+.illustrationRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .illustration {
-  width: 108px;
-  height: 108px;
+  width: 84px;
+  height: 84px;
   color: var(--accent-2);
   flex: none;
 }
 
-#illustration.mirror {
+.illustration.mirror {
   transform: scaleX(-1);
+}
+
+.illustrationArrow {
+  width: 26px;
+  height: 26px;
+  color: var(--muted);
+  flex: none;
 }
 
 .actions {

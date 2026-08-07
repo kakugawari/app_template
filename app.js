@@ -15,8 +15,10 @@
     screenDone: document.getElementById('screenDone'),
     warmupText: document.getElementById('warmupText'),
     progress: document.getElementById('progress'),
-    illustration: document.getElementById('illustration'),
-    illustrationUse: document.getElementById('illustrationUse'),
+    illustrationBefore: document.getElementById('illustrationBefore'),
+    illustrationBeforeUse: document.getElementById('illustrationBeforeUse'),
+    illustrationAfter: document.getElementById('illustrationAfter'),
+    illustrationAfterUse: document.getElementById('illustrationAfterUse'),
     exerciseName: document.getElementById('exerciseName'),
     side: document.getElementById('side'),
     reps: document.getElementById('reps'),
@@ -46,8 +48,11 @@
       const step = C.currentStep(state.session);
       const progress = C.sessionProgress(state.session);
       els.progress.textContent = progress.current + ' / ' + progress.total;
-      els.illustrationUse.setAttribute('href', '#ex' + step.exerciseIndex);
-      els.illustration.classList.toggle('mirror', step.side === 'right');
+      els.illustrationBeforeUse.setAttribute('href', '#ex' + step.exerciseIndex + '-before');
+      els.illustrationAfterUse.setAttribute('href', '#ex' + step.exerciseIndex + '-after');
+      const mirror = step.side === 'right';
+      els.illustrationBefore.classList.toggle('mirror', mirror);
+      els.illustrationAfter.classList.toggle('mirror', mirror);
       els.exerciseName.textContent = step.name;
       els.reps.textContent = String(step.reps);
       els.side.classList.toggle('is-empty', !step.side);
