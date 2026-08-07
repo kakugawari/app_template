@@ -15,6 +15,8 @@
     screenDone: document.getElementById('screenDone'),
     warmupText: document.getElementById('warmupText'),
     progress: document.getElementById('progress'),
+    illustration: document.getElementById('illustration'),
+    illustrationUse: document.getElementById('illustrationUse'),
     exerciseName: document.getElementById('exerciseName'),
     side: document.getElementById('side'),
     reps: document.getElementById('reps'),
@@ -43,6 +45,8 @@
       const step = C.currentStep(state.session);
       const progress = C.sessionProgress(state.session);
       els.progress.textContent = progress.current + ' / ' + progress.total;
+      els.illustrationUse.setAttribute('href', '#ex' + step.exerciseIndex);
+      els.illustration.classList.toggle('mirror', step.side === 'right');
       els.exerciseName.textContent = step.name;
       els.reps.textContent = String(step.reps);
       if (step.side) {

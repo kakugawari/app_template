@@ -11,6 +11,135 @@
 </head>
 <body>
 
+<!-- イラストの元。線画のピクトグラムを symbol にまとめておき、
+     各画面では <use> で呼び出すだけにする(色はテーマの currentColor に追従)。 -->
+<svg style="display:none" aria-hidden="true">
+  <defs>
+
+    <symbol id="iconWarmup" viewBox="0 0 120 120">
+      <circle cx="60" cy="60" r="18" stroke="currentColor" stroke-width="6" fill="none"/>
+      <g stroke="currentColor" stroke-width="6" stroke-linecap="round">
+        <line x1="86" y1="60" x2="100" y2="60"/>
+        <line x1="78.4" y1="41.6" x2="88.3" y2="31.7"/>
+        <line x1="60" y1="34" x2="60" y2="20"/>
+        <line x1="41.6" y1="41.6" x2="31.7" y2="31.7"/>
+        <line x1="34" y1="60" x2="20" y2="60"/>
+        <line x1="41.6" y1="78.4" x2="31.7" y2="88.3"/>
+        <line x1="60" y1="86" x2="60" y2="100"/>
+        <line x1="78.4" y1="78.4" x2="88.3" y2="88.3"/>
+      </g>
+    </symbol>
+
+    <symbol id="iconComplete" viewBox="0 0 120 120">
+      <circle cx="60" cy="60" r="34" stroke="currentColor" stroke-width="6" fill="none"/>
+      <path d="M44,62 L56,74 L80,46" stroke="currentColor" stroke-width="8" fill="none"
+        stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+
+    <!-- 0: 仰向けに寝て、膝立ちにした足を左右に倒す -->
+    <symbol id="ex0" viewBox="0 0 120 120">
+      <line x1="10" y1="100" x2="110" y2="100" stroke="currentColor" stroke-width="4" opacity=".45"/>
+      <line x1="78" y1="66" x2="94" y2="40" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <line x1="94" y1="40" x2="72" y2="32" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <circle cx="22" cy="66" r="11" fill="currentColor"/>
+      <rect x="36" y="58" width="42" height="16" rx="8" fill="currentColor"/>
+    </symbol>
+
+    <!-- 1: 横向きに寝て、上の膝を曲げて開く・閉じる -->
+    <symbol id="ex1" viewBox="0 0 120 120">
+      <line x1="10" y1="100" x2="110" y2="100" stroke="currentColor" stroke-width="4" opacity=".45"/>
+      <line x1="80" y1="55" x2="106" y2="70" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <line x1="80" y1="55" x2="96" y2="30" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <line x1="96" y1="30" x2="72" y2="24" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <circle cx="22" cy="48" r="11" fill="currentColor"/>
+      <rect x="34" y="41" width="44" height="16" rx="8" fill="currentColor" transform="rotate(10 56 49)"/>
+    </symbol>
+
+    <!-- 2: 横向きに寝て、上の腕を伸ばして開く・閉じる -->
+    <symbol id="ex2" viewBox="0 0 120 120">
+      <line x1="10" y1="100" x2="110" y2="100" stroke="currentColor" stroke-width="4" opacity=".45"/>
+      <line x1="82" y1="53" x2="108" y2="68" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <line x1="46" y1="44" x2="46" y2="14" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <circle cx="22" cy="46" r="11" fill="currentColor"/>
+      <rect x="34" y="39" width="44" height="16" rx="8" fill="currentColor" transform="rotate(8 56 47)"/>
+    </symbol>
+
+    <!-- 3: 椅子に座り、ボールを抱えて体をひねる -->
+    <symbol id="ex3" viewBox="0 0 120 120">
+      <g stroke="currentColor" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="26" y1="90" x2="94" y2="90"/>
+        <line x1="32" y1="90" x2="28" y2="110"/>
+        <line x1="88" y1="90" x2="92" y2="110"/>
+      </g>
+      <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="60" y1="46" x2="60" y2="86"/>
+        <line x1="60" y1="54" x2="68" y2="50"/>
+        <line x1="60" y1="54" x2="68" y2="64"/>
+      </g>
+      <circle cx="60" cy="38" r="8" fill="currentColor"/>
+      <circle cx="78" cy="56" r="13" stroke="currentColor" stroke-width="5" fill="none"/>
+    </symbol>
+
+    <!-- 4: 椅子に座り、ボールを抱えて体を倒す -->
+    <symbol id="ex4" viewBox="0 0 120 120">
+      <g stroke="currentColor" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="26" y1="90" x2="94" y2="90"/>
+        <line x1="32" y1="90" x2="28" y2="110"/>
+        <line x1="88" y1="90" x2="92" y2="110"/>
+      </g>
+      <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="52" y1="44" x2="64" y2="86"/>
+        <line x1="58" y1="50" x2="48" y2="54"/>
+        <line x1="58" y1="50" x2="48" y2="66"/>
+      </g>
+      <circle cx="52" cy="36" r="8" fill="currentColor"/>
+      <circle cx="54" cy="58" r="13" stroke="currentColor" stroke-width="5" fill="none"/>
+    </symbol>
+
+    <!-- 5: 椅子に座り、ボールを持って上げ下げする -->
+    <symbol id="ex5" viewBox="0 0 120 120">
+      <g stroke="currentColor" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="26" y1="90" x2="94" y2="90"/>
+        <line x1="32" y1="90" x2="28" y2="110"/>
+        <line x1="88" y1="90" x2="92" y2="110"/>
+      </g>
+      <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="60" y1="58" x2="60" y2="86"/>
+        <line x1="60" y1="58" x2="50" y2="30"/>
+        <line x1="60" y1="58" x2="70" y2="30"/>
+      </g>
+      <circle cx="60" cy="50" r="8" fill="currentColor"/>
+      <circle cx="60" cy="22" r="13" stroke="currentColor" stroke-width="5" fill="none"/>
+    </symbol>
+
+    <!-- 6: 椅子に座り、トゲトゲボールを足で踏んで転がす -->
+    <symbol id="ex6" viewBox="0 0 120 120">
+      <g stroke="currentColor" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="26" y1="90" x2="94" y2="90"/>
+        <line x1="32" y1="90" x2="28" y2="110"/>
+        <line x1="88" y1="90" x2="92" y2="110"/>
+      </g>
+      <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="60" y1="42" x2="58" y2="78"/>
+        <line x1="58" y1="50" x2="46" y2="64"/>
+        <line x1="58" y1="50" x2="70" y2="64"/>
+        <line x1="58" y1="78" x2="78" y2="96"/>
+      </g>
+      <circle cx="60" cy="34" r="8" fill="currentColor"/>
+      <g stroke="currentColor" stroke-width="4" stroke-linecap="round">
+        <circle cx="78" cy="100" r="10" fill="none"/>
+        <line x1="88" y1="100" x2="94" y2="100"/>
+        <line x1="83" y1="91.3" x2="86" y2="86.1"/>
+        <line x1="73" y1="91.3" x2="70" y2="86.1"/>
+        <line x1="68" y1="100" x2="62" y2="100"/>
+        <line x1="73" y1="108.7" x2="70" y2="113.9"/>
+        <line x1="83" y1="108.7" x2="86" y2="113.9"/>
+      </g>
+    </symbol>
+
+  </defs>
+</svg>
+
 <div id="app">
   <header id="topbar">
     <h1 class="title">STRETCH ROUTINE</h1>
@@ -22,12 +151,14 @@
   <main id="stage">
 
     <section id="screenWarmup" class="screen">
+      <svg class="illustration" aria-hidden="true"><use href="#iconWarmup"></use></svg>
       <p class="badge">WARM UP</p>
       <p class="lead" id="warmupText">—</p>
       <button type="button" id="btnStart" class="btn btn-primary">はじめる</button>
     </section>
 
     <section id="screenRun" class="screen" hidden>
+      <svg class="illustration" id="illustration" aria-hidden="true"><use id="illustrationUse" href="#ex0"></use></svg>
       <p class="progress" id="progress">— / —</p>
       <p class="exerciseName" id="exerciseName">—</p>
       <p class="side" id="side" hidden>—</p>
@@ -36,6 +167,7 @@
     </section>
 
     <section id="screenDone" class="screen" hidden>
+      <svg class="illustration" aria-hidden="true"><use href="#iconComplete"></use></svg>
       <p class="badge">COMPLETE</p>
       <p class="lead">おつかれさまでした。</p>
       <button type="button" id="btnAgain" class="btn btn-primary">もう一度</button>

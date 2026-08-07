@@ -131,6 +131,17 @@ body {
   box-shadow: 6px 6px 0 var(--line);
 }
 
+.illustration {
+  width: 108px;
+  height: 108px;
+  color: var(--accent-2);
+  flex: none;
+}
+
+#illustration.mirror {
+  transform: scaleX(-1);
+}
+
 .badge {
   margin: 0;
   font-size: 12px;
