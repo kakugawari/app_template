@@ -52,7 +52,7 @@
       els.reps.textContent = String(step.reps);
       if (step.side) {
         els.side.hidden = false;
-        els.side.textContent = C.SIDE_LABELS[step.side];
+        els.side.textContent = C.sideLabel(step);
       } else {
         els.side.hidden = true;
       }

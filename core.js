@@ -23,14 +23,17 @@
   const SIDE_LABELS = { left: '左', right: '右' };
 
   // 左右のある種目は sides に ['left', 'right'] (または指定された順) を、無いものは null を入れる。
+  // sideNoun を付けると「左足」のように部位つきで表示する (省略すると「左」だけ)。
+  // 扇風機の首振りや振り子のように、左右へ振るが止めて数えないような動きは
+  // 1 ステップ (sides: null) にする — 左右に分けると実際の動きと合わなくなる。
   const DEFAULT_EXERCISES = [
-    { name: '仰向けに寝て、足を膝立ちにして右に倒す・左に倒す', reps: 20, sides: ['right', 'left'] },
-    { name: '横向きに寝て、膝を曲げて開く・閉じる', reps: 20, sides: ['left', 'right'] },
-    { name: '横向きに寝て、手を伸ばして開く・閉じる', reps: 20, sides: ['left', 'right'] },
-    { name: '椅子に浅く座り、バランスボールを抱えて体をひねる', reps: 20, sides: ['left', 'right'] },
-    { name: '椅子に浅く座り、バランスボールを抱えて体を倒す', reps: 20, sides: ['left', 'right'] },
+    { name: '仰向けに寝て、足を膝立ちにして右に倒す・左に倒す', reps: 20, sides: ['left', 'right'], sideNoun: '足' },
+    { name: '横向きに寝て、膝を曲げて開く・閉じる', reps: 20, sides: ['left', 'right'], sideNoun: '足' },
+    { name: '横向きに寝て、手を伸ばして開く・閉じる', reps: 20, sides: ['left', 'right'], sideNoun: '手' },
+    { name: '椅子に浅く座り、バランスボールを抱えて体をひねる', reps: 20, sides: null },
+    { name: '椅子に浅く座り、バランスボールを抱えて体を倒す', reps: 20, sides: null },
     { name: '椅子に浅く座り、バランスボールを持って上げ下げする', reps: 20, sides: null },
-    { name: '椅子に浅く座り、トゲトゲボールを足で踏んで転がす', reps: 20, sides: ['left', 'right'] }
+    { name: '椅子に浅く座り、トゲトゲボールを足で踏んで転がす', reps: 20, sides: ['left', 'right'], sideNoun: '足' }
   ];
 
   /** 種目リストを「1 ステップ = 1 回のできたボタン」の並びに崩す。 */
@@ -43,11 +46,18 @@
           exerciseIndex: exerciseIndex,
           name: exercise.name,
           reps: exercise.reps,
-          side: side
+          side: side,
+          sideNoun: exercise.sideNoun || ''
         });
       });
     });
     return steps;
+  }
+
+  /** 表示用の左右ラベル。sideNoun があれば「左足」のように部位つきで返す。 */
+  function sideLabel(step) {
+    if (!step.side) return null;
+    return SIDE_LABELS[step.side] + (step.sideNoun || '');
   }
 
   function createSession(exercises) {
@@ -91,6 +101,7 @@
     currentStep: currentStep,
     advanceSession: advanceSession,
     retreatSession: retreatSession,
-    sessionProgress: sessionProgress
+    sessionProgress: sessionProgress,
+    sideLabel: sideLabel
   };
 });
