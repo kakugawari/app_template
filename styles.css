@@ -148,6 +148,15 @@ body {
   transform: scaleX(-1);
 }
 
+/* 体の手前で抱えているボールは、カードと同じ色で塗って体を隠す。
+   塗らずに輪郭だけにすると、後ろの胴体の線がボールの中を横切って見える。
+   セレクタは .ball 単独で書くこと。<use> の中身は影の木に複製されるため、
+   `.illustration .ball` のように祖先をたどる書き方では届かず、
+   fill 未指定 = 黒 のままになる。 */
+.ball {
+  fill: var(--bg-2);
+}
+
 .illustrationArrow {
   width: 26px;
   height: 26px;
