@@ -163,68 +163,59 @@
       <rect x="32" y="68" width="42" height="16" rx="8" fill="currentColor"/>
     </symbol>
 
-    <!-- 3: 椅子に浅く座り、ボールを抱えて体をひねる。
-         before = ボールを胸の正面で抱えた姿勢
-         after  = ボールを横へ送った (体をひねった) 姿勢 -->
+    <!-- 3・4 (ひねる/倒す) も、横から見ると回転や傾きが伝わらないので
+         1番と同じ真上から見た構図にする: 頭を上に置き、椅子の座面は
+         真上から見た四角にする (chairTopBase)。
+         3: 椅子に浅く座り、ボールを抱えて体をひねる。
+         before = 体もボールも正面 (座面の真ん中) を向けた姿勢
+         after  = 体は向けたまま、ボールだけ横に送った (ひねった) 姿勢 -->
+    <g id="chairTopBase" stroke="currentColor" stroke-width="4" opacity=".45"
+       fill="none" stroke-linecap="round">
+      <rect x="24" y="48" width="72" height="62" rx="10"/>
+    </g>
     <symbol id="ex3-before" viewBox="0 0 120 120">
-      <use href="#chairBase"/>
+      <use href="#chairTopBase"/>
       <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="62" y1="74" x2="88" y2="74"/>
-        <line x1="88" y1="74" x2="88" y2="101"/>
-        <line x1="88" y1="101" x2="97" y2="101"/>
-        <line x1="62" y1="48" x2="76" y2="48"/>
-        <line x1="62" y1="60" x2="76" y2="60"/>
+        <line x1="52" y1="72" x2="60" y2="84"/>
+        <line x1="68" y1="72" x2="60" y2="84"/>
       </g>
-      <circle cx="62" cy="24" r="11" fill="currentColor"/>
-      <rect x="54" y="35" width="16" height="41" rx="8" fill="currentColor"/>
-      <circle cx="80" cy="54" r="15" stroke="currentColor" stroke-width="5" fill="none"/>
+      <circle cx="60" cy="32" r="11" fill="currentColor"/>
+      <rect x="49" y="46" width="22" height="30" rx="11" fill="currentColor"/>
+      <circle cx="60" cy="92" r="14" stroke="currentColor" stroke-width="5" fill="none"/>
     </symbol>
     <symbol id="ex3-after" viewBox="0 0 120 120">
-      <use href="#chairBase"/>
+      <use href="#chairTopBase"/>
       <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="62" y1="74" x2="88" y2="74"/>
-        <line x1="88" y1="74" x2="88" y2="101"/>
-        <line x1="88" y1="101" x2="97" y2="101"/>
-        <line x1="62" y1="42" x2="90" y2="32"/>
-        <line x1="62" y1="62" x2="90" y2="72"/>
+        <line x1="52" y1="68" x2="84" y2="58"/>
+        <line x1="68" y1="72" x2="90" y2="80"/>
       </g>
-      <circle cx="62" cy="24" r="11" fill="currentColor"/>
-      <rect x="54" y="35" width="16" height="41" rx="8" fill="currentColor"/>
-      <circle cx="98" cy="52" r="15" stroke="currentColor" stroke-width="5" fill="none"/>
+      <circle cx="60" cy="32" r="11" fill="currentColor"/>
+      <rect x="49" y="46" width="22" height="30" rx="11" fill="currentColor"/>
+      <circle cx="94" cy="68" r="14" stroke="currentColor" stroke-width="5" fill="none"/>
     </symbol>
 
     <!-- 4: 椅子に浅く座り、ボールを抱えて体を倒す。
-         before = 上体をまっすぐ起こしてボールを抱えた姿勢
-         after  = 上体を横に倒した姿勢 -->
+         before = 体をまっすぐ起こし、ボールを正面で抱えた姿勢
+         after  = 体ごとボールを横に倒した姿勢 (頭・胴体・ボールがそろって横へ動く) -->
     <symbol id="ex4-before" viewBox="0 0 120 120">
-      <use href="#chairBase"/>
+      <use href="#chairTopBase"/>
       <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="62" y1="74" x2="88" y2="74"/>
-        <line x1="88" y1="74" x2="88" y2="101"/>
-        <line x1="88" y1="101" x2="97" y2="101"/>
-        <line x1="62" y1="48" x2="76" y2="48"/>
-        <line x1="62" y1="60" x2="76" y2="60"/>
+        <line x1="52" y1="72" x2="60" y2="84"/>
+        <line x1="68" y1="72" x2="60" y2="84"/>
       </g>
-      <circle cx="62" cy="24" r="11" fill="currentColor"/>
-      <rect x="54" y="35" width="16" height="41" rx="8" fill="currentColor"/>
-      <circle cx="80" cy="54" r="15" stroke="currentColor" stroke-width="5" fill="none"/>
+      <circle cx="60" cy="32" r="11" fill="currentColor"/>
+      <rect x="49" y="46" width="22" height="30" rx="11" fill="currentColor"/>
+      <circle cx="60" cy="92" r="14" stroke="currentColor" stroke-width="5" fill="none"/>
     </symbol>
     <symbol id="ex4-after" viewBox="0 0 120 120">
-      <use href="#chairBase"/>
+      <use href="#chairTopBase"/>
       <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="62" y1="74" x2="88" y2="74"/>
-        <line x1="88" y1="74" x2="88" y2="101"/>
-        <line x1="88" y1="101" x2="97" y2="101"/>
+        <line x1="78" y1="80" x2="86" y2="92"/>
+        <line x1="94" y1="80" x2="86" y2="92"/>
       </g>
-      <g transform="rotate(30 62 76)">
-        <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="62" y1="46" x2="78" y2="44"/>
-          <line x1="62" y1="58" x2="78" y2="64"/>
-        </g>
-        <circle cx="62" cy="24" r="11" fill="currentColor"/>
-        <rect x="54" y="35" width="16" height="41" rx="8" fill="currentColor"/>
-        <circle cx="82" cy="54" r="15" stroke="currentColor" stroke-width="5" fill="none"/>
-      </g>
+      <circle cx="86" cy="40" r="11" fill="currentColor"/>
+      <rect x="75" y="54" width="22" height="30" rx="11" fill="currentColor"/>
+      <circle cx="86" cy="100" r="14" stroke="currentColor" stroke-width="5" fill="none"/>
     </symbol>
 
     <!-- 5: 椅子に浅く座り、ボールを持って上げ下げする。
