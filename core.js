@@ -113,6 +113,18 @@
     return { current: current, total: total };
   }
 
+  /**
+   * 進捗バー用に「終わったぶん」の割合 (0〜1) を返す。
+   * 表示中のステップはまだ終わっていないので数えない
+   * — 最初のステップを開いた時点でバーが伸びていると、
+   *   何もしていないのに進んだように見えてしまう。
+   */
+  function sessionRatio(session) {
+    const total = session.steps.length;
+    if (total === 0) return 0;
+    return Math.min(session.index, total) / total;
+  }
+
   return {
     WARMUP_NOTE: WARMUP_NOTE,
     SIDE_LABELS: SIDE_LABELS,
@@ -124,6 +136,7 @@
     advanceSession: advanceSession,
     retreatSession: retreatSession,
     sessionProgress: sessionProgress,
+    sessionRatio: sessionRatio,
     sideLabel: sideLabel
   };
 });

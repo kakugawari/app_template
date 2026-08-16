@@ -121,3 +121,30 @@ test('sessionProgress は 1 始まりで、途中経過を正しく返す', () =
   const session = Core.createSession(Core.DEFAULT_EXERCISES);
   assert.deepStrictEqual(Core.sessionProgress(session), { current: 1, total: 10 });
 });
+
+test('sessionRatio は最初のステップでは 0 (まだ何も終わっていない)', () => {
+  const session = Core.createSession(Core.DEFAULT_EXERCISES);
+  assert.strictEqual(Core.sessionRatio(session), 0);
+});
+
+test('sessionRatio は終わったステップ数ぶんだけ増える', () => {
+  const exercises = [
+    { name: 'A', reps: 10, sides: null },
+    { name: 'B', reps: 10, sides: null },
+    { name: 'C', reps: 10, sides: null },
+    { name: 'D', reps: 10, sides: null }
+  ];
+  let session = Core.createSession(exercises);
+  assert.strictEqual(Core.sessionRatio(session), 0);
+  session = Core.advanceSession(session);
+  assert.strictEqual(Core.sessionRatio(session), 0.25);
+  session = Core.advanceSession(session);
+  assert.strictEqual(Core.sessionRatio(session), 0.5);
+});
+
+test('sessionRatio は最後まで進むと 1 になり、それ以上増えない', () => {
+  let session = Core.createSession(Core.DEFAULT_EXERCISES);
+  const total = session.steps.length;
+  for (let i = 0; i < total + 5; i++) session = Core.advanceSession(session);
+  assert.strictEqual(Core.sessionRatio(session), 1);
+});

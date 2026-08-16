@@ -131,6 +131,14 @@ async function run() {
     });
 
     section('準備画面 → 実行画面');
+    // 隠れているボタンは大きさが 0 になるので、その画面が出ているうちに測る。
+    const startSize = await phone.evaluate(() => {
+      const r = document.getElementById('btnStart').getBoundingClientRect();
+      return { w: Math.round(r.width), h: Math.round(r.height) };
+    });
+    ok(startSize.h >= 44 && startSize.w >= 44,
+      `はじめるボタンが 44px 以上 (${startSize.w}x${startSize.h})`);
+
     await phone.locator('#btnStart').tap();
     await phone.waitForTimeout(120);
     const firstStep = Object.assign(await shownFlags(), await phone.evaluate(() => ({
@@ -143,6 +151,46 @@ async function run() {
     ok(firstStep.progress === '1 / 10', `進捗が 1 / 10 から始まる (${firstStep.progress})`);
     ok(!firstStep.sideShown, `1 種目め (両足そろえて振る動き) では側バッジが出ない (${firstStep.side})`);
     ok(firstStep.reps === '20', `回数が 20 と出る (${firstStep.reps})`);
+
+    section('進捗バー・タップ領域・読み上げ');
+    const barAtStart = await phone.evaluate(() =>
+      document.getElementById('progressBarFill').getBoundingClientRect().width);
+    ok(barAtStart < 1, `最初のステップではバーが伸びていない (${Math.round(barAtStart)}px)`);
+
+    await phone.locator('#btnDone').tap();
+    await phone.waitForTimeout(300);
+    const barAfterOne = await phone.evaluate(() => ({
+      fill: document.getElementById('progressBarFill').getBoundingClientRect().width,
+      track: document.querySelector('.progressBar').getBoundingClientRect().width
+    }));
+    ok(barAfterOne.fill > 1 && barAfterOne.fill < barAfterOne.track,
+      `1 つ進めるとバーが少しだけ伸びる (${Math.round(barAfterOne.fill)} / ${Math.round(barAfterOne.track)}px)`);
+    await phone.locator('#btnBack').tap();
+    await phone.waitForTimeout(300);
+
+    // 指で押す目安の 44px。小さいと押しそこねる。
+    const tapSizes = await phone.evaluate(() =>
+      ['btnBack', 'btnDone', 'btnRestart'].map((id) => {
+        const el = document.getElementById(id);
+        const r = el.getBoundingClientRect();
+        return { id: id, w: Math.round(r.width), h: Math.round(r.height) };
+      }));
+    const tooSmall = tapSizes.filter((b) => b.h < 44 || b.w < 44);
+    ok(tooSmall.length === 0,
+      tooSmall.length ? '44px 未満のボタン: ' + JSON.stringify(tooSmall)
+                      : `ボタンが全部 44px 以上 (${tapSizes.map((b) => b.id + ' ' + b.h).join(', ')})`);
+
+    const live = await phone.evaluate(() => {
+      const el = document.querySelector('#screenRun [aria-live]');
+      if (!el) return null;
+      return {
+        value: el.getAttribute('aria-live'),
+        hasName: el.contains(document.getElementById('exerciseName')),
+        hasButton: !!el.querySelector('button')
+      };
+    });
+    ok(live && live.value === 'polite' && live.hasName && !live.hasButton,
+      '種目名まわりが読み上げ対象になっていて、ボタンは含まれていない');
 
     section('もどるで1つ前のステップに、最初のステップからは準備画面に戻る');
     await phone.locator('#btnDone').tap();

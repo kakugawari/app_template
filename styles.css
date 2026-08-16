@@ -93,6 +93,9 @@ body {
   padding: 9px 16px;
   cursor: pointer;
   transition: transform .08s ease, border-color .15s ease;
+  /* 指で押す目安の 44px を下回らないようにする */
+  min-height: 44px;
+  min-width: 44px;
 }
 
 .btn:hover { border-color: var(--accent-2); }
@@ -192,6 +195,35 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* 残りがどれくらいかを一目で見せるバー。数はすぐ上の文字が受け持つ。 */
+.progressBar {
+  width: 100%;
+  max-width: 15em;
+  height: 8px;
+  background: var(--bg);
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progressBarFill {
+  height: 100%;
+  width: 0;
+  background: var(--accent);
+  border-radius: 999px;
+  transition: width .2s ease;
+}
+
+/* 種目名・左右・回数のまとまり。.screen 直下から1階層深くなるぶん、
+   同じ間隔を自前で持たせて見た目を変えない。 */
+.stepInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
 .exerciseName {
   margin: 0;
   font-size: 21px;
@@ -241,4 +273,5 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   * { transition-duration: .01ms !important; animation: none !important; }
+  .progressBarFill { transition: none; }
 }

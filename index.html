@@ -340,9 +340,18 @@
         <svg class="illustration" id="illustrationAfter" aria-hidden="true"><use id="illustrationAfterUse" href="#ex0-after"></use></svg>
       </div>
       <p class="progress" id="progress">— / —</p>
-      <p class="exerciseName" id="exerciseName">—</p>
-      <p class="side" id="side">—</p>
-      <p class="reps"><span id="reps">—</span><span class="repsUnit">回</span></p>
+      <!-- バーは「6 / 10」の文字と同じことを絵で見せるだけなので、
+           読み上げからは外す (二重に読まれるのを防ぐ)。 -->
+      <div class="progressBar" aria-hidden="true">
+        <div class="progressBarFill" id="progressBarFill"></div>
+      </div>
+      <!-- 種目が変わったことを読み上げに知らせる。ボタンまで含めると
+           押すたびに全部読まれてうるさいので、変わる中身だけを囲う。 -->
+      <div class="stepInfo" aria-live="polite">
+        <p class="exerciseName" id="exerciseName">—</p>
+        <p class="side" id="side">—</p>
+        <p class="reps"><span id="reps">—</span><span class="repsUnit">回</span></p>
+      </div>
       <div class="actions">
         <button type="button" id="btnBack" class="btn">もどる</button>
         <button type="button" id="btnDone" class="btn btn-primary">できた</button>

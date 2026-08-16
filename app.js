@@ -15,6 +15,7 @@
     screenDone: document.getElementById('screenDone'),
     warmupText: document.getElementById('warmupText'),
     progress: document.getElementById('progress'),
+    progressBarFill: document.getElementById('progressBarFill'),
     illustrationBefore: document.getElementById('illustrationBefore'),
     illustrationBeforeUse: document.getElementById('illustrationBeforeUse'),
     illustrationAfter: document.getElementById('illustrationAfter'),
@@ -48,6 +49,7 @@
       const step = C.currentStep(state.session);
       const progress = C.sessionProgress(state.session);
       els.progress.textContent = progress.current + ' / ' + progress.total;
+      els.progressBarFill.style.width = (C.sessionRatio(state.session) * 100) + '%';
       els.illustrationBeforeUse.setAttribute('href', '#ex' + step.exerciseIndex + '-before');
       els.illustrationAfterUse.setAttribute('href', '#ex' + step.exerciseIndex + '-after');
       const mirror = step.side === 'right';
