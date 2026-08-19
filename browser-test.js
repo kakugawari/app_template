@@ -421,6 +421,43 @@ async function run() {
       await themed.close();
     }
 
+    // ------------------------------------------------ ステップをまたいだ位置の固定
+    section('どのステップでもカードの高さと回数の位置が変わらない');
+    {
+      const walk = await browser.newContext({ ...devices['iPhone 13'] });
+      const page = await walk.newPage();
+      page.on('pageerror', (e) => errors.push('walk: ' + e.message));
+      await page.goto(URL);
+      await page.waitForFunction(() => window.__app);
+      await page.locator('#btnStart').tap();
+
+      const seen = [];
+      for (let i = 0; i < 10; i++) {
+        await page.waitForTimeout(60);
+        seen.push(await page.evaluate(() => {
+          const box = (s) => document.querySelector(s).getBoundingClientRect();
+          return {
+            n: document.getElementById('progress').textContent.trim(),
+            card: Math.round(box('#screenRun').height),
+            side: Math.round(box('#side').height),
+            repsY: Math.round(box('.reps').y)
+          };
+        }));
+        if (i < 9) await page.locator('#btnDone').tap();
+      }
+
+      // 側バッジは中身が「左足」でも空でも同じ高さでなければならない。
+      // ここが変わるとカードが伸び縮みし、下にある回数が動く
+      // (iOS ではそのずれが古い描画の残りとして「20 が二重」に見えた)。
+      const sideHeights = [...new Set(seen.map((s) => s.side))];
+      const cardHeights = [...new Set(seen.map((s) => s.card))];
+      const repsTops = [...new Set(seen.map((s) => s.repsY))];
+      ok(sideHeights.length === 1, `側バッジの高さが全ステップで同じ (${sideHeights.join(' / ')}px)`);
+      ok(cardHeights.length === 1, `カードの高さが全ステップで同じ (${cardHeights.join(' / ')}px)`);
+      ok(repsTops.length === 1, `回数の縦位置が全ステップで同じ (${repsTops.join(' / ')}px)`);
+      await walk.close();
+    }
+
     // ------------------------------------------------ 横向き
     section('横向きでも「できた」が画面に収まる');
     {

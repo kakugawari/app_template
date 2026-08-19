@@ -242,6 +242,9 @@ body {
   font-size: 21px;
   font-weight: 800;
   line-height: 1.6;
+  /* 1 行で収まる種目名でも 2 行ぶんの場所を取っておく。
+     行数でカードの高さが変わると、ステップを進めるたびに下が動く。 */
+  min-height: 3.2em;
 }
 
 .side {
@@ -254,6 +257,10 @@ body {
   background: var(--accent);
   border-radius: 999px;
   padding: 4px 18px;
+  /* 中身が「左足」でも、空 (visibility: hidden 用の空白) でも同じ高さにする。
+     line-height を決めずにおくと行の高さが字の形で決まり、
+     側バッジのあるステップだけカードが 2px 伸びて、下にある回数まで動く。 */
+  line-height: 18px;
 }
 
 /* display:none で高さごと消すと、側バッジの有無でカードの高さが変わり
@@ -290,13 +297,13 @@ body {
   #stage { padding: 12px; }
 
   .screen {
-    padding: 16px 24px;
-    gap: 10px;
+    padding: 12px 24px;
+    gap: 8px;
   }
 
   .illustrationRow .illustration {
-    width: 84px;
-    height: 84px;
+    width: 72px;
+    height: 72px;
   }
 
   .stepInfo { gap: 10px; }
