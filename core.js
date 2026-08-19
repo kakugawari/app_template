@@ -22,6 +22,17 @@
 
   const SIDE_LABELS = { left: '左', right: '右' };
 
+  /**
+   * イラストのコマ割り。`ex<種目番号>-<コマ名>` の symbol を順に見せる。
+   *
+   * 既定は「はじめ → 動いた先」の 2 コマ。
+   * 左右に振る種目は、真ん中を通って反対側へ行くのが本当の動きなので、
+   * 真ん中 → 左 → 真ん中 → 右 の 4 コマで一周させる。真ん中を挟まずに
+   * 左 → 右 とつなぐと、通り道を飛ばして瞬間移動するように見えてしまう。
+   */
+  const DEFAULT_FRAMES = ['before', 'after'];
+  const SWING_FRAMES = ['center', 'left', 'center', 'right'];
+
   // 左右のある種目は sides に ['left', 'right'] (または指定された順) を、無いものは null を入れる。
   // sideNoun を付けると「左足」のように部位つきで表示する (省略すると「左」だけ)。
   // 扇風機の首振りや振り子のように、両足(両手)をくっつけたまま左右へ振り続け、
@@ -51,8 +62,18 @@
         right: '右向きに寝て、右手を伸ばして開く・閉じる'
       }
     },
-    { name: '椅子に浅く座り、バランスボールを抱えて体をひねる', reps: 20, sides: null },
-    { name: '椅子に浅く座り、バランスボールを抱えて体を倒す', reps: 20, sides: null },
+    {
+      name: '椅子に浅く座り、バランスボールを抱えて体をひねる',
+      reps: 20,
+      sides: null,
+      frames: SWING_FRAMES
+    },
+    {
+      name: '椅子に浅く座り、バランスボールを抱えて体を倒す',
+      reps: 20,
+      sides: null,
+      frames: SWING_FRAMES
+    },
     { name: '椅子に浅く座り、バランスボールを持って上げ下げする', reps: 20, sides: null },
     { name: '椅子に浅く座り、トゲトゲボールを足で踏んで転がす', reps: 20, sides: ['left', 'right'], sideNoun: '足' }
   ];
@@ -69,7 +90,8 @@
           name: name,
           reps: exercise.reps,
           side: side,
-          sideNoun: exercise.sideNoun || ''
+          sideNoun: exercise.sideNoun || '',
+          frames: exercise.frames || DEFAULT_FRAMES
         });
       });
     });
@@ -80,6 +102,16 @@
   function sideLabel(step) {
     if (!step.side) return null;
     return SIDE_LABELS[step.side] + (step.sideNoun || '');
+  }
+
+  /**
+   * コマ割りから、重複を取り除いて出てきた順に並べたもの。
+   * 動きを止めて横に並べるときに使う (真ん中を 2 回並べても意味がないため)。
+   */
+  function uniqueFrames(frames) {
+    return frames.filter(function (frame, i) {
+      return frames.indexOf(frame) === i;
+    });
   }
 
   function createSession(exercises) {
@@ -137,6 +169,9 @@
     retreatSession: retreatSession,
     sessionProgress: sessionProgress,
     sessionRatio: sessionRatio,
-    sideLabel: sideLabel
+    sideLabel: sideLabel,
+    DEFAULT_FRAMES: DEFAULT_FRAMES,
+    SWING_FRAMES: SWING_FRAMES,
+    uniqueFrames: uniqueFrames
   };
 });

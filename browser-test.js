@@ -192,46 +192,132 @@ async function run() {
     ok(live && live.value === 'polite' && live.hasName && !live.hasButton,
       '種目名まわりが読み上げ対象になっていて、ボタンは含まれていない');
 
-    section('2 コマがパラパラ漫画のように入れ替わる');
-    // 2 コマが同じ場所に重なっていること (横に並んでいない)
+    section('コマがパラパラ漫画のように入れ替わる');
+    // どの種目でも「今どのコマが見えているか」を読む道具
+    const readFrames = () => phone.evaluate(() => Array.from(
+      document.querySelectorAll('#illustrationRow .illustration'),
+      (el) => ({
+        frame: el.querySelector('use').getAttribute('href'),
+        opacity: Number(getComputedStyle(el).opacity)
+      })));
+    const shownFrame = (frames) => (frames.find((f) => f.opacity > 0.9) || {}).frame;
+
+    // コマが同じ場所に重なっていること (横に並んでいない)
     const stacked = await phone.evaluate(() => {
-      const a = document.getElementById('illustrationBefore').getBoundingClientRect();
-      const b = document.getElementById('illustrationAfter').getBoundingClientRect();
+      const els = document.querySelectorAll('#illustrationRow .illustration');
+      const boxes = Array.from(els, (el) => el.getBoundingClientRect());
       return {
-        sameSpot: Math.abs(a.x - b.x) < 1 && Math.abs(a.y - b.y) < 1,
-        w: Math.round(a.width),
-        arrowShown: getComputedStyle(document.querySelector('.illustrationArrow')).display !== 'none'
+        n: els.length,
+        sameSpot: boxes.every((b) => Math.abs(b.x - boxes[0].x) < 1 && Math.abs(b.y - boxes[0].y) < 1),
+        w: Math.round(boxes[0].width),
+        arrows: document.querySelectorAll('#illustrationRow .illustrationArrow').length
       };
     });
-    ok(stacked.sameSpot, `2 コマが同じ場所に重なっている (${stacked.w}px)`);
-    ok(!stacked.arrowShown, '重ねているあいだは矢印が出ない');
+    ok(stacked.sameSpot, `コマが同じ場所に重なっている (${stacked.n} コマ / ${stacked.w}px)`);
+    ok(stacked.arrows === 0, '重ねているあいだは矢印を置かない');
     ok(stacked.w >= 120, `1 コマが横並びのときより大きい (${stacked.w}px)`);
 
     // 1 コマぶんの時間をはさんで濃さを測り、実際に入れ替わるか見る。
     // 「アニメーションを作った」ではなく「絵が入れ替わった」ことを確かめる。
     const flipMs = await phone.evaluate(() => window.__app.flipMs);
-    const readFrames = () => phone.evaluate(() => [
-      Number(getComputedStyle(document.getElementById('illustrationBefore')).opacity),
-      Number(getComputedStyle(document.getElementById('illustrationAfter')).opacity)
-    ]);
     await phone.waitForTimeout(Math.round(flipMs * 0.3));
     const frame1 = await readFrames();
     await phone.waitForTimeout(flipMs);
     const frame2 = await readFrames();
-    ok(frame1[0] > 0.9 && frame1[1] < 0.1,
-      `1 コマめは before だけが見えている (${frame1.join(' / ')})`);
-    ok(frame2[0] < 0.1 && frame2[1] > 0.9,
-      `${flipMs}ms 後に after へ入れ替わっている (${frame2.join(' / ')})`);
+    ok(shownFrame(frame1) === '#ex0-before', `1 コマめは before (${shownFrame(frame1)})`);
+    ok(shownFrame(frame2) === '#ex0-after', `${flipMs}ms 後に after へ入れ替わる (${shownFrame(frame2)})`);
 
-    // ステップが変わったら 1 コマめから始まる (途中の after から始まらない)
-    await phone.waitForTimeout(Math.round(flipMs * 0.6)); // after を見ている最中に進める
+    // ステップが変わったら 1 コマめから始まる (途中のコマから始まらない)
+    await phone.waitForTimeout(Math.round(flipMs * 0.6)); // 2 コマめを見ている最中に進める
     await phone.locator('#btnDone').tap();
     await phone.waitForTimeout(80);
-    const afterAdvance = await readFrames();
-    ok(afterAdvance[0] > 0.9 && afterAdvance[1] < 0.1,
-      `次のステップは必ず before から始まる (${afterAdvance.join(' / ')})`);
+    ok(shownFrame(await readFrames()) === '#ex1-before',
+      '次のステップは必ず 1 コマめから始まる');
     await phone.locator('#btnBack').tap();
     await phone.waitForTimeout(60);
+
+    section('ひねる・倒すは 真ん中 → 左 → 真ん中 → 右 の 4 コマ');
+    // 6 種目め (ひねる) まで進める。1 コマめの index は 0
+    for (let i = 0; i < 5; i++) await phone.locator('#btnDone').tap();
+    await phone.waitForTimeout(80);
+    const swingName = await phone.evaluate(() => document.getElementById('exerciseName').textContent);
+    ok(swingName.includes('ひねる'), `6 番目は「ひねる」(${swingName})`);
+
+    const swingFrames = await readFrames();
+    ok(swingFrames.length === 4,
+      `4 コマ並んでいる (${swingFrames.map((f) => f.frame).join(' ')})`);
+    ok(swingFrames.map((f) => f.frame).join(' ')
+        === '#ex3-center #ex3-left #ex3-center #ex3-right',
+      '真ん中 → 左 → 真ん中 → 右 の順に並んでいる');
+
+    // 1 コマずつ追いかけて、本当にこの順で見えるか確かめる
+    const seen = [];
+    for (let i = 0; i < 4; i++) {
+      seen.push(shownFrame(await readFrames()));
+      await phone.waitForTimeout(flipMs);
+    }
+    ok(seen.join(' ') === '#ex3-center #ex3-left #ex3-center #ex3-right',
+      `見えた順が 真ん中→左→真ん中→右 (${seen.map((s) => String(s).replace('#ex3-', '')).join(' → ')})`);
+
+    // 7 種目め (倒す) も同じ 4 コマ
+    await phone.locator('#btnDone').tap();
+    await phone.waitForTimeout(80);
+    const leanFrames = await readFrames();
+    ok(leanFrames.map((f) => f.frame).join(' ')
+        === '#ex4-center #ex4-left #ex4-center #ex4-right',
+      '7 番目 (倒す) も 真ん中 → 左 → 真ん中 → 右');
+
+    // 頭が肩に食われていないこと。
+    // 座標を見比べるだけでは、回した肩の「端」が頭に乗り上げるのを見逃す。
+    // 頭だけを外した絵を実際に描かせて、頭のあった丸の中に体の墨が
+    // 1 粒でも入っていないかを数える。家具は薄いので数えない。
+    const HEAD_MARGIN = 2; // 頭のふちからこれだけは空けたい
+    const headRoom = await phone.evaluate(async (args) => {
+      const sprite = document.getElementById('sprite').innerHTML;
+      const inkNearHead = (id) => new Promise((resolve) => {
+        const sym = document.getElementById(id).cloneNode(true);
+        const head = sym.querySelector(':scope > circle');
+        if (!head) return resolve({ error: '頭が見つからない' });
+        const hx = Number(head.getAttribute('cx'));
+        const hy = Number(head.getAttribute('cy'));
+        const hr = Number(head.getAttribute('r')) + args.margin;
+        head.remove(); // 頭を外し、体だけを描く
+
+        const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"'
+          + ' viewBox="0 0 120 120" style="color:#000">' + sprite + sym.innerHTML + '</svg>';
+        const img = new Image();
+        img.onload = () => {
+          const c = document.createElement('canvas');
+          c.width = 120;
+          c.height = 120;
+          const g = c.getContext('2d');
+          g.drawImage(img, 0, 0);
+          const px = g.getImageData(0, 0, 120, 120).data;
+          let hits = 0;
+          for (let y = 0; y < 120; y++) {
+            for (let x = 0; x < 120; x++) {
+              if ((x - hx) * (x - hx) + (y - hy) * (y - hy) > hr * hr) continue;
+              if (px[(y * 120 + x) * 4 + 3] > 200) hits++; // 家具 (opacity .45) は数えない
+            }
+          }
+          resolve({ hits: hits });
+        };
+        img.onerror = () => resolve({ error: '描けなかった' });
+        img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+      });
+      const out = {};
+      for (const id of args.ids) out[id] = await inkNearHead(id);
+      return out;
+    }, { ids: ['ex3-center', 'ex3-left', 'ex3-right'], margin: HEAD_MARGIN });
+
+    const headHits = Object.keys(headRoom)
+      .map((k) => k.replace('ex3-', '') + ':' + (headRoom[k].error || headRoom[k].hits));
+    ok(Object.values(headRoom).every((r) => r.hits === 0),
+      `ひねる 3 コマとも、頭の周りに体が入り込んでいない (${headHits.join(' ')})`);
+
+    await phone.locator('#btnRestart').tap();
+    await phone.locator('#btnStart').tap();
+    await phone.waitForTimeout(80);
 
     section('もどるで1つ前のステップに、最初のステップからは準備画面に戻る');
     await phone.locator('#btnDone').tap();
@@ -366,23 +452,29 @@ async function run() {
       await page.waitForFunction(() => window.__app);
       await page.locator('#btnStart').tap();
       await page.waitForTimeout(1400); // 切り替わるなら十分な時間だけ待つ
-      const calmView = await page.evaluate(() => {
-        const a = document.getElementById('illustrationBefore');
-        const b = document.getElementById('illustrationAfter');
-        const ra = a.getBoundingClientRect();
-        const rb = b.getBoundingClientRect();
+      const calmShots = () => page.evaluate(() => {
+        const els = Array.from(document.querySelectorAll('#illustrationRow .illustration'));
+        const boxes = els.map((el) => el.getBoundingClientRect());
         return {
-          opacity: [Number(getComputedStyle(a).opacity), Number(getComputedStyle(b).opacity)],
-          sideBySide: rb.x > ra.x + ra.width - 1,
-          arrowShown: getComputedStyle(document.querySelector('.illustrationArrow')).display !== 'none',
+          frames: els.map((el) => el.querySelector('use').getAttribute('href')),
+          allShown: els.every((el) => Number(getComputedStyle(el).opacity) > 0.9),
+          sideBySide: boxes.every((b, i) => i === 0 || b.x > boxes[i - 1].x + boxes[i - 1].width - 1),
+          arrows: document.querySelectorAll('#illustrationRow .illustrationArrow').length,
           animations: document.getAnimations().length
         };
       });
-      ok(calmView.opacity[0] > 0.9 && calmView.opacity[1] > 0.9,
-        `2 コマとも消えずに出ている (${calmView.opacity.join(' / ')})`);
-      ok(calmView.sideBySide, '2 コマが横に並んでいる');
-      ok(calmView.arrowShown, '2 コマをつなぐ矢印が出ている');
+      const calmView = await calmShots();
+      ok(calmView.allShown, `コマがどれも消えずに出ている (${calmView.frames.length} コマ)`);
+      ok(calmView.sideBySide, 'コマが横に並んでいる');
+      ok(calmView.arrows === calmView.frames.length - 1, 'コマとコマのあいだに矢印が入っている');
       ok(calmView.animations === 0, `動くものが 1 つも走っていない (${calmView.animations} 件)`);
+
+      // 4 コマの種目は、同じ絵を 2 度並べず 真ん中・左・右 の 3 枚にする
+      for (let i = 0; i < 5; i++) await page.locator('#btnDone').tap();
+      await page.waitForTimeout(80);
+      const calmSwing = await calmShots();
+      ok(calmSwing.frames.join(' ') === '#ex3-center #ex3-left #ex3-right',
+        `4 コマの種目は重複を除いた 3 枚で並ぶ (${calmSwing.frames.join(' ')})`);
       await calm.close();
     }
 

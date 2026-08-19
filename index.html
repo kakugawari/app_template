@@ -17,7 +17,7 @@
 
 <!-- イラストの元。線画のピクトグラムを symbol にまとめておき、
      各画面では <use> で呼び出すだけにする(色はテーマの currentColor に追従)。 -->
-<svg style="display:none" aria-hidden="true">
+<svg id="sprite" style="display:none" aria-hidden="true">
   <defs>
 
     <symbol id="iconWarmup" viewBox="0 0 120 120">
@@ -44,11 +44,15 @@
            人   = 塗りつぶし (頭・胴体) + 太い線 (手足)。腕は必ず1本描く
            道具 = 濃い輪郭線 (使っているボール)
            家具 = 細く薄い線 (椅子・床)。これで椅子と体が混ざらない
-         各種目は before (はじめの姿勢) と after (動いた先の姿勢) の
-         2つ1組。頭・胴体・家具は動かさず、手足とボールだけを動かして
+         1つの種目は複数のコマでできている。既定は before (はじめの姿勢) と
+         after (動いた先の姿勢) の2つ1組。左右に振る種目だけは
+         center / left / right の3枚を使い、真ん中→左→真ん中→右 と回す
+         (コマの並べ方は core.js の SWING_FRAMES が決める)。
+         どのコマでも頭・胴体・家具は動かさず、手足とボールだけを動かして
          対にする — バラバラに描くと同じ人に見えなくなる。 -->
 
-    <!-- 矢印。before → after のあいだに置く -->
+    <!-- 矢印。コマを切り替えず横に並べるとき (動きを減らす設定) だけ、
+         コマとコマのあいだに置く -->
     <symbol id="iconArrow" viewBox="0 0 40 40">
       <path d="M4,20 L32,20 M22,10 L32,20 L22,30" stroke="currentColor" stroke-width="5"
         fill="none" stroke-linecap="round" stroke-linejoin="round"/>
@@ -168,45 +172,49 @@
     </symbol>
 
     <!-- 3: 椅子に浅く座り、ボールを抱えて体をひねる。
-         真上から見た構図。扇風機の首振りのように、肩幅の板 (肩の線) ごと
-         回るのがこの種目の動き。頭と椅子は動かさず、肩から下だけを回す。
-         before = 正面を向いた姿勢
-         after  = 肩の線ごと横を向いた姿勢 -->
+         真上から見た構図。扇風機の首振りのように、肩の線ごと左右に回る。
+         頭と椅子は動かさず、肩から下だけを回す。
+
+         頭は上に離して置く。真上から見れば頭は背骨の真上 (= 肩の線の中央) に
+         あるはずだが、そこに重ねて描くと頭と肩がひと塊になって人に見えない。
+         そのかわり、回した肩の端が頭に届かない寸法にしてある:
+           肩の長さ 40 (端の丸の中心は中央から 13)、回す角 30 度、頭は cy=24 r=10
+           → 端の丸の中心は (48.7, 44.5)、頭の中心から 23.4 離れる。
+             頭 10 + 端の丸 7 = 17 なので 6 ほど空く。
+         肩を長くする・角を大きくする・頭を下げると、この余りが尽きて
+         頭が肩に食われる。動かすときは上の計算をやり直すこと。 -->
     <g id="chairTopBase" stroke="currentColor" stroke-width="4" opacity=".45"
        fill="none" stroke-linecap="round">
       <rect x="24" y="42" width="72" height="66" rx="10"/>
     </g>
-    <symbol id="ex3-before" viewBox="0 0 120 120">
-      <use href="#chairTopBase"/>
-      <circle cx="60" cy="30" r="10" fill="currentColor"/>
-      <g>
-        <rect x="38" y="44" width="44" height="14" rx="7" fill="currentColor"/>
-        <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round">
-          <line x1="42" y1="58" x2="48" y2="74"/>
-          <line x1="78" y1="58" x2="72" y2="74"/>
-        </g>
-        <circle class="ball" cx="60" cy="80" r="15" stroke="currentColor" stroke-width="5"/>
+    <!-- 回す中身。肩・腕・ボールをひとまとめにして 3 つの姿勢で使い回す -->
+    <g id="ex3Body">
+      <rect x="40" y="44" width="40" height="14" rx="7" fill="currentColor"/>
+      <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round">
+        <line x1="44" y1="58" x2="50" y2="74"/>
+        <line x1="76" y1="58" x2="70" y2="74"/>
       </g>
+      <circle class="ball" cx="60" cy="80" r="15" stroke="currentColor" stroke-width="5"/>
+    </g>
+    <symbol id="ex3-center" viewBox="0 0 120 120">
+      <use href="#chairTopBase"/>
+      <circle cx="60" cy="24" r="10" fill="currentColor"/>
+      <use href="#ex3Body"/>
     </symbol>
-    <symbol id="ex3-after" viewBox="0 0 120 120">
+    <symbol id="ex3-left" viewBox="0 0 120 120">
       <use href="#chairTopBase"/>
-      <circle cx="60" cy="30" r="10" fill="currentColor"/>
-      <g transform="rotate(38 60 51)">
-        <rect x="38" y="44" width="44" height="14" rx="7" fill="currentColor"/>
-        <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round">
-          <line x1="42" y1="58" x2="48" y2="74"/>
-          <line x1="78" y1="58" x2="72" y2="74"/>
-        </g>
-        <circle class="ball" cx="60" cy="80" r="15" stroke="currentColor" stroke-width="5"/>
-      </g>
+      <circle cx="60" cy="24" r="10" fill="currentColor"/>
+      <g transform="rotate(30 60 51)"><use href="#ex3Body"/></g>
+    </symbol>
+    <symbol id="ex3-right" viewBox="0 0 120 120">
+      <use href="#chairTopBase"/>
+      <circle cx="60" cy="24" r="10" fill="currentColor"/>
+      <g transform="rotate(-30 60 51)"><use href="#ex3Body"/></g>
     </symbol>
 
     <!-- 4: 椅子に浅く座り、ボールを抱えて体を倒す。
-         左右への傾きは真上からだと見えないので、正面から見た構図にする
-         (椅子は正面から見た形の chairFrontBase)。脚と椅子は動かさず、
-         上半身 (頭・胴体・腕・ボール) だけを腰の位置を軸に傾ける。
-         before = 上体をまっすぐ起こした姿勢
-         after  = 腰から上だけを横に倒した姿勢 -->
+         左右への傾きは真上からだと見えないので、正面から見た構図にする。
+         脚と椅子は動かさず、腰から上だけを腰の位置を軸に傾ける。 -->
     <g id="chairFrontBase" stroke="currentColor" stroke-width="4" opacity=".45"
        fill="none" stroke-linecap="round">
       <line x1="14" y1="112" x2="106" y2="112"/>
@@ -214,12 +222,8 @@
       <line x1="36" y1="94" x2="34" y2="111"/>
       <line x1="84" y1="94" x2="86" y2="111"/>
     </g>
-    <symbol id="ex4-before" viewBox="0 0 120 120">
-      <use href="#chairFrontBase"/>
-      <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="53" y1="80" x2="53" y2="94"/>
-        <line x1="67" y1="80" x2="67" y2="94"/>
-      </g>
+    <!-- 倒す中身。腰から上をひとまとめにして 3 つの姿勢で使い回す -->
+    <g id="ex4Body">
       <circle cx="60" cy="24" r="11" fill="currentColor"/>
       <rect x="48" y="38" width="24" height="42" rx="12" fill="currentColor"/>
       <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round">
@@ -227,22 +231,27 @@
         <line x1="70" y1="46" x2="75" y2="62"/>
       </g>
       <circle class="ball" cx="60" cy="64" r="15" stroke="currentColor" stroke-width="5"/>
-    </symbol>
-    <symbol id="ex4-after" viewBox="0 0 120 120">
+    </g>
+    <!-- 脚。倒しても動かさない -->
+    <g id="ex4Legs" stroke="currentColor" stroke-width="6" fill="none"
+       stroke-linecap="round" stroke-linejoin="round">
+      <line x1="53" y1="80" x2="53" y2="94"/>
+      <line x1="67" y1="80" x2="67" y2="94"/>
+    </g>
+    <symbol id="ex4-center" viewBox="0 0 120 120">
       <use href="#chairFrontBase"/>
-      <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="53" y1="80" x2="53" y2="94"/>
-        <line x1="67" y1="80" x2="67" y2="94"/>
-      </g>
-      <g transform="rotate(25 60 80)">
-        <circle cx="60" cy="24" r="11" fill="currentColor"/>
-        <rect x="48" y="38" width="24" height="42" rx="12" fill="currentColor"/>
-        <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round">
-          <line x1="50" y1="46" x2="45" y2="62"/>
-          <line x1="70" y1="46" x2="75" y2="62"/>
-        </g>
-        <circle class="ball" cx="60" cy="64" r="15" stroke="currentColor" stroke-width="5"/>
-      </g>
+      <use href="#ex4Legs"/>
+      <use href="#ex4Body"/>
+    </symbol>
+    <symbol id="ex4-left" viewBox="0 0 120 120">
+      <use href="#chairFrontBase"/>
+      <use href="#ex4Legs"/>
+      <g transform="rotate(-25 60 80)"><use href="#ex4Body"/></g>
+    </symbol>
+    <symbol id="ex4-right" viewBox="0 0 120 120">
+      <use href="#chairFrontBase"/>
+      <use href="#ex4Legs"/>
+      <g transform="rotate(25 60 80)"><use href="#ex4Body"/></g>
     </symbol>
 
     <!-- 5: 椅子に浅く座り、ボールを持って上げ下げする。
@@ -338,11 +347,8 @@
     </section>
 
     <section id="screenRun" class="screen" hidden>
-      <div class="illustrationRow" id="illustrationRow">
-        <svg class="illustration" id="illustrationBefore" aria-hidden="true"><use id="illustrationBeforeUse" href="#ex0-before"></use></svg>
-        <svg class="illustrationArrow" aria-hidden="true"><use href="#iconArrow"></use></svg>
-        <svg class="illustration" id="illustrationAfter" aria-hidden="true"><use id="illustrationAfterUse" href="#ex0-after"></use></svg>
-      </div>
+      <!-- 中身は app.js が種目のコマ割りに合わせて組み立てる (2 コマとは限らない) -->
+      <div class="illustrationRow" id="illustrationRow" aria-hidden="true"></div>
       <p class="progress" id="progress">— / —</p>
       <!-- バーは「6 / 10」の文字と同じことを絵で見せるだけなので、
            読み上げからは外す (二重に読まれるのを防ぐ)。 -->

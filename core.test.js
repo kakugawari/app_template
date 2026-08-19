@@ -148,3 +148,34 @@ test('sessionRatio は最後まで進むと 1 になり、それ以上増えな�
   for (let i = 0; i < total + 5; i++) session = Core.advanceSession(session);
   assert.strictEqual(Core.sessionRatio(session), 1);
 });
+
+test('コマ割りは既定で before → after の 2 コマ', () => {
+  const steps = Core.buildSteps([{ name: 'A', reps: 10, sides: null }]);
+  assert.deepStrictEqual(steps[0].frames, ['before', 'after']);
+});
+
+test('左右に振る種目は 真ん中 → 左 → 真ん中 → 右 の 4 コマ', () => {
+  const steps = Core.buildSteps([
+    { name: 'A', reps: 10, sides: null, frames: Core.SWING_FRAMES }
+  ]);
+  assert.deepStrictEqual(steps[0].frames, ['center', 'left', 'center', 'right']);
+});
+
+test('「ひねる」と「倒す」が 4 コマになっている', () => {
+  const steps = Core.buildSteps(Core.DEFAULT_EXERCISES);
+  const swing = steps.filter((s) => s.frames.length === 4);
+  assert.strictEqual(swing.length, 2);
+  assert.ok(swing[0].name.includes('ひねる'), swing[0].name);
+  assert.ok(swing[1].name.includes('倒す'), swing[1].name);
+});
+
+test('4 コマの往復は、真ん中を挟んで左右がそろっている', () => {
+  // 真ん中を飛ばして左 → 右 とつなぐと、通り道が抜けて瞬間移動に見える
+  assert.deepStrictEqual(Core.SWING_FRAMES, ['center', 'left', 'center', 'right']);
+  assert.strictEqual(Core.SWING_FRAMES[0], Core.SWING_FRAMES[2]);
+});
+
+test('uniqueFrames は出てきた順のまま重複だけ取り除く', () => {
+  assert.deepStrictEqual(Core.uniqueFrames(Core.SWING_FRAMES), ['center', 'left', 'right']);
+  assert.deepStrictEqual(Core.uniqueFrames(['before', 'after']), ['before', 'after']);
+});

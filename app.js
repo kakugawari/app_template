@@ -16,10 +16,7 @@
     warmupText: document.getElementById('warmupText'),
     progress: document.getElementById('progress'),
     progressBarFill: document.getElementById('progressBarFill'),
-    illustrationBefore: document.getElementById('illustrationBefore'),
-    illustrationBeforeUse: document.getElementById('illustrationBeforeUse'),
-    illustrationAfter: document.getElementById('illustrationAfter'),
-    illustrationAfterUse: document.getElementById('illustrationAfterUse'),
+    illustrationRow: document.getElementById('illustrationRow'),
     exerciseName: document.getElementById('exerciseName'),
     side: document.getElementById('side'),
     reps: document.getElementById('reps'),
@@ -50,36 +47,74 @@
     flipAnimations = [];
   }
 
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+
+  function svgUse(className, href) {
+    const svg = document.createElementNS(SVG_NS, 'svg');
+    svg.setAttribute('class', className);
+    svg.setAttribute('aria-hidden', 'true');
+    const use = document.createElementNS(SVG_NS, 'use');
+    use.setAttribute('href', href);
+    svg.appendChild(use);
+    return svg;
+  }
+
   /**
-   * 2 コマを同じ場所で切り替える。
+   * ステップのコマ割りぶんだけイラストを並べ直す。
+   *
+   * 切り替えるときは全コマを同じマスに重ね (並べる位置は CSS が受け持つ)、
+   * 動きを減らす設定のときは重複を除いたコマを矢印でつないで横に並べる。
+   */
+  function buildIllustration(step) {
+    const calm = prefersReducedMotion();
+    const frames = calm ? C.uniqueFrames(step.frames) : step.frames;
+    const mirror = step.side === 'right' ? ' mirror' : '';
+
+    els.illustrationRow.textContent = '';
+    frames.forEach(function (frame, i) {
+      if (calm && i > 0) {
+        els.illustrationRow.appendChild(svgUse('illustrationArrow', '#iconArrow'));
+      }
+      els.illustrationRow.appendChild(
+        svgUse('illustration' + mirror, '#ex' + step.exerciseIndex + '-' + frame));
+    });
+  }
+
+  /**
+   * 並べたコマを、1 コマずつ順ぐりに見せる。
    *
    * CSS アニメーションではなく element.animate() を使う。同じフレーム内で
    * 種目を差し替えると、CSS 側は途中の状態を見ないまま次の絵になってしまい、
    * コマが 1 度も切り替わらないことがあるため。
-   * ステップが変わるたびに呼び直すので、必ず 1 コマめ (before) から始まる。
+   * ステップが変わるたびに呼び直すので、必ず 1 コマめから始まる。
    */
   function startFlip() {
     stopFlip();
-    // 動きを減らす設定のときは切り替えない。CSS 側で 2 コマを横に並べている
+    // 動きを減らす設定のときは切り替えない。すでに横に並べてある
     if (prefersReducedMotion()) return;
 
-    // ぱっと切り替える (パラパラ漫画なので、間をなめらかにつながない)
-    function cut(showsFirst) {
-      const a = showsFirst ? 1 : 0;
-      const b = showsFirst ? 0 : 1;
-      return [
-        { opacity: a, offset: 0 },
-        { opacity: a, offset: 0.499 },
-        { opacity: b, offset: 0.5 },
-        { opacity: b, offset: 1 }
-      ];
-    }
+    const shots = els.illustrationRow.querySelectorAll('.illustration');
+    if (shots.length < 2) return;
 
-    const timing = { duration: FLIP_MS * 2, iterations: Infinity };
-    flipAnimations = [
-      els.illustrationBefore.animate(cut(true), timing),
-      els.illustrationAfter.animate(cut(false), timing)
-    ];
+    // ぱっと切り替える (パラパラ漫画なので、間をなめらかにつながない)。
+    // i 番めのコマは i/n 〜 (i+1)/n のあいだだけ見せる。
+    const n = shots.length;
+    const eps = 0.001 / n;
+    const timing = { duration: FLIP_MS * n, iterations: Infinity };
+
+    flipAnimations = Array.prototype.map.call(shots, function (shot, i) {
+      const from = i / n;
+      const to = (i + 1) / n;
+      const keys = [{ opacity: i === 0 ? 1 : 0, offset: 0 }];
+      if (i > 0) {
+        keys.push({ opacity: 0, offset: from - eps });
+        keys.push({ opacity: 1, offset: from });
+      }
+      keys.push({ opacity: 1, offset: to - eps });
+      keys.push({ opacity: 0, offset: to });
+      if (to < 1) keys.push({ opacity: 0, offset: 1 });
+      return shot.animate(keys, timing);
+    });
   }
 
   function render() {
@@ -99,11 +134,7 @@
       const progress = C.sessionProgress(state.session);
       els.progress.textContent = progress.current + ' / ' + progress.total;
       els.progressBarFill.style.width = (C.sessionRatio(state.session) * 100) + '%';
-      els.illustrationBeforeUse.setAttribute('href', '#ex' + step.exerciseIndex + '-before');
-      els.illustrationAfterUse.setAttribute('href', '#ex' + step.exerciseIndex + '-after');
-      const mirror = step.side === 'right';
-      els.illustrationBefore.classList.toggle('mirror', mirror);
-      els.illustrationAfter.classList.toggle('mirror', mirror);
+      buildIllustration(step);
       startFlip();
       els.exerciseName.textContent = step.name;
       els.reps.textContent = String(step.reps);
