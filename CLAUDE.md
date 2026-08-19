@@ -117,6 +117,8 @@ icon-192.png / icon-512.png
 | `hidden` 属性をつけたのに要素が消えない (複数画面が同時に見えてしまう) | 同じ要素に `display: flex` などを指定する CSS ルールが、`[hidden]` の `display: none` を上書きしていた (author の通常ルールは UA スタイルより常に優先されるため、順序やセレクタの詳細度に関係なく起きる) | `[hidden] { display: none !important; }` を1つ書いて一括で勝たせる。要素ごとに気をつけない |
 | `el.hidden` で見た目を確認したつもりが、実は画面に出たままだった | `el.hidden` は属性の有無を返すだけで、実際に描画されているかは見ていない | ブラウザテストでは `getComputedStyle(el).display` など、本当の見え方を確認する |
 | ある要素の中身が変わっただけなのに、画面全体がガクッと動く | 縦中央寄せ (`justify-content: center`) の中で、バッジの表示/非表示のように `display: none` で高さごと出し入れする要素があると、カード全体の高さが変わって再センタリングされ、無関係な要素まで動いて見える | 高さを保ったまま隠したいものは `display: none` ではなく `visibility: hidden` にする (要素は残り続けるので高さが変わらない) |
+| 「動きを減らす」設定にしているのに、絵が動き続ける | `@media (prefers-reduced-motion: reduce)` の `animation: none !important` は **CSS アニメーションにしか効かない**。`element.animate()` (Web Animations API) で動かしたものは止まらない | JS 側でも `matchMedia('(prefers-reduced-motion: reduce)').matches` を見て、動かさない道を用意する。ブラウザテストは `reducedMotion: 'reduce'` の context で `document.getAnimations().length === 0` を見張る |
+| 絵を大きくしたら、横向きのときに主要なボタンが画面の外に出た | 縦が短い画面 (横向きのスマホ) を試していなかった。縦の余白は積み上がるので、1 か所大きくすると下の要素が押し出される | `@media (max-height: ...)` で詰める。ブラウザテストで「ボタンの下端 ≤ 画面の高さ」を見張る |
 | SVG の `<use>` で呼んだ図形に CSS の色が当たらない (塗りが黒のままになる) | `<use>` の中身は影の木に複製されるため、`.illustration .ball` のように祖先をたどるセレクタは中まで届かない | クラス単独 (`.ball { … }`) で書く。または `fill` が継承される性質を使い、`<use>` 側にまとめて指定する |
 
 **新しく踏んだら、この表に足すこと。**

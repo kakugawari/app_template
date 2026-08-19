@@ -192,6 +192,47 @@ async function run() {
     ok(live && live.value === 'polite' && live.hasName && !live.hasButton,
       '種目名まわりが読み上げ対象になっていて、ボタンは含まれていない');
 
+    section('2 コマがパラパラ漫画のように入れ替わる');
+    // 2 コマが同じ場所に重なっていること (横に並んでいない)
+    const stacked = await phone.evaluate(() => {
+      const a = document.getElementById('illustrationBefore').getBoundingClientRect();
+      const b = document.getElementById('illustrationAfter').getBoundingClientRect();
+      return {
+        sameSpot: Math.abs(a.x - b.x) < 1 && Math.abs(a.y - b.y) < 1,
+        w: Math.round(a.width),
+        arrowShown: getComputedStyle(document.querySelector('.illustrationArrow')).display !== 'none'
+      };
+    });
+    ok(stacked.sameSpot, `2 コマが同じ場所に重なっている (${stacked.w}px)`);
+    ok(!stacked.arrowShown, '重ねているあいだは矢印が出ない');
+    ok(stacked.w >= 120, `1 コマが横並びのときより大きい (${stacked.w}px)`);
+
+    // 1 コマぶんの時間をはさんで濃さを測り、実際に入れ替わるか見る。
+    // 「アニメーションを作った」ではなく「絵が入れ替わった」ことを確かめる。
+    const flipMs = await phone.evaluate(() => window.__app.flipMs);
+    const readFrames = () => phone.evaluate(() => [
+      Number(getComputedStyle(document.getElementById('illustrationBefore')).opacity),
+      Number(getComputedStyle(document.getElementById('illustrationAfter')).opacity)
+    ]);
+    await phone.waitForTimeout(Math.round(flipMs * 0.3));
+    const frame1 = await readFrames();
+    await phone.waitForTimeout(flipMs);
+    const frame2 = await readFrames();
+    ok(frame1[0] > 0.9 && frame1[1] < 0.1,
+      `1 コマめは before だけが見えている (${frame1.join(' / ')})`);
+    ok(frame2[0] < 0.1 && frame2[1] > 0.9,
+      `${flipMs}ms 後に after へ入れ替わっている (${frame2.join(' / ')})`);
+
+    // ステップが変わったら 1 コマめから始まる (途中の after から始まらない)
+    await phone.waitForTimeout(Math.round(flipMs * 0.6)); // after を見ている最中に進める
+    await phone.locator('#btnDone').tap();
+    await phone.waitForTimeout(80);
+    const afterAdvance = await readFrames();
+    ok(afterAdvance[0] > 0.9 && afterAdvance[1] < 0.1,
+      `次のステップは必ず before から始まる (${afterAdvance.join(' / ')})`);
+    await phone.locator('#btnBack').tap();
+    await phone.waitForTimeout(60);
+
     section('もどるで1つ前のステップに、最初のステップからは準備画面に戻る');
     await phone.locator('#btnDone').tap();
     await phone.locator('#btnDone').tap();
@@ -292,6 +333,57 @@ async function run() {
       }));
       ok(colors.bg !== colors.fg, `${scheme}: 文字と背景の色が違う (${colors.bg} / ${colors.fg})`);
       await themed.close();
+    }
+
+    // ------------------------------------------------ 横向き
+    section('横向きでも「できた」が画面に収まる');
+    {
+      const land = await browser.newContext({
+        viewport: { width: 844, height: 390 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2
+      });
+      const page = await land.newPage();
+      page.on('pageerror', (e) => errors.push('landscape: ' + e.message));
+      await page.goto(URL);
+      await page.waitForFunction(() => window.__app);
+      await page.locator('#btnStart').tap();
+      await page.waitForTimeout(80);
+      const fit = await page.evaluate(() => {
+        const r = document.getElementById('btnDone').getBoundingClientRect();
+        return { bottom: Math.round(r.bottom), vh: window.innerHeight };
+      });
+      ok(fit.bottom <= fit.vh,
+        `できたボタンが画面の中に収まっている (下端 ${fit.bottom} / 画面 ${fit.vh})`);
+      await land.close();
+    }
+
+    // ------------------------------------------------ 動きを減らす設定
+    section('動きを減らす設定では、コマを切り替えず横に並べる');
+    {
+      const calm = await browser.newContext({ ...devices['iPhone 13'], reducedMotion: 'reduce' });
+      const page = await calm.newPage();
+      page.on('pageerror', (e) => errors.push('reduce: ' + e.message));
+      await page.goto(URL);
+      await page.waitForFunction(() => window.__app);
+      await page.locator('#btnStart').tap();
+      await page.waitForTimeout(1400); // 切り替わるなら十分な時間だけ待つ
+      const calmView = await page.evaluate(() => {
+        const a = document.getElementById('illustrationBefore');
+        const b = document.getElementById('illustrationAfter');
+        const ra = a.getBoundingClientRect();
+        const rb = b.getBoundingClientRect();
+        return {
+          opacity: [Number(getComputedStyle(a).opacity), Number(getComputedStyle(b).opacity)],
+          sideBySide: rb.x > ra.x + ra.width - 1,
+          arrowShown: getComputedStyle(document.querySelector('.illustrationArrow')).display !== 'none',
+          animations: document.getAnimations().length
+        };
+      });
+      ok(calmView.opacity[0] > 0.9 && calmView.opacity[1] > 0.9,
+        `2 コマとも消えずに出ている (${calmView.opacity.join(' / ')})`);
+      ok(calmView.sideBySide, '2 コマが横に並んでいる');
+      ok(calmView.arrowShown, '2 コマをつなぐ矢印が出ている');
+      ok(calmView.animations === 0, `動くものが 1 つも走っていない (${calmView.animations} 件)`);
+      await calm.close();
     }
 
     // ------------------------------------------------ アイコン (用意していれば)

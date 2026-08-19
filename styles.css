@@ -134,17 +134,30 @@ body {
   box-shadow: 6px 6px 0 var(--line);
 }
 
-.illustrationRow {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
 .illustration {
   width: 84px;
   height: 84px;
   color: var(--accent-2);
   flex: none;
+}
+
+/* 実行画面の 2 コマ。横に並べず同じマスに重ねて、パラパラ漫画のように
+   切り替える(切り替えは app.js の element.animate())。1 コマぶんの幅で
+   済むので、そのぶん大きく描ける = 離れていても動きが分かる。 */
+.illustrationRow {
+  display: grid;
+  place-items: center;
+}
+
+.illustrationRow .illustration {
+  grid-area: 1 / 1;
+  width: 132px;
+  height: 132px;
+}
+
+/* 重ねているあいだは、2 コマをつなぐ矢印が要らない */
+.illustrationRow .illustrationArrow {
+  display: none;
 }
 
 .illustration.mirror {
@@ -271,7 +284,40 @@ body {
   color: var(--muted);
 }
 
+/* 横向きなど、縦が短いとき。1 コマを大きくしたぶん、そのままだと
+   「できた」が画面の下に隠れてしまう。詰めて必ず収める。 */
+@media (max-height: 560px) {
+  #stage { padding: 12px; }
+
+  .screen {
+    padding: 16px 24px;
+    gap: 10px;
+  }
+
+  .illustrationRow .illustration {
+    width: 84px;
+    height: 84px;
+  }
+
+  .stepInfo { gap: 10px; }
+  .exerciseName { font-size: 18px; }
+  #reps { font-size: 34px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   * { transition-duration: .01ms !important; animation: none !important; }
   .progressBarFill { transition: none; }
+
+  /* 動きを減らす設定のときはコマを切り替えず、2 コマを横に並べて矢印でつなぐ。
+     動かさなくても「こう動く」ことは同じように伝わる。
+     (app.js 側も matchMedia を見て切り替えを止める。上の animation: none は
+      CSS アニメーションにしか効かず、element.animate() は止まらないため) */
+  .illustrationRow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .illustrationRow .illustration { width: 84px; height: 84px; }
+  .illustrationRow .illustrationArrow { display: block; }
 }
