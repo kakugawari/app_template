@@ -1,7 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="ストレッチ ルーティン">
-  <rect width="512" height="512" rx="88" fill="#b0402c"/>
-  <circle cx="256" cy="256" r="188" fill="none" stroke="#f8efd9" stroke-width="14"/>
-  <circle cx="256" cy="256" r="160" fill="#f8efd9"/>
-  <circle cx="256" cy="256" r="160" fill="none" stroke="#22415a" stroke-width="10"/>
-  <path d="M256 146 L281 216 L354 216 L295 258 L317 328 L256 286 L195 328 L217 258 L158 216 L231 216 Z" fill="#d3a039"/>
+  <!-- 角の丸みはここだけ。PNG に書き出すときは make-icons.js が外す
+       (iOS が自分で角を丸めるため、丸めた PNG を渡すと角が黒くなる) -->
+  <rect id="plate" width="512" height="512" rx="112" fill="#b0402c"/>
+  <circle cx="256" cy="256" r="208" fill="none" stroke="#d3a039" stroke-width="10"/>
+  <circle cx="256" cy="256" r="188" fill="#f8efd9"/>
+  <circle cx="256" cy="256" r="188" fill="none" stroke="#22415a" stroke-width="12"/>
+  <!-- 両腕を上げて伸びる人。小さくしても潰れないよう、頭・胴・手足を離して太く描く -->
+  <circle cx="256" cy="150" r="36" fill="#22415a"/>
+  <path d="M256 196 L256 306" stroke="#22415a" stroke-width="48" stroke-linecap="round" fill="none"/>
+  <g stroke="#22415a" stroke-width="26" stroke-linecap="round" fill="none">
+    <path d="M256 218 L176 138"/>
+    <path d="M256 218 L336 138"/>
+    <path d="M256 306 L214 400"/>
+    <path d="M256 306 L298 400"/>
+  </g>
 </svg>

@@ -307,6 +307,38 @@ async function run() {
       ok(apple.endsWith('.png'), `ホーム画面用アイコンが PNG (${apple})`);
       const res = await desk.request.get(URL + apple.replace('./', ''));
       ok(res.ok(), `${apple} が配信される`);
+
+      // PNG を実際に読み込んで、大きさと四隅を確かめる。
+      // iOS は角を自分で丸めるので、こちらで丸めた (= 角が透明な) 画像を渡すと
+      // 透明なぶんが黒く塗られて額縁のように残る。角は必ず不透明にしておく。
+      const px = await desk.evaluate((src) => new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          const c = document.createElement('canvas');
+          c.width = img.width;
+          c.height = img.height;
+          const g = c.getContext('2d');
+          g.drawImage(img, 0, 0);
+          const corners = [[0, 0], [img.width - 1, 0], [0, img.height - 1], [img.width - 1, img.height - 1]]
+            .map(([x, y]) => Array.from(g.getImageData(x, y, 1, 1).data));
+          resolve({ w: img.width, h: img.height, corners });
+        };
+        img.onerror = () => resolve(null);
+        img.src = src;
+      }), apple);
+
+      ok(px !== null, 'ホーム画面用アイコンが画像として読める');
+      if (px) {
+        ok(px.w === 180 && px.h === 180, `ホーム画面用アイコンが 180x180 (${px.w}x${px.h})`);
+        ok(px.corners.every((c) => c[3] === 255),
+          '四隅が透明でない (角を丸めていない = iOS で黒い額縁が出ない)');
+      }
+
+      // manifest 用の PNG も配信できること
+      for (const [file, size] of [['icon-192.png', 192], ['icon-512.png', 512]]) {
+        const r = await desk.request.get(URL + file);
+        ok(r.ok(), `${file} が配信される (${size}x${size} 用)`);
+      }
     }
 
     // ------------------------------------------------ 更新とオフライン (sw.js があれば)
