@@ -340,16 +340,11 @@
       <line x1="14" y1="110" x2="106" y2="110"/>
     </g>
 
-    <!-- 仰向けに寝て、腰をひねる。真上から見た構図。
-         上半身 (頭・胴体・腕) は動かさず、腰から下だけを腰の位置を軸に振る。
-         before = まっすぐ / after = 腰をひねった姿勢 -->
-    <g id="hipTwistLower">
-      <g stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round">
-        <line x1="53" y1="70" x2="50" y2="106"/>
-        <line x1="67" y1="70" x2="70" y2="106"/>
-      </g>
-      <rect x="47" y="62" width="26" height="16" rx="8" fill="currentColor"/>
-    </g>
+    <!-- 仰向けに寝て、片足を反対の足の上へ持っていく (腰をひねる)。
+         真上から見た構図。肩は床につけたまま動かさず、骨盤と渡る足だけが動く。
+         「両脚をそろえたまま回す」のではなく、片足が反対の足を越えて渡るのが
+         この種目の動き。動く前の足の位置を薄く残して、どこから来たかを見せる。
+         before = 両足そろえた姿勢 / after = 片足が反対側へ渡った姿勢 -->
     <g id="hipTwistUpper">
       <circle cx="60" cy="20" r="11" fill="currentColor"/>
       <rect x="48" y="32" width="24" height="34" rx="12" fill="currentColor"/>
@@ -360,12 +355,27 @@
     </g>
     <symbol id="hipTwist-before" viewBox="0 0 120 120">
       <use href="#matTopBase"/>
-      <use href="#hipTwistLower"/>
+      <rect x="47" y="62" width="26" height="16" rx="8" fill="currentColor"/>
+      <g stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round">
+        <line x1="53" y1="72" x2="50" y2="106"/>
+        <line x1="67" y1="72" x2="70" y2="106"/>
+      </g>
       <use href="#hipTwistUpper"/>
     </symbol>
     <symbol id="hipTwist-after" viewBox="0 0 120 120">
       <use href="#matTopBase"/>
-      <g transform="rotate(-26 60 66)"><use href="#hipTwistLower"/></g>
+      <!-- 動く前の足。ここから反対側へ渡る -->
+      <line x1="67" y1="72" x2="70" y2="106" stroke="currentColor" stroke-width="7"
+        stroke-linecap="round" opacity=".25"/>
+      <!-- 下になる足は動かさない -->
+      <line x1="53" y1="72" x2="50" y2="106" stroke="currentColor" stroke-width="7"
+        stroke-linecap="round"/>
+      <g transform="rotate(18 60 70)">
+        <rect x="47" y="62" width="26" height="16" rx="8" fill="currentColor"/>
+      </g>
+      <!-- 渡る足。下の足の上を越えるので、あとから描いて上に重ねる -->
+      <path d="M68 74 L44 82 L28 100" stroke="currentColor" stroke-width="7"
+        fill="none" stroke-linecap="round" stroke-linejoin="round"/>
       <use href="#hipTwistUpper"/>
     </symbol>
 
