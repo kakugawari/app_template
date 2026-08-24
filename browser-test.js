@@ -36,6 +36,30 @@ function skip(message) {
   console.log('  \x1b[90m- とばした: ' + message + '\x1b[0m');
 }
 
+/**
+ * 目当ての種目のステップまで「できた」を押して進む。
+ *
+ * 「5 回押す」のような数え方だと、種目を足したり並べ替えたりするたびに
+ * テストを数え直すことになるので、種目の名前 (art) で探して止まる。
+ * 見つからなければ false を返す。
+ */
+async function goToArt(page, art) {
+  const currentArt = () => page.evaluate(() => {
+    const s = window.__app.state().session;
+    return s.steps[s.index] ? s.steps[s.index].art : null;
+  });
+  for (let i = 0; i < 40; i++) {
+    const now = await currentArt();
+    if (now === art) return true;
+    // 終わりまで来てしまったら打ち止め。ここで押し続けると完了画面に入り、
+    // ボタンが消えてタップが延々と待たされる (探す順番を間違えたということ)
+    if (now === null) return false;
+    await page.locator('#btnDone').tap();
+    await page.waitForTimeout(40);
+  }
+  return false;
+}
+
 function section(name) {
   console.log('\n' + name);
 }
@@ -148,7 +172,7 @@ async function run() {
     })));
     ok(firstStep.runVisible && !firstStep.warmupVisible && !firstStep.doneVisible,
       '実行画面だけが表示され、準備・完了画面は本当に隠れている');
-    ok(firstStep.progress === '1 / 10', `進捗が 1 / 10 から始まる (${firstStep.progress})`);
+    ok(/^1 \/ \d+$/.test(firstStep.progress), `進捗が 1 から始まる (${firstStep.progress})`);
     ok(!firstStep.sideShown, `1 種目め (両足そろえて振る動き) では側バッジが出ない (${firstStep.side})`);
     ok(firstStep.reps === '20', `回数が 20 と出る (${firstStep.reps})`);
 
@@ -224,30 +248,44 @@ async function run() {
     const frame1 = await readFrames();
     await phone.waitForTimeout(flipMs);
     const frame2 = await readFrames();
-    ok(shownFrame(frame1) === '#ex0-before', `1 コマめは before (${shownFrame(frame1)})`);
-    ok(shownFrame(frame2) === '#ex0-after', `${flipMs}ms 後に after へ入れ替わる (${shownFrame(frame2)})`);
+    ok(shownFrame(frame1) === '#kneeFall-before', `1 コマめは before (${shownFrame(frame1)})`);
+    ok(shownFrame(frame2) === '#kneeFall-after', `${flipMs}ms 後に after へ入れ替わる (${shownFrame(frame2)})`);
 
     // ステップが変わったら 1 コマめから始まる (途中のコマから始まらない)
     await phone.waitForTimeout(Math.round(flipMs * 0.6)); // 2 コマめを見ている最中に進める
     await phone.locator('#btnDone').tap();
     await phone.waitForTimeout(80);
-    ok(shownFrame(await readFrames()) === '#ex1-before',
+    ok(shownFrame(await readFrames()) === '#hipTwist-before',
       '次のステップは必ず 1 コマめから始まる');
     await phone.locator('#btnBack').tap();
     await phone.waitForTimeout(60);
 
-    section('ひねる・倒すは 真ん中 → 左 → 真ん中 → 右 の 4 コマ');
-    // 6 種目め (ひねる) まで進める。1 コマめの index は 0
-    for (let i = 0; i < 5; i++) await phone.locator('#btnDone').tap();
+    section('猫のポーズ・ひねる・倒すは 4 コマで一周する');
+    // 猫のポーズも 4 コマ。こちらは左右ではなく「丸める・反る」
+    ok(await goToArt(phone, 'catPose'), '「猫のポーズ」のステップまで進める');
+    await phone.waitForTimeout(80);
+    const catFrames = await readFrames();
+    ok(catFrames.map((f) => f.frame).join(' ')
+        === '#catPose-center #catPose-round #catPose-center #catPose-arch',
+      `猫のポーズは まん中 → 丸める → まん中 → 反る (${catFrames.length} コマ)`);
+    const catSeen = [];
+    for (let i = 0; i < 4; i++) {
+      catSeen.push(shownFrame(await readFrames()));
+      await phone.waitForTimeout(flipMs);
+    }
+    ok(catSeen.join(' ') === '#catPose-center #catPose-round #catPose-center #catPose-arch',
+      `見えた順が まん中→丸める→まん中→反る (${catSeen.map((s) => String(s).replace('#catPose-', '')).join(' → ')})`);
+
+    ok(await goToArt(phone, 'chairTwist'), '「ひねる」のステップまで進める');
     await phone.waitForTimeout(80);
     const swingName = await phone.evaluate(() => document.getElementById('exerciseName').textContent);
-    ok(swingName.includes('ひねる'), `6 番目は「ひねる」(${swingName})`);
+    ok(swingName.includes('ひねる'), `種目名が「ひねる」(${swingName})`);
 
     const swingFrames = await readFrames();
     ok(swingFrames.length === 4,
       `4 コマ並んでいる (${swingFrames.map((f) => f.frame).join(' ')})`);
     ok(swingFrames.map((f) => f.frame).join(' ')
-        === '#ex3-center #ex3-left #ex3-center #ex3-right',
+        === '#chairTwist-center #chairTwist-left #chairTwist-center #chairTwist-right',
       '真ん中 → 左 → 真ん中 → 右 の順に並んでいる');
 
     // 1 コマずつ追いかけて、本当にこの順で見えるか確かめる
@@ -256,16 +294,16 @@ async function run() {
       seen.push(shownFrame(await readFrames()));
       await phone.waitForTimeout(flipMs);
     }
-    ok(seen.join(' ') === '#ex3-center #ex3-left #ex3-center #ex3-right',
-      `見えた順が 真ん中→左→真ん中→右 (${seen.map((s) => String(s).replace('#ex3-', '')).join(' → ')})`);
+    ok(seen.join(' ') === '#chairTwist-center #chairTwist-left #chairTwist-center #chairTwist-right',
+      `見えた順が 真ん中→左→真ん中→右 (${seen.map((s) => String(s).replace('#chairTwist-', '')).join(' → ')})`);
 
-    // 7 種目め (倒す) も同じ 4 コマ
-    await phone.locator('#btnDone').tap();
+    // 「倒す」も同じ 4 コマ
+    ok(await goToArt(phone, 'chairLean'), '「倒す」のステップまで進める');
     await phone.waitForTimeout(80);
     const leanFrames = await readFrames();
     ok(leanFrames.map((f) => f.frame).join(' ')
-        === '#ex4-center #ex4-left #ex4-center #ex4-right',
-      '7 番目 (倒す) も 真ん中 → 左 → 真ん中 → 右');
+        === '#chairLean-center #chairLean-left #chairLean-center #chairLean-right',
+      '「倒す」も 真ん中 → 左 → 真ん中 → 右');
 
     // 頭が肩に食われていないこと。
     // 座標を見比べるだけでは、回した肩の「端」が頭に乗り上げるのを見逃す。
@@ -308,10 +346,10 @@ async function run() {
       const out = {};
       for (const id of args.ids) out[id] = await inkNearHead(id);
       return out;
-    }, { ids: ['ex3-center', 'ex3-left', 'ex3-right'], margin: HEAD_MARGIN });
+    }, { ids: ['chairTwist-center', 'chairTwist-left', 'chairTwist-right'], margin: HEAD_MARGIN });
 
     const headHits = Object.keys(headRoom)
-      .map((k) => k.replace('ex3-', '') + ':' + (headRoom[k].error || headRoom[k].hits));
+      .map((k) => k.replace('chairTwist-', '') + ':' + (headRoom[k].error || headRoom[k].hits));
     ok(Object.values(headRoom).every((r) => r.hits === 0),
       `ひねる 3 コマとも、頭の周りに体が入り込んでいない (${headHits.join(' ')})`);
 
@@ -343,7 +381,7 @@ async function run() {
     await phone.locator('#btnStart').tap();
     await phone.waitForTimeout(60);
     const resumed = await phone.evaluate(() => document.getElementById('progress').textContent);
-    ok(resumed === '1 / 10', `準備画面から再開すると同じ最初のステップに戻る (${resumed})`);
+    ok(/^1 \/ \d+$/.test(resumed), `準備画面から再開すると同じ最初のステップに戻る (${resumed})`);
 
     section('横向きに寝る種目は、膝も手も左右にあわせて寝る向きが変わる');
     const stepText = () => phone.evaluate(() => ({
@@ -351,7 +389,7 @@ async function run() {
       side: document.getElementById('side').textContent
     }));
 
-    await phone.locator('#btnDone').tap();
+    ok(await goToArt(phone, 'sideKnee'), '「横向きに寝て膝」のステップまで進める');
     await phone.waitForTimeout(60);
     const leftKneeStep = await stepText();
     ok(leftKneeStep.name.startsWith('左向きに寝て'), `左膝のときは「左向きに寝て」から始まる (${leftKneeStep.name})`);
@@ -363,7 +401,7 @@ async function run() {
     ok(rightKneeStep.name.startsWith('右向きに寝て'), `右膝のときは「右向きに寝て」から始まる (${rightKneeStep.name})`);
     ok(rightKneeStep.side === '右足', `側バッジは「右足」(${rightKneeStep.side})`);
 
-    await phone.locator('#btnDone').tap();
+    ok(await goToArt(phone, 'sideArm'), '「横向きに寝て手」のステップまで進める');
     await phone.waitForTimeout(60);
     const leftHandStep = await stepText();
     ok(leftHandStep.name.startsWith('左向きに寝て'), `左手のときは「左向きに寝て」から始まる (${leftHandStep.name})`);
@@ -375,8 +413,8 @@ async function run() {
     ok(rightHandStep.name.startsWith('右向きに寝て'), `右手のときは「右向きに寝て」から始まる (${rightHandStep.name})`);
     ok(rightHandStep.side === '右手', `側バッジは「右手」(${rightHandStep.side})`);
 
-    section('左右のない種目 (6 種目め) では側の表示が隠れる');
-    for (let i = 0; i < 3; i++) await phone.locator('#btnDone').tap();
+    section('左右のない種目 (猫のポーズ) では側の表示が隠れる');
+    ok(await goToArt(phone, 'catPose'), '「猫のポーズ」のステップまで進める');
     await phone.waitForTimeout(60);
     const noSideStep = Object.assign(await shownFlags(), await phone.evaluate(() => ({
       name: document.getElementById('exerciseName').textContent
@@ -384,13 +422,21 @@ async function run() {
     ok(!noSideStep.sideShown, `左右のない種目では側バッジが出ない (${noSideStep.name})`);
 
     section('最後まで進めると完了画面になる');
-    for (let i = 0; i < 3; i++) await phone.locator('#btnDone').tap();
+    // 途中まで進んでいるので、残りぶんだけ押す
+    const remaining = await phone.evaluate(() => {
+      const s = window.__app.state().session;
+      return s.steps.length - s.index;
+    });
+    for (let i = 0; i < remaining; i++) await phone.locator('#btnDone').tap();
     await phone.waitForTimeout(120);
     const doneScreen = Object.assign(await shownFlags(), await phone.evaluate(() => ({
-      finished: window.__app.state().session.index
+      finished: window.__app.state().session.index,
+      total: window.__app.state().session.steps.length
     })));
-    ok(doneScreen.doneVisible && !doneScreen.runVisible, '10 ステップぶん進めると完了画面が本当に表示される');
-    ok(doneScreen.finished === 10, `ステップの index が 10 まで進んでいる (${doneScreen.finished})`);
+    ok(doneScreen.doneVisible && !doneScreen.runVisible,
+      `${doneScreen.total} ステップぶん進めると完了画面が本当に表示される`);
+    ok(doneScreen.finished === doneScreen.total,
+      `ステップの index が最後まで進んでいる (${doneScreen.finished} / ${doneScreen.total})`);
 
     section('もう一度で最初からやり直せる');
     await phone.locator('#btnAgain').tap();
@@ -431,8 +477,9 @@ async function run() {
       await page.waitForFunction(() => window.__app);
       await page.locator('#btnStart').tap();
 
+      const stepCount = await page.evaluate(() => window.__app.state().session.steps.length);
       const seen = [];
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < stepCount; i++) {
         await page.waitForTimeout(60);
         seen.push(await page.evaluate(() => {
           const box = (s) => document.querySelector(s).getBoundingClientRect();
@@ -443,7 +490,7 @@ async function run() {
             repsY: Math.round(box('.reps').y)
           };
         }));
-        if (i < 9) await page.locator('#btnDone').tap();
+        if (i < stepCount - 1) await page.locator('#btnDone').tap();
       }
 
       // 側バッジは中身が「左足」でも空でも同じ高さでなければならない。
@@ -507,10 +554,10 @@ async function run() {
       ok(calmView.animations === 0, `動くものが 1 つも走っていない (${calmView.animations} 件)`);
 
       // 4 コマの種目は、同じ絵を 2 度並べず 真ん中・左・右 の 3 枚にする
-      for (let i = 0; i < 5; i++) await page.locator('#btnDone').tap();
+      ok(await goToArt(page, 'chairTwist'), '「ひねる」のステップまで進める');
       await page.waitForTimeout(80);
       const calmSwing = await calmShots();
-      ok(calmSwing.frames.join(' ') === '#ex3-center #ex3-left #ex3-right',
+      ok(calmSwing.frames.join(' ') === '#chairTwist-center #chairTwist-left #chairTwist-right',
         `4 コマの種目は重複を除いた 3 枚で並ぶ (${calmSwing.frames.join(' ')})`);
       await calm.close();
     }

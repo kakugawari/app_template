@@ -76,7 +76,7 @@
         els.illustrationRow.appendChild(svgUse('illustrationArrow', '#iconArrow'));
       }
       els.illustrationRow.appendChild(
-        svgUse('illustration' + mirror, '#ex' + step.exerciseIndex + '-' + frame));
+        svgUse('illustration' + mirror, '#' + step.art + '-' + frame));
     });
   }
 

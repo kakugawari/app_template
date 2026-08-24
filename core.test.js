@@ -2,9 +2,25 @@ const test = require('node:test');
 const assert = require('node:assert');
 const Core = require('./core.js');
 
-test('既定の種目は 7 種目、左右ぶんも合わせて 10 ステップになる', () => {
+test('既定の種目は 11 種目、左右ぶんも合わせて 17 ステップになる', () => {
   const steps = Core.buildSteps(Core.DEFAULT_EXERCISES);
-  assert.strictEqual(steps.length, 10);
+  assert.strictEqual(Core.DEFAULT_EXERCISES.length, 11);
+  assert.strictEqual(steps.length, 17);
+});
+
+test('すべての種目に art (イラストの名前) がついていて、重複していない', () => {
+  const arts = Core.DEFAULT_EXERCISES.map((e) => e.art);
+  assert.ok(arts.every((a) => typeof a === 'string' && a.length > 0), JSON.stringify(arts));
+  assert.strictEqual(new Set(arts).size, arts.length, '重複あり: ' + arts.join(', '));
+});
+
+test('並びは 寝る → 四つん這い → 立つ → 座る の順になっている', () => {
+  assert.deepStrictEqual(Core.DEFAULT_EXERCISES.map((e) => e.art), [
+    'kneeFall', 'hipTwist', 'sideKnee', 'sideArm', 'sideOpen',
+    'catPose',
+    'wallHip',
+    'chairTwist', 'chairLean', 'chairLift', 'footRoll'
+  ]);
 });
 
 test('左右のある種目は左→右の順で並ぶ', () => {
@@ -119,7 +135,7 @@ test('sessionProgress は current が total を超えない', () => {
 
 test('sessionProgress は 1 始まりで、途中経過を正しく返す', () => {
   const session = Core.createSession(Core.DEFAULT_EXERCISES);
-  assert.deepStrictEqual(Core.sessionProgress(session), { current: 1, total: 10 });
+  assert.deepStrictEqual(Core.sessionProgress(session), { current: 1, total: 17 });
 });
 
 test('sessionRatio は最初のステップでは 0 (まだ何も終わっていない)', () => {
@@ -161,12 +177,16 @@ test('左右に振る種目は 真ん中 → 左 → 真ん中 → 右 の 4 コ
   assert.deepStrictEqual(steps[0].frames, ['center', 'left', 'center', 'right']);
 });
 
-test('「ひねる」と「倒す」が 4 コマになっている', () => {
+test('4 コマなのは 猫のポーズ・ひねる・倒す の 3 種目', () => {
   const steps = Core.buildSteps(Core.DEFAULT_EXERCISES);
   const swing = steps.filter((s) => s.frames.length === 4);
-  assert.strictEqual(swing.length, 2);
-  assert.ok(swing[0].name.includes('ひねる'), swing[0].name);
-  assert.ok(swing[1].name.includes('倒す'), swing[1].name);
+  assert.deepStrictEqual(swing.map((s) => s.art), ['catPose', 'chairTwist', 'chairLean']);
+});
+
+test('猫のポーズは まん中 → 丸める → まん中 → 反る の 4 コマ', () => {
+  const cat = Core.buildSteps(Core.DEFAULT_EXERCISES).find((s) => s.art === 'catPose');
+  assert.deepStrictEqual(cat.frames, ['center', 'round', 'center', 'arch']);
+  assert.strictEqual(cat.frames[0], cat.frames[2]);
 });
 
 test('4 コマの往復は、真ん中を挟んで左右がそろっている', () => {

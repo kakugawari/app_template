@@ -33,6 +33,8 @@
   const DEFAULT_FRAMES = ['before', 'after'];
   const SWING_FRAMES = ['center', 'left', 'center', 'right'];
 
+  const CAT_FRAMES = ['center', 'round', 'center', 'arch'];
+
   // 左右のある種目は sides に ['left', 'right'] (または指定された順) を、無いものは null を入れる。
   // sideNoun を付けると「左足」のように部位つきで表示する (省略すると「左」だけ)。
   // 扇風機の首振りや振り子のように、両足(両手)をくっつけたまま左右へ振り続け、
@@ -40,10 +42,29 @@
   // — 左右に分けると実際の動きと合わなくなる。
   // 横向きに寝て左右で体の向きそのものが変わる種目は、sideNames で
   // 「左向きに寝て…」のように片側ごとに文面を変えられる。
+  //
+  // art はイラストの名前。`<art>-<コマ名>` の symbol を引く。
+  // 並び順で引くと (ex0, ex1, …)、種目を足したり並べ替えたりするたびに
+  // 全部のイラストがずれるので、名前で結びつけている。
+  //
+  // 並びは姿勢ごと。寝る → 四つん這い → 立つ → 座る の順にして、
+  // 途中で体勢を変える回数をなるべく少なくしている。
   const DEFAULT_EXERCISES = [
-    { name: '仰向けに寝て、両膝を立てて左右に倒す', reps: 20, sides: null },
+    // --- 寝る ---
+    { name: '仰向けに寝て、両膝を立てて左右に倒す', art: 'kneeFall', reps: 20, sides: null },
+    {
+      name: '仰向けに寝て、腰をひねる',
+      art: 'hipTwist',
+      reps: 20,
+      sides: ['left', 'right'],
+      sideNames: {
+        left: '仰向けに寝て、腰を左にひねる',
+        right: '仰向けに寝て、腰を右にひねる'
+      }
+    },
     {
       name: '横向きに寝て、膝を曲げて開く・閉じる',
+      art: 'sideKnee',
       reps: 20,
       sides: ['left', 'right'],
       sideNoun: '足',
@@ -54,6 +75,7 @@
     },
     {
       name: '横向きに寝て、手を伸ばして開く・閉じる',
+      art: 'sideArm',
       reps: 20,
       sides: ['left', 'right'],
       sideNoun: '手',
@@ -63,19 +85,52 @@
       }
     },
     {
+      name: '横向きに寝て、膝を曲げ、上半身をひねって肩甲骨を開く',
+      art: 'sideOpen',
+      reps: 20,
+      sides: ['left', 'right'],
+      sideNames: {
+        left: '左向きに寝て膝を曲げ、上半身をひねって肩甲骨を開く',
+        right: '右向きに寝て膝を曲げ、上半身をひねって肩甲骨を開く'
+      }
+    },
+    // --- 四つん這い ---
+    {
+      name: '猫のポーズで、背中を丸める・反る',
+      art: 'catPose',
+      reps: 20,
+      sides: null,
+      frames: CAT_FRAMES
+    },
+    // --- 立つ ---
+    {
+      name: '壁に手をついて、片足を広げて股関節を伸ばす',
+      art: 'wallHip',
+      reps: 20,
+      sides: ['left', 'right'],
+      sideNoun: '足',
+      sideNames: {
+        left: '壁に手をついて、左足を広げて股関節を伸ばす',
+        right: '壁に手をついて、右足を広げて股関節を伸ばす'
+      }
+    },
+    // --- 座る ---
+    {
       name: '椅子に浅く座り、バランスボールを抱えて体をひねる',
+      art: 'chairTwist',
       reps: 20,
       sides: null,
       frames: SWING_FRAMES
     },
     {
       name: '椅子に浅く座り、バランスボールを抱えて体を倒す',
+      art: 'chairLean',
       reps: 20,
       sides: null,
       frames: SWING_FRAMES
     },
-    { name: '椅子に浅く座り、バランスボールを持って上げ下げする', reps: 20, sides: null },
-    { name: '椅子に浅く座り、トゲトゲボールを足で踏んで転がす', reps: 20, sides: ['left', 'right'], sideNoun: '足' }
+    { name: '椅子に浅く座り、バランスボールを持って上げ下げする', art: 'chairLift', reps: 20, sides: null },
+    { name: '椅子に浅く座り、トゲトゲボールを足で踏んで転がす', art: 'footRoll', reps: 20, sides: ['left', 'right'], sideNoun: '足' }
   ];
 
   /** 種目リストを「1 ステップ = 1 回のできたボタン」の並びに崩す。 */
@@ -87,6 +142,7 @@
         const name = (exercise.sideNames && side && exercise.sideNames[side]) || exercise.name;
         steps.push({
           exerciseIndex: exerciseIndex,
+          art: exercise.art,
           name: name,
           reps: exercise.reps,
           side: side,

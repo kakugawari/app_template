@@ -92,7 +92,7 @@
        fill="none" stroke-linecap="round">
       <rect x="16" y="6" width="88" height="108" rx="12"/>
     </g>
-    <symbol id="ex0-before" viewBox="0 0 120 120">
+    <symbol id="kneeFall-before" viewBox="0 0 120 120">
       <use href="#matTopBase"/>
       <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
         <line x1="49" y1="42" x2="28" y2="52"/>
@@ -105,7 +105,7 @@
       <circle cx="60" cy="20" r="11" fill="currentColor"/>
       <rect x="49" y="34" width="22" height="36" rx="11" fill="currentColor"/>
     </symbol>
-    <symbol id="ex0-after" viewBox="0 0 120 120">
+    <symbol id="kneeFall-after" viewBox="0 0 120 120">
       <use href="#matTopBase"/>
       <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
         <line x1="71" y1="42" x2="92" y2="52"/>
@@ -122,7 +122,7 @@
     <!-- 1: 横向きに寝て、上の膝を曲げて開く・閉じる。
          before = 上の足を下の足に沿えて閉じた姿勢
          after  = 上の膝を曲げて持ち上げ、開いた姿勢 -->
-    <symbol id="ex1-before" viewBox="0 0 120 120">
+    <symbol id="sideKnee-before" viewBox="0 0 120 120">
       <use href="#bedBase"/>
       <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
         <line x1="74" y1="80" x2="94" y2="84"/>
@@ -134,7 +134,7 @@
       <circle cx="20" cy="76" r="11" fill="currentColor"/>
       <rect x="32" y="68" width="42" height="16" rx="8" fill="currentColor"/>
     </symbol>
-    <symbol id="ex1-after" viewBox="0 0 120 120">
+    <symbol id="sideKnee-after" viewBox="0 0 120 120">
       <use href="#bedBase"/>
       <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
         <line x1="74" y1="80" x2="94" y2="84"/>
@@ -150,7 +150,7 @@
     <!-- 2: 横向きに寝て、上の腕を伸ばして開く・閉じる。
          before = 腕を体に沿わせて下ろした姿勢
          after  = 腕を頭の上に伸ばして開いた姿勢 -->
-    <symbol id="ex2-before" viewBox="0 0 120 120">
+    <symbol id="sideArm-before" viewBox="0 0 120 120">
       <use href="#bedBase"/>
       <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
         <line x1="74" y1="78" x2="92" y2="82"/>
@@ -160,7 +160,7 @@
       <circle cx="20" cy="76" r="11" fill="currentColor"/>
       <rect x="32" y="68" width="42" height="16" rx="8" fill="currentColor"/>
     </symbol>
-    <symbol id="ex2-after" viewBox="0 0 120 120">
+    <symbol id="sideArm-after" viewBox="0 0 120 120">
       <use href="#bedBase"/>
       <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
         <line x1="74" y1="78" x2="92" y2="82"/>
@@ -188,7 +188,7 @@
       <rect x="24" y="42" width="72" height="66" rx="10"/>
     </g>
     <!-- 回す中身。肩・腕・ボールをひとまとめにして 3 つの姿勢で使い回す -->
-    <g id="ex3Body">
+    <g id="chairTwistBody">
       <rect x="40" y="44" width="40" height="14" rx="7" fill="currentColor"/>
       <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round">
         <line x1="44" y1="58" x2="50" y2="74"/>
@@ -196,20 +196,20 @@
       </g>
       <circle class="ball" cx="60" cy="80" r="15" stroke="currentColor" stroke-width="5"/>
     </g>
-    <symbol id="ex3-center" viewBox="0 0 120 120">
+    <symbol id="chairTwist-center" viewBox="0 0 120 120">
       <use href="#chairTopBase"/>
       <circle cx="60" cy="24" r="10" fill="currentColor"/>
-      <use href="#ex3Body"/>
+      <use href="#chairTwistBody"/>
     </symbol>
-    <symbol id="ex3-left" viewBox="0 0 120 120">
+    <symbol id="chairTwist-left" viewBox="0 0 120 120">
       <use href="#chairTopBase"/>
       <circle cx="60" cy="24" r="10" fill="currentColor"/>
-      <g transform="rotate(30 60 51)"><use href="#ex3Body"/></g>
+      <g transform="rotate(30 60 51)"><use href="#chairTwistBody"/></g>
     </symbol>
-    <symbol id="ex3-right" viewBox="0 0 120 120">
+    <symbol id="chairTwist-right" viewBox="0 0 120 120">
       <use href="#chairTopBase"/>
       <circle cx="60" cy="24" r="10" fill="currentColor"/>
-      <g transform="rotate(-30 60 51)"><use href="#ex3Body"/></g>
+      <g transform="rotate(-30 60 51)"><use href="#chairTwistBody"/></g>
     </symbol>
 
     <!-- 4: 椅子に浅く座り、ボールを抱えて体を倒す。
@@ -223,7 +223,7 @@
       <line x1="84" y1="94" x2="86" y2="111"/>
     </g>
     <!-- 倒す中身。腰から上をひとまとめにして 3 つの姿勢で使い回す -->
-    <g id="ex4Body">
+    <g id="chairLeanBody">
       <circle cx="60" cy="24" r="11" fill="currentColor"/>
       <rect x="48" y="38" width="24" height="42" rx="12" fill="currentColor"/>
       <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round">
@@ -233,31 +233,31 @@
       <circle class="ball" cx="60" cy="64" r="15" stroke="currentColor" stroke-width="5"/>
     </g>
     <!-- 脚。倒しても動かさない -->
-    <g id="ex4Legs" stroke="currentColor" stroke-width="6" fill="none"
+    <g id="chairLeanLegs" stroke="currentColor" stroke-width="6" fill="none"
        stroke-linecap="round" stroke-linejoin="round">
       <line x1="53" y1="80" x2="53" y2="94"/>
       <line x1="67" y1="80" x2="67" y2="94"/>
     </g>
-    <symbol id="ex4-center" viewBox="0 0 120 120">
+    <symbol id="chairLean-center" viewBox="0 0 120 120">
       <use href="#chairFrontBase"/>
-      <use href="#ex4Legs"/>
-      <use href="#ex4Body"/>
+      <use href="#chairLeanLegs"/>
+      <use href="#chairLeanBody"/>
     </symbol>
-    <symbol id="ex4-left" viewBox="0 0 120 120">
+    <symbol id="chairLean-left" viewBox="0 0 120 120">
       <use href="#chairFrontBase"/>
-      <use href="#ex4Legs"/>
-      <g transform="rotate(-25 60 80)"><use href="#ex4Body"/></g>
+      <use href="#chairLeanLegs"/>
+      <g transform="rotate(-25 60 80)"><use href="#chairLeanBody"/></g>
     </symbol>
-    <symbol id="ex4-right" viewBox="0 0 120 120">
+    <symbol id="chairLean-right" viewBox="0 0 120 120">
       <use href="#chairFrontBase"/>
-      <use href="#ex4Legs"/>
-      <g transform="rotate(25 60 80)"><use href="#ex4Body"/></g>
+      <use href="#chairLeanLegs"/>
+      <g transform="rotate(25 60 80)"><use href="#chairLeanBody"/></g>
     </symbol>
 
     <!-- 5: 椅子に浅く座り、ボールを持って上げ下げする。
          before = ボールを胸の高さで持った姿勢
          after  = ボールを頭の上まで持ち上げた姿勢 -->
-    <symbol id="ex5-before" viewBox="0 0 120 120">
+    <symbol id="chairLift-before" viewBox="0 0 120 120">
       <use href="#chairBase"/>
       <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
         <line x1="62" y1="74" x2="88" y2="74"/>
@@ -269,7 +269,7 @@
       <rect x="54" y="35" width="16" height="41" rx="8" fill="currentColor"/>
       <circle cx="84" cy="46" r="14" stroke="currentColor" stroke-width="5" fill="none"/>
     </symbol>
-    <symbol id="ex5-after" viewBox="0 0 120 120">
+    <symbol id="chairLift-after" viewBox="0 0 120 120">
       <use href="#chairBase"/>
       <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
         <line x1="62" y1="74" x2="88" y2="74"/>
@@ -286,7 +286,7 @@
     <!-- 6: 椅子に浅く座り、トゲトゲボールを足で踏んで転がす。
          before = ボールを足もとに置いた姿勢
          after  = ボールを前へ転がした姿勢 -->
-    <symbol id="ex6-before" viewBox="0 0 120 120">
+    <symbol id="footRoll-before" viewBox="0 0 120 120">
       <use href="#chairBase"/>
       <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
         <line x1="62" y1="74" x2="84" y2="74"/>
@@ -305,7 +305,7 @@
         <line x1="71.6" y1="101.4" x2="68.1" y2="104.9"/>
       </g>
     </symbol>
-    <symbol id="ex6-after" viewBox="0 0 120 120">
+    <symbol id="footRoll-after" viewBox="0 0 120 120">
       <use href="#chairBase"/>
       <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
         <line x1="62" y1="74" x2="86" y2="74"/>
@@ -324,6 +324,133 @@
         <line x1="104.4" y1="101.4" x2="107.9" y2="104.9"/>
         <line x1="91.6" y1="101.4" x2="88.1" y2="104.9"/>
       </g>
+    </symbol>
+
+
+    <!-- 床。四つん這いの種目で使う -->
+    <g id="floorBase" stroke="currentColor" stroke-width="4" opacity=".45"
+       fill="none" stroke-linecap="round">
+      <line x1="10" y1="106" x2="110" y2="106"/>
+    </g>
+
+    <!-- 壁と床。立ってやる種目で使う -->
+    <g id="wallBase" stroke="currentColor" stroke-width="4" opacity=".45"
+       fill="none" stroke-linecap="round">
+      <line x1="100" y1="12" x2="100" y2="110"/>
+      <line x1="14" y1="110" x2="106" y2="110"/>
+    </g>
+
+    <!-- 仰向けに寝て、腰をひねる。真上から見た構図。
+         上半身 (頭・胴体・腕) は動かさず、腰から下だけを腰の位置を軸に振る。
+         before = まっすぐ / after = 腰をひねった姿勢 -->
+    <g id="hipTwistLower">
+      <g stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round">
+        <line x1="53" y1="70" x2="50" y2="106"/>
+        <line x1="67" y1="70" x2="70" y2="106"/>
+      </g>
+      <rect x="47" y="62" width="26" height="16" rx="8" fill="currentColor"/>
+    </g>
+    <g id="hipTwistUpper">
+      <circle cx="60" cy="20" r="11" fill="currentColor"/>
+      <rect x="48" y="32" width="24" height="34" rx="12" fill="currentColor"/>
+      <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round">
+        <line x1="49" y1="40" x2="28" y2="50"/>
+        <line x1="71" y1="40" x2="92" y2="50"/>
+      </g>
+    </g>
+    <symbol id="hipTwist-before" viewBox="0 0 120 120">
+      <use href="#matTopBase"/>
+      <use href="#hipTwistLower"/>
+      <use href="#hipTwistUpper"/>
+    </symbol>
+    <symbol id="hipTwist-after" viewBox="0 0 120 120">
+      <use href="#matTopBase"/>
+      <g transform="rotate(-26 60 66)"><use href="#hipTwistLower"/></g>
+      <use href="#hipTwistUpper"/>
+    </symbol>
+
+    <!-- 横向きに寝て膝を曲げ、上半身をひねって肩甲骨を開く。真上から見た構図。
+         腰と脚は動かさず、そろえていた両腕のうち上の腕だけが反対側へ回る。
+         腕の通り道を薄い弧で残し、「開く」動きが一目で分かるようにする。
+         before = 両腕をそろえた姿勢 / after = 上の腕を開いた姿勢 -->
+    <g id="sideOpenBody">
+      <g stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="55" y1="76" x2="30" y2="88"/>
+        <line x1="30" y1="88" x2="50" y2="104"/>
+        <line x1="65" y1="76" x2="40" y2="90"/>
+        <line x1="40" y1="90" x2="60" y2="106"/>
+      </g>
+      <circle cx="60" cy="24" r="11" fill="currentColor"/>
+      <rect x="49" y="36" width="22" height="42" rx="11" fill="currentColor"/>
+    </g>
+    <symbol id="sideOpen-before" viewBox="0 0 120 120">
+      <use href="#matTopBase"/>
+      <use href="#sideOpenBody"/>
+      <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round">
+        <line x1="69" y1="44" x2="104" y2="40"/>
+        <line x1="69" y1="52" x2="104" y2="50"/>
+      </g>
+    </symbol>
+    <symbol id="sideOpen-after" viewBox="0 0 120 120">
+      <use href="#matTopBase"/>
+      <use href="#sideOpenBody"/>
+      <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round">
+        <line x1="69" y1="52" x2="104" y2="50"/>
+        <path d="M69 44 Q92 18 60 12" opacity=".28"/>
+        <line x1="51" y1="44" x2="16" y2="40"/>
+      </g>
+    </symbol>
+
+    <!-- 猫のポーズ。横から見た構図。手と脚は動かさず、背中の線と頭だけを動かす。
+         center = 背中がまっすぐ / round = 丸めた姿勢 / arch = 反った姿勢 -->
+    <g id="catLimbs" stroke="currentColor" stroke-width="7" fill="none"
+       stroke-linecap="round" stroke-linejoin="round">
+      <line x1="40" y1="56" x2="38" y2="104"/>
+      <line x1="84" y1="56" x2="86" y2="104"/>
+    </g>
+    <symbol id="catPose-center" viewBox="0 0 120 120">
+      <use href="#floorBase"/>
+      <use href="#catLimbs"/>
+      <path d="M40 52 Q62 52 84 52" stroke="currentColor" stroke-width="18" fill="none" stroke-linecap="round"/>
+      <circle cx="98" cy="56" r="12" fill="currentColor"/>
+    </symbol>
+    <symbol id="catPose-round" viewBox="0 0 120 120">
+      <use href="#floorBase"/>
+      <use href="#catLimbs"/>
+      <path d="M40 52 Q62 26 84 52" stroke="currentColor" stroke-width="18" fill="none" stroke-linecap="round"/>
+      <circle cx="96" cy="68" r="12" fill="currentColor"/>
+    </symbol>
+    <symbol id="catPose-arch" viewBox="0 0 120 120">
+      <use href="#floorBase"/>
+      <use href="#catLimbs"/>
+      <path d="M40 52 Q62 74 84 52" stroke="currentColor" stroke-width="18" fill="none" stroke-linecap="round"/>
+      <circle cx="98" cy="42" r="12" fill="currentColor"/>
+    </symbol>
+
+    <!-- 壁に手をついて、片足を広げて股関節を伸ばす。正面から見た構図。
+         上体は壁と反対へ傾け、腰だけを壁へ寄せる。
+         before = まっすぐ立った姿勢 / after = 腰を壁へ寄せた姿勢 -->
+    <symbol id="wallHip-before" viewBox="0 0 120 120">
+      <use href="#wallBase"/>
+      <g stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round">
+        <line x1="48" y1="78" x2="46" y2="110"/>
+        <line x1="56" y1="78" x2="60" y2="110"/>
+      </g>
+      <circle cx="52" cy="26" r="11" fill="currentColor"/>
+      <rect x="42" y="40" width="20" height="42" rx="10" fill="currentColor"/>
+      <line x1="62" y1="46" x2="102" y2="42" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="wallHip-after" viewBox="0 0 120 120">
+      <use href="#wallBase"/>
+      <g stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round">
+        <line x1="72" y1="80" x2="78" y2="110"/>
+        <line x1="68" y1="80" x2="32" y2="110"/>
+      </g>
+      <g transform="rotate(-22 70 80)">
+        <circle cx="70" cy="26" r="11" fill="currentColor"/>
+        <rect x="60" y="40" width="20" height="42" rx="10" fill="currentColor"/>
+      </g>
+      <line x1="56" y1="45" x2="102" y2="42" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>
     </symbol>
 
   </defs>
