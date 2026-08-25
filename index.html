@@ -384,11 +384,14 @@
          腕の通り道を薄い弧で残し、「開く」動きが一目で分かるようにする。
          before = 両腕をそろえた姿勢 / after = 上の腕を開いた姿勢 -->
     <g id="sideOpenBody">
+      <!-- 曲げた膝はお腹側 (体の前) に来る。腕も前から始まるので、
+           膝と腕は必ず同じ側に置く。真上から見て頭が上のとき、
+           前が画面の右なら「左向きに寝ている」姿になる。 -->
       <g stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="55" y1="76" x2="30" y2="88"/>
-        <line x1="30" y1="88" x2="50" y2="104"/>
-        <line x1="65" y1="76" x2="40" y2="90"/>
-        <line x1="40" y1="90" x2="60" y2="106"/>
+        <line x1="65" y1="76" x2="90" y2="88"/>
+        <line x1="90" y1="88" x2="70" y2="104"/>
+        <line x1="55" y1="76" x2="80" y2="90"/>
+        <line x1="80" y1="90" x2="60" y2="106"/>
       </g>
       <circle cx="60" cy="24" r="11" fill="currentColor"/>
       <rect x="49" y="36" width="22" height="42" rx="11" fill="currentColor"/>
