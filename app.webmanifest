@@ -1,0 +1,12 @@
+{
+  "name": "しょうぎクイズ道場",
+  "short_name": "将棋クイズ",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#101a2e",
+  "theme_color": "#101a2e",
+  "icons": [
+    { "src": "./apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

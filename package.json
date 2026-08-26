@@ -1,12 +1,14 @@
 {
-  "name": "app-template",
+  "name": "shogi-quiz-dojo",
   "version": "1.0.0",
-  "description": "ビルドなしで動くアプリの雛形 (進め方のルールつき)",
+  "description": "将棋のクイズアプリ。囲い・手筋・戦法・詰将棋をパラパラ漫画とクイズでおぼえる",
   "private": true,
   "scripts": {
     "start": "node serve.js",
     "test": "node --test *.test.js",
-    "test:ui": "node browser-test.js"
+    "test:ui": "node browser-test.js",
+    "build": "node build-single.js",
+    "icon": "node make-icon.js"
   },
   "license": "MIT"
 }

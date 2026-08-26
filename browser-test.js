@@ -36,6 +36,12 @@ function skip(message) {
   console.log('  \x1b[90m- とばした: ' + message + '\x1b[0m');
 }
 
+/** 外から借りている web フォントの読み込み失敗は、アプリの不具合ではない。 */
+function isOurs(msg) {
+  const url = (msg.location && msg.location().url) || '';
+  return !/fonts\.(googleapis|gstatic)\.com/.test(url);
+}
+
 function section(name) {
   console.log('\n' + name);
 }
@@ -101,7 +107,7 @@ async function run() {
     const context = await browser.newContext({ ...devices['iPhone 13'] });
     const phone = await context.newPage();
     phone.on('pageerror', (e) => errors.push('スマホ: ' + e.message));
-    phone.on('console', (m) => { if (m.type() === 'error') errors.push('スマホ: ' + m.text()); });
+    phone.on('console', (m) => { if (m.type() === 'error' && isOurs(m)) errors.push('スマホ: ' + m.text()); });
     await phone.goto(URL);
     await phone.waitForFunction(() => window.__app);
     ok(true, 'ページが開いて、画面のしくみが立ち上がる');
@@ -111,21 +117,114 @@ async function run() {
       title: document.querySelector('h1') ? document.querySelector('h1').textContent.trim() : ''
     }));
     ok(fit.wide <= 1, 'スマホ幅で横スクロールが出ない');
-    ok(fit.title.length > 0, `見出しが出ている (${fit.title})`);
+    ok(fit.title.includes('しょうぎクイズ道場'), `見出しが出ている (${fit.title})`);
 
-    // ------------------------------------------------ ここにアプリごとの確認を足す
-    section('アプリの操作');
-    await phone.locator('#btnAction').tap();
-    await phone.waitForTimeout(120);
-    const after = await phone.evaluate(() => ({
-      count: window.__app.state().count,
-      shown: document.getElementById('result').textContent
-    }));
-    ok(after.count === 1 && after.shown !== '—', `ボタンを押すと結果が出る (${after.shown})`);
+    // ------------------------------------------------ タイトル
+    section('タイトル');
+    const modes = await phone.locator('.mode-btn').count();
+    ok(modes >= 6, `モードのボタンが並ぶ (${modes} 個)`);
+    const totalNote = await phone.textContent('#total-note');
+    ok(/全 \d+ 問/.test(totalNote), `問題数が出ている (${totalNote.trim()})`);
 
-    // 押した直後に表示が飛ばないか (CSS アニメーションの上書き事故よけ)
-    const jump = await measureJump(phone, '#result', 'document.getElementById("btnAction").click()');
-    ok(jump < 12, `押した直後に表示が飛ばない (最大ずれ ${jump}px)`);
+    // ------------------------------------------------ 囲いクイズ
+    section('囲いクイズ');
+    await phone.evaluate(() => window.__app.start('castle'));
+    await phone.waitForTimeout(300);
+    ok(await phone.locator('#screen-quiz.is-active').count() === 1, 'クイズ画面になる');
+    ok(await phone.locator('.koma-choice').count() === 4, '選択肢が 4 つ出る');
+    ok(await phone.locator('#stage .koma').count() > 5, '盤に駒が並ぶ');
+    // 回帰: 囲いクイズにパラパラ再生バーは出ない (hidden が効かず出てしまったことがある)
+    ok(await phone.locator('#player').isHidden(), '囲いクイズでは再生バーが隠れている');
+
+    const jump = await measureJump(phone, '#stage .koma', 'void 0');
+    ok(jump < 4, `駒が勝手に動かない (最大ずれ ${jump}px)`);
+
+    await phone.evaluate(() => window.__app.answerCorrect());
+    await phone.waitForTimeout(700);
+    ok(await phone.locator('#judge').isVisible(), '答えると判定シートが出る');
+    ok((await phone.textContent('#judge-mark')).includes('◯'), '正解すると ◯ が出る');
+    ok(await phone.textContent('#hud-score') === '1', 'せいかい数が増える');
+    await phone.locator('#btn-next').tap();
+    await phone.waitForTimeout(300);
+    ok(await phone.textContent('#hud-count') === '第2問', 'つぎへ で次の問題になる');
+
+    // ------------------------------------------------ パラパラ漫画 (戦法)
+    section('パラパラ漫画');
+    await phone.evaluate(() => window.__app.start('senpou'));
+    await phone.waitForTimeout(300);
+    ok(await phone.locator('#player').isVisible(), '戦法クイズでは再生バーが出る');
+    ok(await phone.locator('#stage .koma').count() === 40, '平手の初形 40 枚が並ぶ');
+    const kifuChips = await phone.locator('#kifu-strip span').count();
+    ok(kifuChips >= 5, `棋譜が並ぶ (${kifuChips} 手)`);
+
+    // 1 手すすめると、盤の駒がほんとうに動く
+    const before = await phone.evaluate(() =>
+      [...document.querySelectorAll('#stage .koma')].map((e) => e.style.left + ',' + e.style.top).join('|'));
+    await phone.locator('#btn-next-move').tap();
+    await phone.waitForTimeout(700);
+    const after = await phone.evaluate(() =>
+      [...document.querySelectorAll('#stage .koma')].map((e) => e.style.left + ',' + e.style.top).join('|'));
+    ok(before !== after, '1手すすむボタンで駒が動く');
+    ok(await phone.locator('#stage .hl').isVisible(), '動かした場所に印がつく');
+
+    // 自動再生が最後まで進む (2 手目以降も動く)
+    await phone.locator('#btn-play').tap();
+    await phone.waitForTimeout(2500);
+    const played = await phone.evaluate(() => window.__app.player().index);
+    ok(played >= 3, `自動再生で手が進む (${played} 手目まで)`);
+
+    // ------------------------------------------------ 詰将棋
+    section('1手詰クイズ');
+    await phone.evaluate(() => window.__app.start('tsume'));
+    await phone.waitForTimeout(300);
+    ok(await phone.locator('#hands').isVisible(), '持ち駒が出ている');
+    ok(await phone.locator('#player').isHidden(), '詰将棋では再生バーが隠れている');
+    const moveChoices = await phone.locator('.pill.move').count();
+    ok(moveChoices === 4, `指し手の選択肢が 4 つ (${moveChoices})`);
+
+    // ------------------------------------------------ 最後まで通す
+    section('最後まで通す');
+    await phone.evaluate(async () => {
+      window.__app.start('knowledge');
+      for (let i = 0; i < 20; i++) {
+        if (!document.getElementById('screen-quiz').classList.contains('is-active')) break;
+        window.__app.answerCorrect();
+        await new Promise((r) => setTimeout(r, 480));
+        document.getElementById('btn-next').click();
+        await new Promise((r) => setTimeout(r, 120));
+      }
+    });
+    await phone.waitForTimeout(400);
+    ok(await phone.locator('#screen-result.is-active').count() === 1, '最後まで解くと結果画面になる');
+    ok((await phone.textContent('#result-rank')).length > 0, `段位が出る (${await phone.textContent('#result-rank')})`);
+    const saved = await phone.evaluate(() => localStorage.getItem('shogi-quiz-dojo/v1'));
+    ok(saved && saved.includes('knowledge'), '最高記録がほぞんされる');
+
+    // ------------------------------------------------ ずかん
+    section('ずかん');
+    await phone.evaluate(() => window.__app.showZukan('castle'));
+    await phone.waitForTimeout(400);
+    const cards = await phone.locator('.z-card').count();
+    ok(cards >= 20, `囲いずかんに全部ならぶ (${cards} 枚)`);
+    await phone.locator('#zukan-tabs .tab[data-tab="senpou"]').tap();
+    await phone.waitForTimeout(400);
+    const senpouCards = await phone.locator('.z-card').count();
+    ok(senpouCards >= 10, `戦法ずかんにならぶ (${senpouCards} 枚)`);
+    ok(await phone.locator('.z-card .board .koma').first().isVisible(), 'ずかんの盤にも駒が出る');
+
+    // ------------------------------------------------ 画面のはみ出し
+    section('スマホ幅');
+    for (const [name, go] of [
+      ['タイトル', "window.__app.showScreen('screen-title')"],
+      ['戦法クイズ', "window.__app.start('senpou')"],
+      ['ずかん', "window.__app.showZukan('tesuji')"]
+    ]) {
+      await phone.evaluate(go);
+      await phone.waitForTimeout(250);
+      const over = await phone.evaluate(() =>
+        document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      ok(over <= 1, `${name}: 横スクロールが出ない (はみ出し ${over}px)`);
+    }
 
     // ------------------------------------------------ 明るい画面・暗い画面
     section('明るい画面と暗い画面');
@@ -174,13 +273,14 @@ async function run() {
       // 直したものが 1 回のリロードで出るか (キャッシュ優先だと古い画面が出る)
       const indexPath = path.join(ROOT, 'index.html');
       const original = fs.readFileSync(indexPath, 'utf8');
-      const marker = original.match(/<h1[^>]*>([^<]*)<\/h1>/);
-      fs.writeFileSync(indexPath, original.replace(marker[1], 'こうしんかくにん'));
+      // <title> にも同じ文字列があるので、h1 の中身だけを置きかえる
+      const marker = original.match(/(<h1[^>]*>)([^<]*)/);
+      fs.writeFileSync(indexPath, original.replace(marker[0], marker[1] + 'こうしんかくにん'));
       await swPage.reload();
       await swPage.waitForTimeout(400);
       const title = await swPage.textContent('h1');
       fs.writeFileSync(indexPath, original);
-      ok(title.trim() === 'こうしんかくにん', `直したものが 1 回のリロードで出る (${title.trim()})`);
+      ok(title.trim().startsWith('こうしんかくにん'), `直したものが 1 回のリロードで出る (${title.trim()})`);
 
       await swPage.reload();
       await swPage.waitForTimeout(500);
