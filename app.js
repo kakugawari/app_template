@@ -37,7 +37,9 @@
     const board = el('div', 'board');
     board.style.setProperty('--cols', files.length);
     board.style.setProperty('--rows', ranks.length);
-    wrap.style.setProperty('--cols', files.length);   // 盤の大きさの上限は入れ物側で決める
+    // 盤の大きさの上限は入れ物側で決めるので、筋と段の数を両方わたす
+    wrap.style.setProperty('--cols', files.length);
+    wrap.style.setProperty('--rows', ranks.length);
     const ranksEl = el('div', 'ranks');
     ranks.forEach((r) => ranksEl.appendChild(el('span', null, RANK_KANJI[r - 1])));
 
@@ -463,9 +465,16 @@
     return player;
   }
 
+  /**
+   * 盤の高さの取り置き (px)。盤より下に出るものの合計 + 選択肢 1 行ぶん。
+   * これを引いた高さに盤をおさめるので、選択肢がスクロールなしで見える。
+   */
+  const RESERVE = { castle: 320, senpou: 370, tesuji: 430, tsume: 430 };
+
   function renderQuestion() {
     stopPlayer();
     const q = state.round[state.idx];
+    $('screen-quiz').style.setProperty('--reserve', (RESERVE[q.type] || 430) + 'px');
     state.answered = false;
     $('hud-count').textContent = '第' + (state.idx + 1) + '問';
     renderProgress();
@@ -481,7 +490,7 @@
     choicesEl.innerHTML = '';
 
     if (q.type === 'castle') {
-      $('q-label').textContent = 'かこい　むずかしさ ' + stars(q.item.lv);
+      $('q-label').textContent = stars(q.item.lv);
       $('q-text').innerHTML = 'この囲（かこ）いの名前はどれ？';
       const crop = castleCrop(q.item);
       const board = createBoard(crop.files, crop.ranks);
@@ -490,9 +499,10 @@
       board.set(q.item.pieces.map(([k, f, r]) => ({ k: k, s: C.SENTE, f: f, r: r })));
     } else if (q.type === 'tesuji' || q.type === 'senpou') {
       const isT = q.type === 'tesuji';
-      $('q-label').textContent = (isT ? 'てすじ' : 'せんぽう') + '　むずかしさ ' + stars(q.item.lv);
+      $('q-label').textContent = stars(q.item.lv);
+      // 手筋は再生ボタンがすぐ下に見えているので、説明の行は足さない (そのぶん選択肢が上がる)
       $('q-text').innerHTML = isT
-        ? 'この手筋（てすじ）はどれ？<small>▶ボタンでもう一度見られるよ</small>'
+        ? 'この手筋（てすじ）はどれ？'
         : 'この指し方をする戦法（せんぽう）はどれ？<small>初形からの出だしをパラパラ漫画にしたよ</small>';
       const startBoard = isT ? C.parseBoard(q.item.board, q.item.hand) : C.initialBoard();
       const seq = fromKifu(startBoard, q.item.kifu);
@@ -503,7 +513,7 @@
       buildPlayerUI(board, seq.frames, seq.moves, true);
       if (isT && q.item.hand) showHands(startBoard);
     } else if (q.type === 'tsume') {
-      $('q-label').textContent = '1手詰　むずかしさ ' + stars(q.item.lv);
+      $('q-label').textContent = stars(q.item.lv);
       $('q-text').innerHTML = '<b>1手</b>で詰ますのはどれ？<small>先手（下）の手番だよ</small>';
       const b = C.parseBoard(q.item.board, q.item.hand);
       const crop = C.cropFor(b, [], 5);
@@ -513,7 +523,7 @@
       board.set(C.listPieces(b));
       showHands(b);
     } else {
-      $('q-label').textContent = 'ちしき・かくげん';
+      $('q-label').textContent = '';
       $('q-text').textContent = q.item.q;
     }
 
@@ -805,6 +815,16 @@
         window.__app.answer(q.choices.findIndex((c) => c.ok));
       },
       player: () => state.player,
+      /** テスト用: 決まった 1 問だけを出して描く */
+      showOne: (type, item) => {
+        state.mode = type;
+        state.round = [C.questionOf(type, item, D, Math.random)];
+        state.idx = 0;
+        state.score = 0;
+        state.wrong = [];
+        showScreen('screen-quiz');
+        renderQuestion();
+      },
       data: D,
       core: C
     };

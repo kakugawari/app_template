@@ -159,8 +159,12 @@ async function run() {
       const cs = getComputedStyle(k);
       return { font: parseFloat(cs.fontSize), w: k.getBoundingClientRect().width };
     });
-    ok(komaSize.font >= 17, `9×9 でも駒の字が小さくなりすぎない (${komaSize.font.toFixed(1)}px)`);
-    ok(komaSize.w >= 28, `駒じたいも十分な大きさ (${komaSize.w.toFixed(1)}px)`);
+    /* 9×9 の盤は、画面の高さから「選択肢 1 行ぶん」を残して大きさを決めている。
+       せまい画面 (高さ664) では、盤を最大 (マス36px) にすると選択肢が 27px 隠れる。
+       押せない選択肢のほうが困るので、そちらを優先して盤を少し小さくしている。
+       実機 (高さ734〜) ではマス36px 以上、ホーム画面から開けばさらに大きい。 */
+    ok(komaSize.font >= 16, `9×9 でも駒の字が読める大きさ (${komaSize.font.toFixed(1)}px)`);
+    ok(komaSize.w >= 25, `駒じたいも十分な大きさ (${komaSize.w.toFixed(1)}px)`);
 
     const kifuChips = await phone.locator('#kifu-strip span').count();
     ok(kifuChips >= 5, `棋譜が並ぶ (${kifuChips} 手)`);
@@ -192,6 +196,34 @@ async function run() {
     ok(await phone.locator('#player').isHidden(), '詰将棋では再生バーが隠れている');
     const moveChoices = await phone.locator('.pill.move').count();
     ok(moveChoices === 4, `指し手の選択肢が 4 つ (${moveChoices})`);
+
+    // ------------------------------------------------ 選択肢が画面に入るか
+    // 盤の切り取りが縦長 (5×9 など) だと、盤だけで画面がうまり、
+    // 選択肢がスクロールしないと見えなくなっていた。全問ぶん測って見張る。
+    section('選択肢が画面に入る');
+    const overflow = await phone.evaluate(async () => {
+      const D = window.__app.data;
+      const ng = [];
+      let minCell = 999;
+      for (const [type, list] of [['castle', D.castles], ['tesuji', D.tesuji],
+                                  ['tsume', D.tsume], ['senpou', D.senpou]]) {
+        for (const item of list) {
+          window.__app.showOne(type, item);
+          await new Promise((r) => setTimeout(r, 25));
+          const board = document.querySelector('.board');
+          const cols = Number(getComputedStyle(board).getPropertyValue('--cols'));
+          minCell = Math.min(minCell, board.getBoundingClientRect().width / cols);
+          const top = document.querySelector('.choices').getBoundingClientRect().top;
+          // 選択肢の 1 行 (88px) が画面に入っているか
+          if (top + 88 > window.innerHeight) ng.push(item.name + ' (' + Math.round(top) + 'px)');
+        }
+      }
+      return { ng: ng, minCell: Math.round(minCell) };
+    });
+    ok(overflow.ng.length === 0,
+      overflow.ng.length ? '選択肢が画面からはみ出す問題がある: ' + overflow.ng.slice(0, 4).join(' / ')
+                         : '全問で、選択肢の1行目がスクロールなしで見える');
+    ok(overflow.minCell >= 24, `いちばん縦長の盤でも、マスが小さくなりすぎない (${overflow.minCell}px)`);
 
     // ------------------------------------------------ 最後まで通す
     section('最後まで通す');
