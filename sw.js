@@ -6,7 +6,7 @@
 const CACHE = 'shogi-quiz-dojo-v1';
 const FILES = [
   './', './index.html', './styles.css', './core.js', './data.js', './app.js',
-  './icon.svg', './apple-touch-icon.png', './app.webmanifest'
+  './icon-192.png', './icon-512.png', './apple-touch-icon.png', './app.webmanifest'
 ];
 
 self.addEventListener('install', (e) => {

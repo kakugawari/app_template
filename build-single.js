@@ -16,11 +16,13 @@ function build() {
   const css = read('styles.css');
   const js = ['core.js', 'data.js', 'app.js'].map(read).join('\n')
     .replace(/\/\* build:strip-start[\s\S]*?build:strip-end \*\//g, '');
-  const icon = 'data:image/svg+xml;base64,' + fs.readFileSync(path.join(__dirname, 'icon.svg')).toString('base64');
+  // favicon は icon-192.png (小さいほう) を埋めこむ。原寸の icon.png は
+  // 1MB を超えるので、ページの重さのためにここでは使わない。
+  const icon = 'data:image/png;base64,' + fs.readFileSync(path.join(__dirname, 'icon-192.png')).toString('base64');
 
   let html = read('index.html')
     .replace('<link rel="stylesheet" href="./styles.css">', '<style>\n' + css + '\n</style>')
-    .replace(/<link rel="icon"[^>]*>/, '<link rel="icon" href="' + icon + '" type="image/svg+xml">')
+    .replace(/<link rel="icon"[^>]*>/, '<link rel="icon" href="' + icon + '" type="image/png">')
     .replace(/\s*<link rel="apple-touch-icon"[^>]*>/, '')
     .replace(/\s*<link rel="manifest"[^>]*>/, '')
     .replace(

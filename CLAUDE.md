@@ -20,7 +20,7 @@ npm start          # http://localhost:8080/ で開く
 npm test           # ロジックとクイズの中身のテスト (node だけで動く。速い)
 npm run test:ui    # ブラウザで実際に動かすテスト (要 npm i -D playwright)
 npm run build      # 1枚の HTML に焼く (テストプレイ用 / Artifact 用)
-npm run icon       # icon.svg から apple-touch-icon.png を焼き直す
+npm run icon       # icon.png から apple-touch-icon.png / icon-192.png / icon-512.png を焼き直す
 ```
 
 `npm run test:ui` は本物のブラウザを立ち上げ、指の操作をそのまま再現する。
@@ -37,7 +37,7 @@ core.test.js              ルールのテスト (node --test)
 data.test.js              クイズの中身を将棋のルールで検算するテスト
 browser-test.js           ブラウザで動かすテスト
 build-single.js           1枚の HTML に焼く
-make-icon.js              アイコンを PNG に焼く
+make-icon.js              icon.png から各サイズのアイコンを焼く
 serve.js / sw.js          開発用サーバー / サービスワーカー
 fonts/OFL.txt             駒の字 (Shippori Mincho) のライセンス
 ```
@@ -136,6 +136,7 @@ fonts/OFL.txt             駒の字 (Shippori Mincho) のライセンス
 | アニメーションが 1 フレームも動かない | 同じフレーム内で書き換えると、ブラウザは途中の状態を見ない | `element.animate()` (Web Animations API) を使う |
 | まわすと指の下から対象が逃げる | 回転で縦横が入れ替わり、並び全体がずれていた | 入れ物を正方形にして、回しても大きさを変えない |
 | ホーム画面のアイコンが違うものになる | iOS は `apple-touch-icon` に SVG を使えない | PNG を用意する |
+| 1枚ものの HTML が急に重くなる | favicon に原寸 (1024px) のアイコンをそのまま埋めこんでいた | 埋めこむのは小さいサイズ (`icon-192.png`) にする |
 | 直したのに古い画面が出る | サービスワーカーがキャッシュ優先だった | つながっていれば最新を取りにいく |
 | 操作のたびに一瞬止まる | 操作ごとに `localStorage` へ同期で書き込み、全体を描き直していた | 書き込みはまとめる。描き直しは変わったぶんだけ |
 | タップしても反応しない | 上に重ねた層が全面をふさいでいた | 反応させたい所だけ `pointer-events` を有効にする |
