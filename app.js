@@ -343,13 +343,14 @@
      タイトル
      ============================================================ */
 
+  // 絵文字ではなく、駒の形の札に漢字を一文字。和紙の見た目にそろえる
   const MODES = [
-    { id: 'castle', icon: '🏯', name: '囲いクイズ', desc: '盤の形を見て、囲いの名前を当てよう', count: () => D.castles.length },
-    { id: 'tesuji', icon: '🎞', name: '手筋パラパラ', desc: '動く絵で出る手筋の名前は？ 全部アニメで出題', count: () => D.tesuji.length },
-    { id: 'senpou', icon: '♟', name: '戦法パラパラ', desc: '序盤の指し手をパラパラ漫画で。何の戦法かな', count: () => D.senpou.length },
-    { id: 'tsume', icon: '🎯', name: '1手詰クイズ', desc: 'この局面、1手で詰ますのはどれ？', count: () => D.tsume.length },
-    { id: 'knowledge', icon: '📖', name: '知識・格言', desc: 'ルール、戦法、将棋のことわざ', count: () => D.knowledge.length },
-    { id: 'mix', icon: '🔥', name: 'ミックス十番勝負', desc: 'ぜんぶまぜて実力チェック！', count: () => 0 }
+    { id: 'castle', icon: '囲', name: '囲いクイズ', desc: '盤の形を見て、囲いの名前を当てよう', count: () => D.castles.length },
+    { id: 'tesuji', icon: '筋', name: '手筋パラパラ', desc: '動く絵で出る手筋の名前は？ 全部アニメで出題', count: () => D.tesuji.length },
+    { id: 'senpou', icon: '戦', name: '戦法パラパラ', desc: '序盤の指し手をパラパラ漫画で。何の戦法かな', count: () => D.senpou.length },
+    { id: 'tsume', icon: '詰', name: '1手詰クイズ', desc: 'この局面、1手で詰ますのはどれ？', count: () => D.tsume.length },
+    { id: 'knowledge', icon: '言', name: '知識・格言', desc: 'ルール、戦法、将棋のことわざ', count: () => D.knowledge.length },
+    { id: 'mix', icon: '番', name: 'ミックス十番勝負', desc: 'ぜんぶまぜて実力チェック！', count: () => 0 }
   ];
 
   function renderTitle() {
@@ -373,7 +374,7 @@
     }
     const z = el('button', 'mode-btn is-zukan');
     z.type = 'button';
-    z.appendChild(el('span', 'medal', '📚'));
+    z.appendChild(el('span', 'medal', '図'));
     const zb = el('span', 'body');
     zb.appendChild(el('span', 'name', 'ずかん'));
     zb.appendChild(el('span', 'desc', '囲い27・手筋15・戦法19。動く絵でひとつずつ見られる'));
@@ -660,7 +661,7 @@
     for (let i = 0; i < 24; i++) {
       const s = el('span', 'confetti', chars[Math.floor(Math.random() * chars.length)]);
       s.style.left = Math.random() * 96 + 'vw';
-      s.style.color = ['#f0cd8b', '#ff9d85', '#8fd3ff', '#a8e6b8'][i % 4];
+      s.style.color = ['#b23a2e', '#8a6a34', '#2f5d8a', '#4f7f5f'][i % 4];
       s.style.animationDuration = 2.2 + Math.random() * 2.4 + 's';
       s.style.animationDelay = Math.random() * 0.8 + 's';
       document.body.appendChild(s);

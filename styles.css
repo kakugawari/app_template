@@ -11,20 +11,21 @@
 }
 
 /* ===========================================================
-   しょうぎクイズ道場 — 見た目
-   藍（あい）の背景 × 榧（かや）の盤 × 朱（しゅ）の判定。
-   色は :root にまとめる。アプリの顔なので、暗い和の一色でそろえた。
+   将棋クイズ — 見た目
+   和紙（かみ）の白 × 墨（すみ）の字 × 朱（しゅ）のさし色。
+   筆文字のアイコンと、棋譜ノート (kakugawari/kifu) に色をそろえてある。
+   色は :root にまとめる。
    =========================================================== */
 
 :root {
-  --ink:      #0d1526;
-  --ink-2:    #131f38;
-  --panel:    #1d2c4e;
-  --panel-2:  #233757;
-  --line:     #365a9b;
-  --line-soft:#2a3d67;
-  --text:     #f4f7ff;
-  --muted:    #a8b8dd;
+  --kami:     #faf8f3;          /* 地 (和紙の白) */
+  --kami-2:   #ffffff;          /* 紙 (カード) */
+  --kami-3:   #f2ece0;          /* うすい和紙 (札・見出し) */
+  --sumi:     #221c15;          /* 墨 (見出し) */
+  --sumi-2:   #453b2e;          /* 本文 */
+  --usu:      #8a8072;          /* うすい字 */
+  --sen:      #e0d7c6;          /* けい線 */
+  --sen-2:    #cfc3ac;          /* こい けい線 */
   --wood:     #f2dfb0;          /* 駒の地 */
   --wood-hi:  #f7e8be;
   --wood-lo:  #ebd59f;
@@ -33,15 +34,16 @@
   --wood-ink: #241c12;          /* 駒の字 */
   --ban:      #e0bc7e;          /* 盤の木地 */
   --momo:     #e0628a;          /* 直前の手 */
-  --shu:      #d9483a;
-  --shu-dark: #96291f;
-  --gold:     #f2c766;
+  --shu:      #b23a2e;          /* 朱 (アイコンの「クイズ」と同じ) */
+  --shu-dark: #8b2b21;
+  --shu-usu:  #f7ece7;          /* 朱のうすい面 */
+  --ai:       #2f5d8a;          /* 藍 (✕ などのさし色) */
+  --midori:   #4f7f5f;
   --cream:    #fff7e8;
-  --ao:       #5b93e8;
-  --midori:   #6cc39a;
-  --radius:   18px;
-  --shadow:   0 6px 0 rgba(6, 12, 26, .55);
-  color-scheme: dark;
+  --radius:   14px;
+  /* 紙に置いた影。濃い影より、うすく広い影のほうが和紙になじむ */
+  --shadow:   0 1px 2px rgba(80, 66, 44, .07), 0 6px 16px rgba(80, 66, 44, .08);
+  color-scheme: light;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -55,14 +57,13 @@ body {
   font-family: "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", "BIZ UDPGothic",
                "Hiragino Kaku Gothic ProN", system-ui, sans-serif;
   font-weight: 700;
-  color: var(--text);
-  background-color: var(--ink);
-  /* 麻の葉ふうの細かい市松＋やわらかい光 */
+  color: var(--sumi-2);
+  background-color: var(--kami);
+  /* 和紙の地。ごく薄い縦の繊維と、すみに落とした墨のにじみ */
   background-image:
-    radial-gradient(circle at 22% 12%, rgba(91, 147, 232, .16), transparent 46%),
-    radial-gradient(circle at 82% 78%, rgba(217, 72, 58, .10), transparent 44%),
-    repeating-linear-gradient(45deg, rgba(255, 255, 255, .022) 0 1px, transparent 1px 14px),
-    repeating-linear-gradient(-45deg, rgba(255, 255, 255, .022) 0 1px, transparent 1px 14px);
+    radial-gradient(circle at 88% 4%, rgba(130, 110, 80, .07), transparent 42%),
+    radial-gradient(circle at 6% 96%, rgba(178, 58, 46, .045), transparent 40%),
+    repeating-linear-gradient(97deg, rgba(150, 130, 95, .035) 0 1px, transparent 1px 6px);
   background-attachment: fixed;
   -webkit-text-size-adjust: 100%;
   display: flex;
@@ -84,32 +85,38 @@ body {
 
 .title-hero { text-align: center; padding: 10px 0 2px; }
 .logo-mark {
-  width: 112px; height: 112px;
-  border-radius: 26px;
-  box-shadow: 0 7px 0 rgba(0, 0, 0, .35), 0 2px 10px rgba(0, 0, 0, .25);
+  width: 116px; height: 116px;
+  border-radius: 27px;
+  box-shadow: 0 2px 4px rgba(80, 66, 44, .10), 0 10px 24px rgba(80, 66, 44, .13);
   animation: logo-in .5s cubic-bezier(.2, 1.6, .3, 1);
 }
 @keyframes logo-in { from { opacity: 0; transform: scale(.7) rotate(-8deg); } to { opacity: 1; transform: none; } }
 
 .title {
-  font-family: "Mochiy Pop One", "M PLUS Rounded 1c", sans-serif;
-  font-size: clamp(1.7rem, 8vw, 2.1rem);
-  line-height: 1.3;
-  letter-spacing: .05em;
-  margin-top: 6px;
-  text-shadow: 0 3px 0 #0a1224, 0 0 18px rgba(91, 147, 232, .35);
+  font-family: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: clamp(1.6rem, 7.4vw, 2rem);
+  line-height: 1.32;
+  letter-spacing: .06em;
+  margin-top: 10px;
+  color: var(--sumi);
 }
 .title-sub {
   display: block;
-  font-size: .8rem;
+  font-family: "M PLUS Rounded 1c", sans-serif;
+  font-size: .74rem;
   letter-spacing: .34em;
-  color: var(--gold);
-  margin-top: 6px;
+  color: var(--shu);
+  margin-top: 8px;
 }
-.tagline { font-size: .88rem; color: #cddcff; margin-top: 8px; }
-.tagline b { color: var(--gold); }
-.total-note { font-size: .76rem; color: var(--muted); margin-top: 4px; }
-.credit { font-size: .68rem; color: #7f8fb6; text-align: center; line-height: 1.8; margin-top: 6px; }
+/* 見出しの下の朱の線。落款のように短く引く */
+.title-hero::after {
+  content: ""; display: block; width: 46px; height: 2px;
+  margin: 12px auto 0; background: var(--shu); opacity: .55; border-radius: 2px;
+}
+.tagline { font-size: .86rem; color: var(--sumi-2); margin-top: 12px; }
+.tagline b { color: var(--shu); }
+.total-note { font-size: .74rem; font-weight: 500; color: var(--usu); margin-top: 5px; }
+.credit { font-size: .68rem; font-weight: 500; color: var(--usu); text-align: center; line-height: 1.8; margin-top: 6px; }
 
 .mode-list { display: flex; flex-direction: column; gap: 12px; }
 
@@ -120,78 +127,83 @@ body {
   padding: 14px 16px;
   text-align: left;
   cursor: pointer;
-  color: var(--text);
+  color: var(--sumi);
   font: inherit;
-  background: linear-gradient(180deg, var(--panel-2), var(--panel));
-  border: 2px solid var(--line);
+  background: var(--kami-2);
+  border: 1px solid var(--sen);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  transition: transform .09s ease, border-color .16s ease;
+  transition: transform .09s ease, border-color .16s ease, box-shadow .16s ease;
 }
-.mode-btn:hover { border-color: #4d7ec2; }
-.mode-btn:active { transform: translateY(5px); box-shadow: 0 1px 0 rgba(6, 12, 26, .55); }
+.mode-btn:hover { border-color: var(--sen-2); }
+.mode-btn:active { transform: translateY(1px); box-shadow: 0 1px 2px rgba(80, 66, 44, .10); }
+/* モードの札。盤の駒と同じ五角形にして、漢字を一文字のせる */
 .mode-btn .medal {
-  flex: 0 0 auto; width: 46px; height: 46px; display: grid; place-items: center;
-  font-size: 1.5rem;
-  border-radius: 14px;
-  background: radial-gradient(circle at 32% 28%, #33507f, #1a2946);
-  border: 1px solid #4a70ad;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18);
+  flex: 0 0 auto; width: 44px; height: 47px; display: grid; place-items: center;
+  font-family: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  /* 字を大きくしすぎると、五角形の下で切れる。押し下げも控えめに */
+  font-size: 1.16rem; font-weight: 700; color: var(--wood-ink);
+  padding-top: 4%;
+  clip-path: polygon(50% 0%, 86% 19%, 100% 100%, 0 100%, 14% 19%);
+  background: linear-gradient(180deg, var(--wood-hi), var(--wood-lo));
+  filter: drop-shadow(0 1px 1.5px rgba(80, 66, 44, .3));
 }
 .mode-btn .body { flex: 1 1 auto; min-width: 0; }
 .mode-btn .body { display: flex; flex-direction: column; gap: 3px; }
-.mode-btn .name { display: block; font-family: "Mochiy Pop One", sans-serif; font-size: 1.05rem; letter-spacing: .02em; }
-.mode-btn .desc { display: block; font-size: .74rem; font-weight: 500; color: #b7c9ee; line-height: 1.6; }
+.mode-btn .name { display: block; font-family: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif; font-size: 1.06rem; letter-spacing: .04em; }
+.mode-btn .desc { display: block; font-size: .73rem; font-weight: 500; color: var(--usu); line-height: 1.65; }
 .mode-btn .best {
-  flex: 0 0 auto; font-size: .68rem; color: var(--gold);
-  background: #101c33; border: 1px solid #2f4b7d; border-radius: 999px; padding: 4px 9px;
+  flex: 0 0 auto; font-size: .66rem; font-weight: 700; color: var(--shu);
+  background: var(--shu-usu); border: 1px solid #ecd9d2; border-radius: 999px; padding: 4px 9px;
 }
-.mode-btn.is-zukan { background: linear-gradient(180deg, #2b3f2f, #1d2d24); border-color: #43714f; }
-.mode-btn.is-zukan .medal { background: radial-gradient(circle at 32% 28%, #3d6b4c, #1e3427); border-color: #4f8560; }
+/* ずかんは「読むもの」なので、朱ではなく緑の栞（しおり）で分ける */
+.mode-btn.is-zukan { border-color: #d7e0d2; }
+.mode-btn.is-zukan .medal { background: linear-gradient(180deg, #eaf1e6, #d3e0cd); color: #2f4a37; }
+.mode-btn.is-zukan .name { color: var(--midori); }
 
 /* ---------------- HUD ---------------- */
 
 .hud { display: flex; align-items: center; gap: 10px; }
-.hud-count { font-family: "Mochiy Pop One", sans-serif; font-size: 1rem; color: var(--gold); }
-.hud-score { margin-left: auto; font-size: .78rem; background: #101c33; border: 1px solid #2f4b7d; border-radius: 999px; padding: 5px 13px; }
-.hud-score b { color: var(--gold); font-size: 1rem; }
+.hud-count { font-family: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif; font-size: 1rem; color: var(--sumi); letter-spacing: .06em; }
+.hud-score { margin-left: auto; font-size: .74rem; color: var(--usu); background: var(--kami-2); border: 1px solid var(--sen); border-radius: 999px; padding: 5px 13px; }
+.hud-score b { color: var(--shu); font-size: 1rem; }
 
 .icon-btn {
   width: 34px; height: 34px; flex: 0 0 auto;
   display: grid; place-items: center;
-  font: inherit; font-size: .9rem; color: var(--text); cursor: pointer;
-  background: #101c33; border: 1px solid #2f4b7d; border-radius: 11px;
+  font: inherit; font-size: .9rem; color: var(--sumi-2); cursor: pointer;
+  background: var(--kami-2); border: 1px solid var(--sen); border-radius: 11px;
 }
 .icon-btn:active { transform: translateY(2px); }
 
 .progress { display: flex; gap: 4px; justify-content: center; flex-wrap: wrap; }
 .progress i {
   width: 15px; height: 17px; display: block;
-  background: #33456d;
+  background: var(--sen);
   clip-path: polygon(50% 0%, 86% 17%, 96% 100%, 4% 100%, 14% 17%);
   transition: background-color .2s ease;
 }
-.progress i.ok { background: var(--gold); }
-.progress i.ng { background: var(--shu); }
-.progress i.now { background: #7ea7e8; animation: hop .8s ease-in-out infinite alternate; }
+.progress i.ok { background: var(--wood-edge); }
+.progress i.ng { background: var(--shu); opacity: .45; }
+.progress i.now { background: var(--shu); animation: hop .8s ease-in-out infinite alternate; }
 @keyframes hop { from { transform: translateY(0); } to { transform: translateY(-4px); } }
 
 /* ---------------- 問題カード ---------------- */
 
 .q-card {
-  background: linear-gradient(180deg, var(--panel-2), var(--panel));
-  border: 2px solid var(--line);
+  background: var(--kami-2);
+  border: 1px solid var(--sen);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: 14px 10px 16px;
   display: flex; flex-direction: column; align-items: center; gap: 11px;
 }
 .q-label {
-  font-size: .68rem; letter-spacing: .12em; color: var(--gold);
-  background: #101c33; border: 1px solid #2f4b7d; border-radius: 999px; padding: 4px 12px;
+  font-size: .68rem; letter-spacing: .12em; color: var(--usu);
+  background: var(--kami-3); border: 1px solid var(--sen); border-radius: 999px; padding: 4px 12px;
 }
-.q-text { font-size: 1rem; line-height: 1.7; text-align: center; }
-.q-text small { display: block; font-size: .74rem; font-weight: 500; color: var(--muted); margin-top: 4px; }
+.q-text { font-size: 1rem; line-height: 1.7; text-align: center; color: var(--sumi); }
+.q-text small { display: block; font-size: .74rem; font-weight: 500; color: var(--usu); margin-top: 4px; }
 
 /* ---------------- 盤 ---------------- */
 
@@ -207,7 +219,7 @@ body {
   max-width: calc(var(--cols, 9) * 70px);
   margin: 0 auto;
 }
-.files, .ranks { display: flex; font-size: 9px; font-weight: 700; color: #93a7d2; }
+.files, .ranks { display: flex; font-size: 9px; font-weight: 700; color: var(--usu); }
 .files { grid-area: 1 / 1; }
 .files span { flex: 1 1 0; text-align: center; }
 .ranks { grid-area: 2 / 2; flex-direction: column; }
@@ -226,7 +238,7 @@ body {
     repeating-linear-gradient(90deg, rgba(94, 69, 38, .55) 0 1px, transparent 1px calc(100% / var(--cols))),
     repeating-linear-gradient(180deg, rgba(94, 69, 38, .55) 0 1px, transparent 1px calc(100% / var(--rows))),
     linear-gradient(135deg, #e7c68b, #dfb877 50%, #e5c287);
-  box-shadow: 0 4px 0 rgba(6, 12, 26, .45), 0 2px 8px rgba(0, 0, 0, .18);
+  box-shadow: 0 2px 8px rgba(80, 66, 44, .16);
 }
 .board .star {
   position: absolute;
@@ -288,11 +300,11 @@ body {
 .hands { width: 100%; display: flex; flex-direction: column; gap: 6px; }
 .hands .side {
   display: flex; align-items: center; gap: 8px;
-  background: #101c33; border: 1px solid #2f4b7d; border-radius: 11px;
-  padding: 5px 10px; font-size: .72rem; color: var(--muted);
+  background: var(--kami-3); border: 1px solid var(--sen); border-radius: 11px;
+  padding: 5px 10px; font-size: .72rem; color: var(--usu);
 }
 .hands .side .who { flex: 0 0 auto; }
-.hands .side .none { color: #7f8fb6; }
+.hands .side .none { color: var(--usu); opacity: .8; }
 .hands .plates { flex: 1 1 auto; display: flex; gap: 5px; flex-wrap: wrap; justify-content: flex-end; }
 .hk { position: relative; width: 27px; height: 28.6px; flex: 0 0 auto; }
 .hk .p, .hk .c { position: absolute; clip-path: polygon(50% 0%, 86% 19%, 100% 100%, 0 100%, 14% 19%); }
@@ -307,7 +319,7 @@ body {
 .hk .n {
   position: absolute; right: -3px; bottom: -4px; z-index: 1;
   font-family: "M PLUS Rounded 1c", system-ui, sans-serif; font-size: 10px; font-weight: 700;
-  color: var(--cream); background: var(--shu); border-radius: 7px; padding: 0 4px; line-height: 1.4;
+  color: #fff; background: var(--shu); border-radius: 7px; padding: 0 4px; line-height: 1.4;
 }
 
 /* ---------------- パラパラ再生 ---------------- */
@@ -316,14 +328,14 @@ body {
 .player-btns { display: flex; gap: 7px; align-items: center; justify-content: center; flex-wrap: wrap; }
 .ctrl {
   font: inherit; font-size: .8rem; font-weight: 700; cursor: pointer;
-  color: var(--cream); background: linear-gradient(180deg, #33507f, #22385e);
-  border: 1px solid #4a70ad; border-radius: 999px; padding: 8px 15px;
-  box-shadow: 0 3px 0 #101c33;
+  color: var(--sumi-2); background: var(--kami-2);
+  border: 1px solid var(--sen-2); border-radius: 999px; padding: 8px 15px;
+  box-shadow: 0 1px 2px rgba(80, 66, 44, .08);
 }
-.ctrl:active { transform: translateY(3px); box-shadow: 0 0 0 #101c33; }
-.ctrl:disabled { opacity: .45; cursor: default; box-shadow: none; transform: none; }
+.ctrl:active { transform: translateY(1px); box-shadow: none; }
+.ctrl:disabled { opacity: .4; cursor: default; box-shadow: none; transform: none; }
 .ctrl-sm { padding: 8px 12px; min-width: 42px; }
-.ctrl.is-on { background: linear-gradient(180deg, var(--shu), #b2352a); border-color: #ef7c6d; box-shadow: 0 3px 0 var(--shu-dark); }
+.ctrl.is-on { color: #fff; background: var(--shu); border-color: var(--shu-dark); }
 
 .kifu-strip {
   width: 100%; display: flex; gap: 5px; overflow-x: auto; padding: 2px 2px 6px;
@@ -332,11 +344,11 @@ body {
 .kifu-strip span {
   flex: 0 0 auto;
   font-family: "Shippori Mincho B1", serif; font-size: .74rem;
-  color: var(--muted); background: #14213a; border: 1px solid #2a3d67;
+  color: var(--usu); background: var(--kami-2); border: 1px solid var(--sen);
   border-radius: 8px; padding: 4px 8px; white-space: nowrap;
 }
 .kifu-strip span.now { color: var(--wood-ink); background: var(--wood); border-color: var(--wood-lo); }
-.kifu-strip span.done { color: var(--text); border-color: #3d5a92; }
+.kifu-strip span.done { color: var(--sumi-2); border-color: var(--sen-2); }
 
 /* ---------------- 選択肢 ---------------- */
 
@@ -347,10 +359,11 @@ body {
 
 .koma-choice {
   position: relative; border: none; background: none; padding: 0; cursor: pointer;
-  filter: drop-shadow(0 5px 0 rgba(6, 12, 26, .5));
+  /* 2 つめの影で、切り抜いた五角形のまわりに細いふちを作る (clip-path は枠線が引けない) */
+  filter: drop-shadow(0 2px 3px rgba(80, 66, 44, .22)) drop-shadow(0 0 .8px rgba(138, 106, 52, .95));
   transition: transform .09s ease;
 }
-.koma-choice:active { transform: translateY(4px); }
+.koma-choice:active { transform: translateY(2px); }
 .koma-choice .shape {
   clip-path: polygon(50% 0%, 88% 13%, 97% 100%, 3% 100%, 12% 13%);
   background: linear-gradient(168deg, var(--wood-hi), var(--wood) 52%, var(--wood-lo));
@@ -360,66 +373,68 @@ body {
   color: #4a2c10;
 }
 .koma-choice .kana { font-size: .64rem; font-weight: 800; color: #7c5024; }
-.koma-choice .kanji { font-family: "Mochiy Pop One", sans-serif; font-size: 1.02rem; line-height: 1.25; text-align: center; }
-.koma-choice.ok .shape { background: linear-gradient(168deg, #fff3c4, #ffd97a 55%, #f0b544); }
+.koma-choice .kanji { font-family: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif; font-size: 1.02rem; line-height: 1.25; text-align: center; }
+.koma-choice.ok .shape { background: linear-gradient(168deg, #fff6d2, #ffe08c 55%, #f3c05a); }
 .koma-choice.ok::after {
   content: "◯"; position: absolute; inset: 0; display: grid; place-items: center;
-  font-size: 3.4rem; color: rgba(217, 72, 58, .82); animation: stamp .32s cubic-bezier(.2, 2, .4, 1);
+  font-size: 3.4rem; color: rgba(178, 58, 46, .8); animation: stamp .32s cubic-bezier(.2, 2, .4, 1);
 }
 .koma-choice.ng .shape { filter: grayscale(.75); opacity: .5; }
 .koma-choice:disabled { cursor: default; }
 
 .pill {
   font: inherit; font-size: .95rem; font-weight: 700; line-height: 1.55; cursor: pointer;
-  color: var(--text); background: linear-gradient(180deg, #22355a, #182642);
-  border: 2px solid var(--line); border-radius: 14px; padding: 13px 16px; text-align: center;
-  box-shadow: 0 4px 0 rgba(6, 12, 26, .55);
-  transition: transform .09s ease;
+  color: var(--sumi); background: var(--kami-2);
+  border: 1px solid var(--sen-2); border-radius: 12px; padding: 13px 16px; text-align: center;
+  box-shadow: var(--shadow);
+  transition: transform .09s ease, box-shadow .16s ease;
 }
-.pill:active { transform: translateY(4px); box-shadow: 0 0 0; }
+.pill:active { transform: translateY(1px); box-shadow: 0 1px 2px rgba(80, 66, 44, .10); }
 .pill.move { font-family: "Shippori Mincho B1", serif; font-size: 1.12rem; letter-spacing: .04em; }
-.pill.ok { background: linear-gradient(180deg, #e0574a, #b53a2d); border-color: #f09183; }
-.pill.ng { opacity: .42; }
+.pill.ok { color: #fff; background: var(--shu); border-color: var(--shu-dark); }
+.pill.ng { opacity: .4; }
 .pill:disabled { cursor: default; }
 
 /* ---------------- 判定シート ---------------- */
 
 #judge { position: fixed; inset: 0; z-index: 60; display: flex; align-items: flex-end; justify-content: center; }
 #judge[hidden] { display: none; }
-.judge-dim { position: absolute; inset: 0; background: rgba(6, 12, 26, .6); animation: fade .2s ease; }
+.judge-dim { position: absolute; inset: 0; background: rgba(52, 42, 28, .38); animation: fade .2s ease; }
 @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
 .judge-sheet {
   position: relative; width: 100%; max-width: 540px;
-  background: linear-gradient(180deg, #fffdf6, var(--cream));
-  color: #3a2b1d;
-  border-radius: 24px 24px 0 0;
+  background: var(--kami-2);
+  color: var(--sumi-2);
+  border-top: 3px solid var(--shu);
+  border-radius: 20px 20px 0 0;
   padding: 20px 18px calc(22px + env(safe-area-inset-bottom));
   display: flex; flex-direction: column; align-items: center; gap: 10px;
-  box-shadow: 0 -10px 30px rgba(0, 0, 0, .4);
+  box-shadow: 0 -8px 28px rgba(52, 42, 28, .22);
   animation: slide-up .3s cubic-bezier(.2, .9, .3, 1);
   max-height: 82dvh; overflow-y: auto;
 }
 @keyframes slide-up { from { transform: translateY(70px); opacity: .4; } to { transform: none; opacity: 1; } }
-.judge-mark { display: flex; align-items: center; gap: 12px; font-family: "Mochiy Pop One", sans-serif; font-size: 1.35rem; }
+.judge-mark { display: flex; align-items: center; gap: 12px; font-family: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif; font-size: 1.35rem; }
 .judge-mark .mark { font-size: 2.9rem; line-height: 1; animation: stamp .34s cubic-bezier(.2, 2, .4, 1); }
 @keyframes stamp { from { transform: scale(2.1) rotate(-12deg); opacity: 0; } to { transform: none; opacity: 1; } }
 .judge-mark.ok { color: var(--shu); }
-.judge-mark.ng { color: #2f62c0; }
+.judge-mark.ng { color: var(--ai); }
 .judge-answer {
-  font-size: 1rem; background: #fbe9cd; border-radius: 12px; padding: 8px 18px; color: #6b3f16;
-  text-align: center;
+  font-family: "Shippori Mincho B1", "Hiragino Mincho ProN", serif;
+  font-size: 1.05rem; background: var(--kami-3); border-radius: 10px; padding: 8px 18px; color: var(--sumi);
+  text-align: center; letter-spacing: .04em;
 }
-.judge-answer .kana { font-size: .74rem; color: #9a6b34; display: block; }
-.judge-expl { font-size: .88rem; font-weight: 500; line-height: 1.85; color: #4c3b2c; text-align: left; }
+.judge-answer .kana { font-family: "M PLUS Rounded 1c", sans-serif; font-size: .72rem; color: var(--usu); display: block; letter-spacing: 0; }
+.judge-expl { font-size: .88rem; font-weight: 500; line-height: 1.9; color: var(--sumi-2); text-align: left; }
 .next-btn {
   border: none; cursor: pointer; border-radius: 999px; width: 100%; max-width: 320px;
-  font-family: "Mochiy Pop One", sans-serif; font-size: 1.05rem; color: #fff;
-  background: linear-gradient(180deg, #e2584a, var(--shu)); padding: 13px 20px;
-  box-shadow: 0 4px 0 var(--shu-dark);
+  font-family: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif; font-size: 1.05rem; color: #fff;
+  background: var(--shu); padding: 13px 20px; letter-spacing: .08em;
+  box-shadow: 0 2px 6px rgba(139, 43, 33, .3);
 }
-.next-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--shu-dark); }
+.next-btn:active { transform: translateY(1px); box-shadow: 0 1px 2px rgba(139, 43, 33, .3); }
 .ghost-btn {
-  border: 2px solid #d9b98a; background: #fff6e4; color: #7a4f26;
+  border: 1px solid var(--sen-2); background: var(--kami); color: var(--sumi-2);
   font: inherit; font-weight: 700; font-size: .84rem; border-radius: 999px; padding: 8px 18px; cursor: pointer;
 }
 
@@ -429,80 +444,79 @@ body {
 .menjo {
   position: relative; width: 100%;
   background:
-    repeating-linear-gradient(101deg, rgba(160, 120, 70, .05) 0 2px, transparent 2px 9px),
-    linear-gradient(180deg, #fffdf5, #f7ecd6);
-  color: #3f2f1e;
-  border: 3px double #c9a463;
-  border-radius: 14px;
-  padding: 22px 18px 60px;
+    repeating-linear-gradient(97deg, rgba(150, 130, 95, .05) 0 1px, transparent 1px 6px),
+    var(--kami-2);
+  color: var(--sumi-2);
+  border: 2px double var(--sen-2);
+  border-radius: 10px;
+  padding: 24px 18px 62px;
   text-align: center;
-  box-shadow: 0 8px 0 rgba(6, 12, 26, .5);
+  box-shadow: var(--shadow);
   font-family: "Shippori Mincho B1", "Hiragino Mincho ProN", serif;
 }
-.menjo-head { font-size: .9rem; letter-spacing: .5em; color: #8a6a35; }
-.menjo-rank { font-size: 2.5rem; margin-top: 8px; letter-spacing: .1em; color: #23180d; }
-.menjo-kana { font-size: .72rem; color: #8a6a35; letter-spacing: .2em; }
-.menjo-stars { font-size: 1.3rem; color: #d9a13a; letter-spacing: .16em; margin-top: 8px; }
+.menjo-head { font-size: .86rem; letter-spacing: .5em; color: var(--usu); }
+.menjo-rank { font-size: 2.5rem; margin-top: 10px; letter-spacing: .12em; color: var(--sumi); }
+.menjo-kana { font-size: .72rem; color: var(--usu); letter-spacing: .2em; }
+.menjo-stars { font-size: 1.25rem; color: var(--wood-edge); letter-spacing: .16em; margin-top: 10px; }
 .menjo-score { font-size: .95rem; margin-top: 10px; font-family: "M PLUS Rounded 1c", sans-serif; }
 .menjo-score b { font-size: 2rem; color: var(--shu); }
-.menjo-msg { font-size: .84rem; font-weight: 500; line-height: 1.9; margin-top: 10px; color: #5b4732; font-family: "M PLUS Rounded 1c", sans-serif; }
+.menjo-msg { font-size: .84rem; font-weight: 500; line-height: 1.9; margin-top: 12px; color: var(--sumi-2); font-family: "M PLUS Rounded 1c", sans-serif; }
 .menjo-seal {
   position: absolute; right: 14px; bottom: 14px;
   width: 52px; height: 52px; display: grid; place-items: center;
-  color: #fff; background: rgba(200, 50, 40, .88);
-  border: 2px solid rgba(255, 255, 255, .6);
-  border-radius: 8px; font-size: .82rem; letter-spacing: .05em;
-  transform: rotate(-8deg);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, .25);
+  color: #fff; background: rgba(178, 58, 46, .9);
+  border-radius: 6px; font-size: .8rem; letter-spacing: .05em;
+  transform: rotate(-7deg);
 }
 
-.review { width: 100%; background: var(--panel); border: 2px solid var(--line); border-radius: var(--radius); padding: 12px 14px; }
-.review-title { font-family: "Mochiy Pop One", sans-serif; font-size: .92rem; color: var(--gold); }
-.review-list { list-style: none; margin-top: 8px; display: flex; flex-direction: column; gap: 7px; }
-.review-list li { font-size: .8rem; font-weight: 500; line-height: 1.7; color: #d8e2f8; border-left: 3px solid var(--shu); padding-left: 9px; }
-.review-list li b { font-weight: 700; color: var(--text); }
+.review { width: 100%; background: var(--kami-2); border: 1px solid var(--sen); border-radius: var(--radius); padding: 13px 15px; box-shadow: var(--shadow); }
+.review-title { font-family: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif; font-size: .95rem; color: var(--sumi); letter-spacing: .06em; }
+.review-list { list-style: none; margin-top: 10px; display: flex; flex-direction: column; gap: 9px; }
+.review-list li { font-size: .8rem; font-weight: 500; line-height: 1.75; color: var(--sumi-2); border-left: 2px solid var(--shu); padding-left: 10px; }
+.review-list li b { font-weight: 700; color: var(--sumi); }
 
 .btn-col { display: flex; flex-direction: column; gap: 10px; width: 100%; }
 .big-btn {
   border: none; cursor: pointer; border-radius: 999px; padding: 14px;
-  font-family: "Mochiy Pop One", sans-serif; font-size: 1rem; color: #fff;
-  background: linear-gradient(180deg, #e2584a, var(--shu)); box-shadow: 0 4px 0 var(--shu-dark);
+  font-family: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif; font-size: 1rem; color: #fff;
+  background: var(--shu); letter-spacing: .08em; box-shadow: 0 2px 6px rgba(139, 43, 33, .28);
 }
-.big-btn.alt { background: linear-gradient(180deg, #2b4166, #1c2c4c); box-shadow: 0 4px 0 #0d1729; border: 1px solid var(--line); }
-.big-btn:active { transform: translateY(3px); box-shadow: none; }
+.big-btn.alt { color: var(--sumi-2); background: var(--kami-2); border: 1px solid var(--sen-2); box-shadow: var(--shadow); }
+.big-btn:active { transform: translateY(1px); box-shadow: 0 1px 2px rgba(80, 66, 44, .12); }
 
 /* ---------------- ずかん ---------------- */
 
 .tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .tab {
   font: inherit; font-weight: 700; font-size: .86rem; cursor: pointer; padding: 9px 4px;
-  color: var(--muted); background: #14213a; border: 1px solid #2a3d67; border-radius: 11px;
+  color: var(--usu); background: var(--kami-2); border: 1px solid var(--sen); border-radius: 11px;
 }
-.tab.is-on { color: var(--wood-ink); background: linear-gradient(180deg, var(--wood-hi), var(--wood-lo)); border-color: var(--wood-lo); }
-.zukan-note { font-size: .74rem; font-weight: 500; color: var(--muted); line-height: 1.7; text-align: center; }
+.tab.is-on { color: #fff; background: var(--shu); border-color: var(--shu-dark); }
+.zukan-note { font-size: .74rem; font-weight: 500; color: var(--usu); line-height: 1.7; text-align: center; }
 .zukan-fam {
-  font-family: "Mochiy Pop One", sans-serif; font-size: .95rem; color: var(--gold);
-  display: flex; align-items: center; gap: 9px; margin: 14px 0 2px;
+  font-family: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif; font-size: .98rem; color: var(--sumi);
+  letter-spacing: .08em;
+  display: flex; align-items: center; gap: 10px; margin: 16px 0 4px;
 }
-.zukan-fam::after { content: ""; flex: 1; height: 2px; background: var(--line-soft); border-radius: 2px; }
+.zukan-fam::after { content: ""; flex: 1; height: 1px; background: var(--sen-2); }
 .z-card {
-  background: linear-gradient(180deg, var(--panel-2), var(--panel));
-  border: 2px solid var(--line); border-radius: var(--radius);
+  background: var(--kami-2);
+  border: 1px solid var(--sen); border-radius: var(--radius);
   box-shadow: var(--shadow);
-  padding: 13px 12px 15px; margin-bottom: 12px;
+  padding: 14px 12px 16px; margin-bottom: 12px;
   display: flex; flex-direction: column; align-items: center; gap: 9px;
 }
-.z-name { font-family: "Mochiy Pop One", sans-serif; font-size: 1.1rem; text-align: center; }
-.z-name .kana { display: block; font-family: "M PLUS Rounded 1c", sans-serif; font-size: .68rem; color: #b7c9ee; letter-spacing: .1em; }
-.z-lv { font-size: .74rem; color: var(--gold); letter-spacing: .1em; }
-.z-expl { font-size: .82rem; font-weight: 500; line-height: 1.85; color: #dfe8fb; }
+.z-name { font-family: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif; font-size: 1.12rem; text-align: center; color: var(--sumi); letter-spacing: .06em; }
+.z-name .kana { display: block; font-family: "M PLUS Rounded 1c", sans-serif; font-size: .68rem; color: var(--usu); letter-spacing: .1em; margin-top: 3px; }
+.z-lv { font-size: .74rem; color: var(--wood-edge); letter-spacing: .1em; }
+.z-expl { font-size: .82rem; font-weight: 500; line-height: 1.9; color: var(--sumi-2); }
 
 /* 駒ふぶき */
 .confetti { position: fixed; top: -6vh; z-index: 70; font-size: 1.3rem; pointer-events: none; animation: fall linear forwards;
   font-family: "Shippori Mincho B1", serif; }
 @keyframes fall { to { transform: translateY(112vh) rotate(680deg); opacity: .85; } }
 
-button:focus-visible, .tab:focus-visible { outline: 3px solid #ffd97a; outline-offset: 2px; }
+button:focus-visible, .tab:focus-visible { outline: 3px solid var(--shu); outline-offset: 2px; }
 
 @media (max-width: 340px) {
   .koma-choice .kanji { font-size: .92rem; }
