@@ -3,11 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>しょうぎクイズ道場</title>
+<title>将棋クイズ</title>
 <meta name="description" content="囲い・手筋・戦法・詰将棋を、パラパラ漫画とクイズでおぼえる将棋アプリ">
 <meta name="theme-color" content="#101a2e">
 <link rel="icon" href="./icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="将棋クイズ">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="./app.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,17 +24,8 @@
   <!-- ============ タイトル ============ -->
   <section class="screen is-active" id="screen-title">
     <div class="title-hero">
-      <svg class="logo-koma" viewBox="0 0 100 106" aria-hidden="true">
-        <defs>
-          <linearGradient id="lg-wood" x1="0" y1="0" x2=".6" y2="1">
-            <stop offset="0" stop-color="#fdeac2"/><stop offset=".55" stop-color="#f0cd8b"/><stop offset="1" stop-color="#d3a055"/>
-          </linearGradient>
-        </defs>
-        <polygon points="50,3 84,19 95,101 5,101 16,19" fill="url(#lg-wood)" stroke="#7a4f26" stroke-width="3" stroke-linejoin="round"/>
-        <polygon points="50,10 79,24 89,95 11,95 21,24" fill="none" stroke="#c99a54" stroke-width="1.5" stroke-linejoin="round"/>
-        <text x="50" y="74" text-anchor="middle" font-size="48" fill="#3a2410" class="logo-kanji">王</text>
-      </svg>
-      <h1 class="title">しょうぎクイズ道場<span class="title-sub">かこい・てすじ・せんぽう</span></h1>
+      <img class="logo-mark" src="./icon-192.png" width="120" height="120" alt="将棋クイズ">
+      <h1 class="title">将棋（しょうぎ）クイズ<span class="title-sub">かこい・てすじ・せんぽう</span></h1>
       <p class="tagline">クイズにこたえて <b>名人（めいじん）</b> をめざそう！</p>
       <p class="total-note" id="total-note">&nbsp;</p>
     </div>

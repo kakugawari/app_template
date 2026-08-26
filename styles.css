@@ -83,9 +83,13 @@ body {
 /* ---------------- タイトル ---------------- */
 
 .title-hero { text-align: center; padding: 10px 0 2px; }
-.logo-koma { width: 108px; height: 114px; filter: drop-shadow(0 7px 0 rgba(0, 0, 0, .35)); animation: sway 3.6s ease-in-out infinite; }
-.logo-kanji { font-family: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif; font-weight: 700; }
-@keyframes sway { 0%, 100% { transform: rotate(-3.5deg); } 50% { transform: rotate(3.5deg); } }
+.logo-mark {
+  width: 112px; height: 112px;
+  border-radius: 26px;
+  box-shadow: 0 7px 0 rgba(0, 0, 0, .35), 0 2px 10px rgba(0, 0, 0, .25);
+  animation: logo-in .5s cubic-bezier(.2, 1.6, .3, 1);
+}
+@keyframes logo-in { from { opacity: 0; transform: scale(.7) rotate(-8deg); } to { opacity: 1; transform: none; } }
 
 .title {
   font-family: "Mochiy Pop One", "M PLUS Rounded 1c", sans-serif;

@@ -117,7 +117,7 @@ async function run() {
       title: document.querySelector('h1') ? document.querySelector('h1').textContent.trim() : ''
     }));
     ok(fit.wide <= 1, 'スマホ幅で横スクロールが出ない');
-    ok(fit.title.includes('しょうぎクイズ道場'), `見出しが出ている (${fit.title})`);
+    ok(fit.title.includes('将棋'), `見出しが出ている (${fit.title})`);
 
     // ------------------------------------------------ タイトル
     section('タイトル');
@@ -260,7 +260,7 @@ async function run() {
     const apple = await desk.evaluate(() =>
       document.querySelector('link[rel="apple-touch-icon"]')?.getAttribute('href'));
     if (!apple) {
-      skip('ホーム画面用のアイコンはまだ無い (PWA にするときに用意する)');
+      ok(false, 'ホーム画面用のアイコン指定が無い (1枚ものに焼くとき落としていないか)');
     } else {
       // iOS は SVG のアイコンを使えない
       ok(apple.endsWith('.png'), `ホーム画面用アイコンが PNG (${apple})`);
