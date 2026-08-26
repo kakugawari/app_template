@@ -154,6 +154,14 @@ async function run() {
     await phone.waitForTimeout(300);
     ok(await phone.locator('#player').isVisible(), '戦法クイズでは再生バーが出る');
     ok(await phone.locator('#stage .koma').count() === 40, '平手の初形 40 枚が並ぶ');
+    const komaSize = await phone.evaluate(() => {
+      const k = document.querySelector('#stage .koma .face');
+      const cs = getComputedStyle(k);
+      return { font: parseFloat(cs.fontSize), w: k.getBoundingClientRect().width };
+    });
+    ok(komaSize.font >= 17, `9×9 でも駒の字が小さくなりすぎない (${komaSize.font.toFixed(1)}px)`);
+    ok(komaSize.w >= 28, `駒じたいも十分な大きさ (${komaSize.w.toFixed(1)}px)`);
+
     const kifuChips = await phone.locator('#kifu-strip span').count();
     ok(kifuChips >= 5, `棋譜が並ぶ (${kifuChips} 手)`);
 
@@ -165,7 +173,9 @@ async function run() {
     const after = await phone.evaluate(() =>
       [...document.querySelectorAll('#stage .koma')].map((e) => e.style.left + ',' + e.style.top).join('|'));
     ok(before !== after, '1手すすむボタンで駒が動く');
-    ok(await phone.locator('#stage .hl').isVisible(), '動かした場所に印がつく');
+    // 直前の手: もといたマスが塗られ、動いた駒のふちが光る
+    ok(await phone.locator('#stage .hl').isVisible(), 'もといたマスに印がつく');
+    ok(await phone.locator('#stage .koma.last').count() === 1, '動いた駒のふちが光る');
 
     // 自動再生が最後まで進む (2 手目以降も動く)
     await phone.locator('#btn-play').tap();
@@ -178,6 +188,7 @@ async function run() {
     await phone.evaluate(() => window.__app.start('tsume'));
     await phone.waitForTimeout(300);
     ok(await phone.locator('#hands').isVisible(), '持ち駒が出ている');
+    ok(await phone.locator('#hands .hk').count() >= 1, '持ち駒が駒の形でならぶ');
     ok(await phone.locator('#player').isHidden(), '詰将棋では再生バーが隠れている');
     const moveChoices = await phone.locator('.pill.move').count();
     ok(moveChoices === 4, `指し手の選択肢が 4 つ (${moveChoices})`);

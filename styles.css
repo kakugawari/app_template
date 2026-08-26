@@ -1,3 +1,15 @@
+/* 駒の字。端末のフォントに左右されず、オフラインでも同じ形にするため、
+   Shippori Mincho Bold から駒に使う14文字だけを切り出して埋めこんである (3.6KB)。
+   書体: Shippori Mincho / SIL Open Font License 1.1 (全文は fonts/OFL.txt)
+   作りなおしかたは 棋譜ノート (kakugawari/kifu) の tools/make-koma-font.sh と同じ。 */
+@font-face {
+  font-family: "Koma";
+  src: url(data:font/woff2;base64,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) format("woff2");
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: block;
+}
+
 /* ===========================================================
    しょうぎクイズ道場 — 見た目
    藍（あい）の背景 × 榧（かや）の盤 × 朱（しゅ）の判定。
@@ -13,11 +25,14 @@
   --line-soft:#2a3d67;
   --text:     #f4f7ff;
   --muted:    #a8b8dd;
-  --wood:     #f0cd8b;
-  --wood-hi:  #fdeac2;
-  --wood-lo:  #d3a055;
-  --wood-line:#7a4f26;
-  --wood-ink: #33230f;
+  --wood:     #f2dfb0;          /* 駒の地 */
+  --wood-hi:  #f7e8be;
+  --wood-lo:  #ebd59f;
+  --wood-edge:#8a6a34;          /* 駒のふち */
+  --wood-line:#5e4526;
+  --wood-ink: #241c12;          /* 駒の字 */
+  --ban:      #e0bc7e;          /* 盤の木地 */
+  --momo:     #e0628a;          /* 直前の手 */
   --shu:      #d9483a;
   --shu-dark: #96291f;
   --gold:     #f2c766;
@@ -164,7 +179,7 @@ body {
   border: 2px solid var(--line);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  padding: 14px 12px 16px;
+  padding: 14px 10px 16px;
   display: flex; flex-direction: column; align-items: center; gap: 11px;
 }
 .q-label {
@@ -176,19 +191,19 @@ body {
 
 /* ---------------- 盤 ---------------- */
 
-.stage { width: 100%; display: flex; justify-content: center; }
+.stage { width: 100%; margin: 0 -5px; display: flex; justify-content: center; }
 
 .board-wrap {
   display: grid;
-  grid-template-columns: 1fr 15px;
-  grid-template-rows: 15px 1fr;
-  gap: 2px;
+  grid-template-columns: 1fr 13px;
+  grid-template-rows: 13px 1fr;
+  gap: 1px;
   width: 100%;
-  max-width: 330px;
+  /* 盤はできるだけ大きく。1 マスが大きくなりすぎるところだけ止める */
+  max-width: calc(var(--cols, 9) * 70px);
   margin: 0 auto;
 }
-.board-wrap.is-wide { max-width: 380px; }
-.files, .ranks { display: flex; font-size: 9.5px; font-weight: 700; color: #93a7d2; }
+.files, .ranks { display: flex; font-size: 9px; font-weight: 700; color: #93a7d2; }
 .files { grid-area: 1 / 1; }
 .files span { flex: 1 1 0; text-align: center; }
 .ranks { grid-area: 2 / 2; flex-direction: column; }
@@ -199,57 +214,97 @@ body {
   position: relative;
   width: 100%;
   aspect-ratio: var(--cols) / var(--rows);
-  border: 2px solid var(--wood-line);
-  border-radius: 5px;
+  border: 1.6px solid rgba(60, 42, 20, .9);
+  border-radius: 3px;
   overflow: hidden;
-  background-color: var(--wood);
+  background-color: var(--ban);
   background-image:
-    repeating-linear-gradient(90deg, rgba(122, 79, 38, .55) 0 1px, transparent 1px calc(100% / var(--cols))),
-    repeating-linear-gradient(180deg, rgba(122, 79, 38, .55) 0 1px, transparent 1px calc(100% / var(--rows))),
-    repeating-linear-gradient(97deg, rgba(140, 96, 45, .10) 0 2px, transparent 2px 7px),
-    linear-gradient(160deg, #f6dcaa, #eec987 55%, #e0b978);
-  box-shadow: 0 5px 0 rgba(6, 12, 26, .5), inset 0 0 24px rgba(122, 79, 38, .22);
+    repeating-linear-gradient(90deg, rgba(94, 69, 38, .55) 0 1px, transparent 1px calc(100% / var(--cols))),
+    repeating-linear-gradient(180deg, rgba(94, 69, 38, .55) 0 1px, transparent 1px calc(100% / var(--rows))),
+    linear-gradient(135deg, #e7c68b, #dfb877 50%, #e5c287);
+  box-shadow: 0 4px 0 rgba(6, 12, 26, .45), 0 2px 8px rgba(0, 0, 0, .18);
 }
+.board .star {
+  position: absolute;
+  width: 4.4px; height: 4.4px; margin: -2.2px 0 0 -2.2px;
+  border-radius: 50%;
+  background: rgba(60, 42, 20, .75);
+  pointer-events: none;
+}
+
+/* 直前に指した手の「もといたマス」。盤の木地が茶色いので、いちど白で
+   明るくしてから桃色を乗せる (そのまま重ねるとくすんだ赤になる)。 */
 .board .hl {
   position: absolute; z-index: 1;
   width: calc(100% / var(--cols)); height: calc(100% / var(--rows));
-  background: rgba(217, 72, 58, .26);
-  box-shadow: inset 0 0 0 2px rgba(217, 72, 58, .55);
+  background:
+    linear-gradient(rgba(224, 98, 138, .40), rgba(224, 98, 138, .40)),
+    linear-gradient(rgba(255, 255, 255, .42), rgba(255, 255, 255, .42));
+  box-shadow: inset 0 0 0 1.4px rgba(224, 98, 138, .85);
   pointer-events: none;
-  transition: opacity .2s ease;
 }
 
+/* 駒。五角形で切り抜くと枠線が消えるので、ふち用の五角形を下に重ねている
+   (棋譜ノートと同じ作り)。マスいっぱいまで大きくして字を読みやすく。 */
 .koma {
   position: absolute; z-index: 2;
   width: calc(100% / var(--cols));
   height: calc(100% / var(--rows));
   display: grid; place-items: center;
-  padding: 4%;
 }
-.koma .face {
+.koma .edge, .koma .face {
+  grid-area: 1 / 1;
   width: 88%; height: 92%;
-  display: grid; place-items: center;
-  clip-path: polygon(50% 1%, 84% 17%, 95% 99%, 5% 99%, 16% 17%);
-  background: linear-gradient(165deg, var(--wood-hi), var(--wood) 52%, var(--wood-lo));
-  color: var(--wood-ink);
-  font-family: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif;
-  font-weight: 700;
-  font-size: calc(var(--cell, 40px) * .5);
-  line-height: 1;
-  padding-top: 8%;
-  filter: drop-shadow(0 1px 1px rgba(60, 35, 10, .45));
+  clip-path: polygon(50% 0%, 86% 19%, 100% 100%, 0 100%, 14% 19%);
 }
+.koma .edge { background: var(--wood-edge); }
+.koma .face {
+  width: calc(88% - 2.4px); height: calc(92% - 2.4px);
+  display: grid; place-items: center;
+  background: linear-gradient(180deg, var(--wood-hi), var(--wood-lo));
+  color: var(--wood-ink);
+  font-family: "Koma", "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-weight: 700;
+  font-size: calc(var(--cell, 40px) * .52);
+  line-height: 1;
+  padding-top: 5%;
+}
+/* 直前に動いた駒。ベタ塗りにすると字が読みにくいので、ふちだけを光らせる */
+.koma.last .edge { background: var(--momo); }
+.koma.last { filter: drop-shadow(0 0 3px rgba(224, 98, 138, .85)); }
 .koma.gote { transform: rotate(180deg); }
-.koma.king .face { background: linear-gradient(165deg, #fff2d2, #ffe1a5 52%, #e6b970); }
+.koma.king .face { background: linear-gradient(180deg, #fff3d6, #f2d9a2); }
 .koma.pro .face { color: var(--shu-dark); }
-.koma.small .face { font-size: calc(var(--cell, 40px) * .3); letter-spacing: -.08em; }
+
 .koma.pop { animation: pop .34s cubic-bezier(.2, 1.8, .4, 1); }
 @keyframes pop { from { opacity: 0; } to { opacity: 1; } }
 
 /* 持ち駒 */
-.hands { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; font-size: .76rem; font-weight: 700; }
-.hands .side { background: #101c33; border: 1px solid #2f4b7d; border-radius: 10px; padding: 5px 11px; color: var(--muted); }
-.hands .side b { color: var(--wood); font-family: "Shippori Mincho B1", serif; font-size: .92rem; margin-left: 4px; }
+/* 持ち駒 (駒台)。盤の駒と同じ形の小さな板でならべる */
+.hands { width: 100%; display: flex; flex-direction: column; gap: 6px; }
+.hands .side {
+  display: flex; align-items: center; gap: 8px;
+  background: #101c33; border: 1px solid #2f4b7d; border-radius: 11px;
+  padding: 5px 10px; font-size: .72rem; color: var(--muted);
+}
+.hands .side .who { flex: 0 0 auto; }
+.hands .side .none { color: #7f8fb6; }
+.hands .plates { flex: 1 1 auto; display: flex; gap: 5px; flex-wrap: wrap; justify-content: flex-end; }
+.hk { position: relative; width: 27px; height: 28.6px; flex: 0 0 auto; }
+.hk .p, .hk .c { position: absolute; clip-path: polygon(50% 0%, 86% 19%, 100% 100%, 0 100%, 14% 19%); }
+.hk .p { inset: 0; background: var(--wood-edge); }
+.hk .c {
+  inset: 1.4px; display: grid; place-items: center;
+  background: linear-gradient(180deg, var(--wood-hi), var(--wood-lo));
+  color: var(--wood-ink);
+  font-family: "Koma", "Hiragino Mincho ProN", serif; font-weight: 700;
+  font-size: 14.5px; padding-top: 5%;
+}
+.hk .n {
+  position: absolute; right: -3px; bottom: -4px; z-index: 1;
+  font-family: "M PLUS Rounded 1c", system-ui, sans-serif; font-size: 10px; font-weight: 700;
+  color: var(--cream); background: var(--shu); border-radius: 7px; padding: 0 4px; line-height: 1.4;
+}
 
 /* ---------------- パラパラ再生 ---------------- */
 

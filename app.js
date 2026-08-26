@@ -37,12 +37,23 @@
     const board = el('div', 'board');
     board.style.setProperty('--cols', files.length);
     board.style.setProperty('--rows', ranks.length);
+    wrap.style.setProperty('--cols', files.length);   // 盤の大きさの上限は入れ物側で決める
     const ranksEl = el('div', 'ranks');
     ranks.forEach((r) => ranksEl.appendChild(el('span', null, RANK_KANJI[r - 1])));
 
     const hl = el('div', 'hl');
     hl.hidden = true;
     board.appendChild(hl);
+
+    // 9×9 のときは星を打つ (本物の盤と同じ 4 か所)
+    if (files.length === 9 && ranks.length === 9) {
+      for (const [a, b] of [[3, 3], [6, 3], [3, 6], [6, 6]]) {
+        const dot = el('div', 'star');
+        dot.style.left = (a * 100) / 9 + '%';
+        dot.style.top = (b * 100) / 9 + '%';
+        board.appendChild(dot);
+      }
+    }
     wrap.append(filesEl, board, ranksEl);
 
     const map = new Map(); // 'f-r' → 駒の要素
@@ -61,8 +72,8 @@
       if (side === C.GOTE) e.classList.add('gote');
       if (C.isKing(k)) e.classList.add('king');
       if (SHORT[k]) e.classList.add('pro');
-      const face = el('div', 'face', SHORT[k] || k);
-      e.appendChild(face);
+      e.appendChild(el('div', 'edge'));            // ふち (五角形で切り抜くと枠線が消えるため)
+      e.appendChild(el('div', 'face', SHORT[k] || k));
       e.dataset.k = k;
       return e;
     }
@@ -91,11 +102,21 @@
         map.set(key(f, r), e);
         return e;
       },
-      highlight(f, r) {
-        if (!has(f, r)) { hl.hidden = true; return; }
-        hl.style.left = left(f);
-        hl.style.top = top(r);
-        hl.hidden = false;
+      /**
+       * 直前の手を示す。もといたマスを桃色に塗り、動いた駒はふちを光らせる。
+       * 行った先までベタ塗りにすると駒の字が読みにくくなるため (棋譜ノートと同じ)。
+       */
+      showLast(from, to) {
+        board.querySelectorAll('.koma.last').forEach((e) => e.classList.remove('last'));
+        if (from && has(from[0], from[1])) {
+          hl.style.left = left(from[0]);
+          hl.style.top = top(from[1]);
+          hl.hidden = false;
+        } else {
+          hl.hidden = true;
+        }
+        const moved = to && map.get(key(to[0], to[1]));
+        if (moved) moved.classList.add('last');
       },
       /** 1 手ぶん動かす。持駒や盤の外から来る駒は from を null にする。 */
       move(from, to, opt) {
@@ -119,7 +140,7 @@
           board.appendChild(e);
         }
         map.set(key(to[0], to[1]), e);
-        api.highlight(to[0], to[1]);
+        api.showLast(from, to);
 
         const nl = left(to[0]), nt = top(to[1]);
         const ol = e.style.left, ot = e.style.top;
@@ -194,7 +215,7 @@
         gen++;
         i = Math.max(0, Math.min(moves.length, n));
         boardApi.set(frames[i]);
-        if (i > 0) boardApi.highlight(moves[i - 1].to[0], moves[i - 1].to[1]);
+        if (i > 0) boardApi.showLast(moves[i - 1].from, moves[i - 1].to);
         emit();
       },
       /**
@@ -267,17 +288,30 @@
       : { files: [5, 4, 3, 2, 1], ranks: [5, 6, 7, 8, 9] };
   }
 
-  function handsText(board) {
-    const out = [];
+  /** 持ち駒を、盤の駒と同じ形の小さな板でならべる (枚数はバッジで出す)。 */
+  function handsEl(board) {
+    const wrap = el('div', 'hands');
     [C.SENTE, C.GOTE].forEach((side) => {
+      const row = el('div', 'side');
+      row.appendChild(el('span', 'who', (side === C.SENTE ? '先手（自分）' : '後手（相手）') + ' 持駒'));
+      const plates = el('div', 'plates');
       const h = board.hand[side];
       const keys = Object.keys(h).filter((k) => h[k] > 0);
-      out.push({
-        side: side === C.SENTE ? '先手（自分）' : '後手（相手）',
-        text: keys.length ? keys.map((k) => k + (h[k] > 1 ? h[k] : '')).join('　') : 'なし'
-      });
+      if (!keys.length) {
+        plates.appendChild(el('span', 'none', 'なし'));
+      } else {
+        for (const k of keys) {
+          const hk = el('div', 'hk');
+          hk.appendChild(el('div', 'p'));
+          hk.appendChild(el('div', 'c', SHORT[k] || k));
+          if (h[k] > 1) hk.appendChild(el('span', 'n', String(h[k])));
+          plates.appendChild(hk);
+        }
+      }
+      row.appendChild(plates);
+      wrap.appendChild(row);
     });
-    return out;
+    return wrap;
   }
 
   /* ============================================================
@@ -517,12 +551,7 @@
 
   function showHands(board) {
     const h = $('hands');
-    h.innerHTML = '';
-    for (const s of handsText(board)) {
-      const d = el('div', 'side', s.side + '　持駒');
-      d.appendChild(el('b', null, s.text));
-      h.appendChild(d);
-    }
+    h.innerHTML = handsEl(board).innerHTML;
     h.hidden = false;
   }
 
@@ -680,15 +709,7 @@
     card.appendChild(boardApi.el);
     boardApi.set(kind === 'castle' ? frames[frames.length - 1] : frames[0]);
 
-    if (kind === 'tesuji' && item.hand) {
-      const hands = el('div', 'hands');
-      for (const s of handsText(startBoard)) {
-        const d = el('div', 'side', s.side + '　持駒');
-        d.appendChild(el('b', null, s.text));
-        hands.appendChild(d);
-      }
-      card.appendChild(hands);
-    }
+    if (kind === 'tesuji' && item.hand) card.appendChild(handsEl(startBoard));
 
     const bar = el('div', 'player-btns');
     const play = el('button', 'ctrl', '▶ ' + (kind === 'castle' ? 'くみたてを見る' : '手順を見る'));
