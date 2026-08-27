@@ -126,6 +126,18 @@ async function run() {
     const totalNote = await phone.textContent('#total-note');
     ok(/全 \d+ 問/.test(totalNote), `問題数が出ている (${totalNote.trim()})`);
 
+    // ずかんの札の数は data.js の中身と合っていること (手で書くと古くなる)
+    const zukanDesc = await phone.evaluate(() => {
+      const d = window.Data;
+      return {
+        text: document.querySelector('.mode-btn.is-zukan .desc').textContent,
+        want: '囲い' + d.castles.length + '・手筋' + d.tesuji.length +
+              '・戦法' + d.senpou.length
+      };
+    });
+    ok(zukanDesc.text.startsWith(zukanDesc.want),
+      `ずかんの札の数が中身と合う (${zukanDesc.want})`);
+
     // ------------------------------------------------ 囲いクイズ
     section('囲いクイズ');
     await phone.evaluate(() => window.__app.start('castle'));

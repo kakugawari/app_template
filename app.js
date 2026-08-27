@@ -378,7 +378,10 @@
     z.appendChild(el('span', 'medal', '図'));
     const zb = el('span', 'body');
     zb.appendChild(el('span', 'name', 'ずかん'));
-    zb.appendChild(el('span', 'desc', '囲い27・手筋15・戦法19。動く絵でひとつずつ見られる'));
+    // 数は data.js から数える (中身を足したときに書き直し忘れないように)
+    zb.appendChild(el('span', 'desc',
+      '囲い' + D.castles.length + '・手筋' + D.tesuji.length + '・戦法' + D.senpou.length +
+      '。動く絵でひとつずつ見られる'));
     z.appendChild(zb);
     z.addEventListener('click', () => showZukan());
     list.appendChild(z);
