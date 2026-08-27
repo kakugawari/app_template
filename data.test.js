@@ -85,6 +85,9 @@ test('手筋の名前・分類・解説がそろっている', () => {
   for (const t of D.tesuji) {
     assert.ok(t.kana && t.expl && t.cat, t.name + ' の項目が足りない');
     assert.ok(t.lv >= 1 && t.lv <= 3);
+    // ずかんでくわしく読ませるための2項目
+    assert.ok(t.nerai && t.nerai.length >= 15, t.name + ' の狙いが書かれていない');
+    assert.ok(t.chui && t.chui.length >= 15, t.name + ' の注意が書かれていない');
   }
 });
 
@@ -108,6 +111,8 @@ test('戦法の名前・分類・解説がそろっている', () => {
   for (const s of D.senpou) {
     assert.ok(s.kana && s.expl && s.cat, s.name + ' の項目が足りない');
     assert.ok(s.lv >= 1 && s.lv <= 3);
+    assert.ok(s.nerai && s.nerai.length >= 15, s.name + ' の狙いが書かれていない');
+    assert.ok(s.taisaku && s.taisaku.length >= 15, s.name + ' の対策が書かれていない');
   }
 });
 

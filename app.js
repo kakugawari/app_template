@@ -743,7 +743,9 @@
     card.appendChild(el('p', 'z-expl', item.expl));
     // ずかんだけ、見出しつきでもう少しくわしく書く。
     // クイズ中の判定シートは短いまま (答え合わせのテンポを落とさないため)
-    for (const [label, text] of [['相性', item.aisho], ['弱点', item.jakuten]]) {
+    const notes = [['相性', item.aisho], ['狙い', item.nerai],
+                   ['弱点', item.jakuten], ['注意', item.chui], ['対策', item.taisaku]];
+    for (const [label, text] of notes) {
       if (!text) continue;
       const note = el('p', 'z-note');
       note.appendChild(el('b', null, label));
