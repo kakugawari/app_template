@@ -38,7 +38,7 @@
   --shu-dark: #8b2b21;
   --shu-usu:  #f7ece7;          /* 朱のうすい面 */
   --ai:       #2f5d8a;          /* 藍 (✕ などのさし色) */
-  --midori:   #4f7f5f;
+  --kon:      #22406b;          /* 紺 (ずかん) */
   --cream:    #fff7e8;
   --radius:   14px;
   /* 紙に置いた影。濃い影より、うすく広い影のほうが和紙になじむ */
@@ -156,10 +156,10 @@ body {
   flex: 0 0 auto; font-size: .66rem; font-weight: 700; color: var(--shu);
   background: var(--shu-usu); border: 1px solid #ecd9d2; border-radius: 999px; padding: 4px 9px;
 }
-/* ずかんは「読むもの」なので、朱ではなく緑の栞（しおり）で分ける */
-.mode-btn.is-zukan { border-color: #d7e0d2; }
-.mode-btn.is-zukan .medal { background: linear-gradient(180deg, #eaf1e6, #d3e0cd); color: #2f4a37; }
-.mode-btn.is-zukan .name { color: var(--midori); }
+/* ずかんは「読むもの」なので、朱ではなく紺の栞（しおり）で分ける */
+.mode-btn.is-zukan { border-color: #ccd7e6; }
+.mode-btn.is-zukan .medal { background: linear-gradient(180deg, #e7edf6, #ccd8e8); color: var(--kon); }
+.mode-btn.is-zukan .name { color: var(--kon); }
 
 /* ---------------- HUD ---------------- */
 

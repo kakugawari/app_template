@@ -56,7 +56,7 @@
   --shu-dark: #8b2b21;
   --shu-usu:  #f7ece7;          /* 朱のうすい面 */
   --ai:       #2f5d8a;          /* 藍 (✕ などのさし色) */
-  --midori:   #4f7f5f;
+  --kon:      #22406b;          /* 紺 (ずかん) */
   --cream:    #fff7e8;
   --radius:   14px;
   /* 紙に置いた影。濃い影より、うすく広い影のほうが和紙になじむ */
@@ -174,10 +174,10 @@ body {
   flex: 0 0 auto; font-size: .66rem; font-weight: 700; color: var(--shu);
   background: var(--shu-usu); border: 1px solid #ecd9d2; border-radius: 999px; padding: 4px 9px;
 }
-/* ずかんは「読むもの」なので、朱ではなく緑の栞（しおり）で分ける */
-.mode-btn.is-zukan { border-color: #d7e0d2; }
-.mode-btn.is-zukan .medal { background: linear-gradient(180deg, #eaf1e6, #d3e0cd); color: #2f4a37; }
-.mode-btn.is-zukan .name { color: var(--midori); }
+/* ずかんは「読むもの」なので、朱ではなく紺の栞（しおり）で分ける */
+.mode-btn.is-zukan { border-color: #ccd7e6; }
+.mode-btn.is-zukan .medal { background: linear-gradient(180deg, #e7edf6, #ccd8e8); color: var(--kon); }
+.mode-btn.is-zukan .name { color: var(--kon); }
 
 /* ---------------- HUD ---------------- */
 
@@ -2032,10 +2032,9 @@ button:focus-visible, .tab:focus-visible { outline: 3px solid var(--shu); outlin
     { id: 'castle', icon: '囲', name: '囲いクイズ', desc: '盤の形を見て、囲いの名前を当てよう', count: () => D.castles.length },
     { id: 'tesuji', icon: '筋', name: '手筋パラパラ', desc: '動く絵で出る手筋の名前は？ 全部アニメで出題', count: () => D.tesuji.length },
     { id: 'senpou', icon: '戦', name: '戦法パラパラ', desc: '序盤の指し手をパラパラ漫画で。何の戦法かな', count: () => D.senpou.length },
-    { id: 'tsume', icon: '詰', name: '1手詰クイズ', desc: 'この局面、1手で詰ますのはどれ？', count: () => D.tsume.length },
-    { id: 'knowledge', icon: '言', name: '知識・格言', desc: 'ルール、戦法、将棋のことわざ', count: () => D.knowledge.length },
-    { id: 'mix', icon: '番', name: 'ミックス十番勝負', desc: 'ぜんぶまぜて実力チェック！', count: () => 0 }
+    { id: 'knowledge', icon: '言', name: '知識・格言', desc: 'ルール、戦法、将棋のことわざ', count: () => D.knowledge.length }
   ];
+  // 'tsume' と 'mix' は core 側には残してあるが、項目が多くなるのでメニューには出さない
 
   function renderTitle() {
     const list = $('mode-list');
@@ -2066,7 +2065,8 @@ button:focus-visible, .tab:focus-visible { outline: 3px solid var(--shu); outlin
     z.addEventListener('click', () => showZukan());
     list.appendChild(z);
 
-    const total = D.castles.length + D.tesuji.length + D.senpou.length + D.knowledge.length + D.tsume.length;
+    // メニューに出しているモードの問題数だけを数える
+    const total = MODES.reduce((n, m) => n + m.count(), 0);
     $('total-note').textContent = '全 ' + total + ' 問 ／ 出題のたびに順番も選択肢も変わるよ';
   }
 

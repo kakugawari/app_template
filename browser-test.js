@@ -122,7 +122,7 @@ async function run() {
     // ------------------------------------------------ タイトル
     section('タイトル');
     const modes = await phone.locator('.mode-btn').count();
-    ok(modes >= 6, `モードのボタンが並ぶ (${modes} 個)`);
+    ok(modes === 5, `モードのボタンが並ぶ (${modes} 個: クイズ4 + ずかん)`);
     const totalNote = await phone.textContent('#total-note');
     ok(/全 \d+ 問/.test(totalNote), `問題数が出ている (${totalNote.trim()})`);
 
@@ -136,6 +136,9 @@ async function run() {
     // 回帰: 囲いクイズにパラパラ再生バーは出ない (hidden が効かず出てしまったことがある)
     ok(await phone.locator('#player').isHidden(), '囲いクイズでは再生バーが隠れている');
 
+    // 画面の入場アニメ (12px 上げる) が終わってから測る。
+    // 途中で測ると、そのぶんを「駒が勝手に動いた」と数えてしまう。
+    await phone.waitForTimeout(500);
     const jump = await measureJump(phone, '#stage .koma', 'void 0');
     ok(jump < 4, `駒が勝手に動かない (最大ずれ ${jump}px)`);
 
@@ -188,7 +191,9 @@ async function run() {
     ok(played >= 3, `自動再生で手が進む (${played} 手目まで)`);
 
     // ------------------------------------------------ 詰将棋
-    section('1手詰クイズ');
+    // 1手詰は「項目が多い」のでメニューには出していないが、
+    // 中身とコードは残してある。いつでも戻せるよう、ここで動くことを見張る。
+    section('1手詰クイズ (メニュー外)');
     await phone.evaluate(() => window.__app.start('tsume'));
     await phone.waitForTimeout(300);
     ok(await phone.locator('#hands').isVisible(), '持ち駒が出ている');

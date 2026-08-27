@@ -350,10 +350,9 @@
     { id: 'castle', icon: '囲', name: '囲いクイズ', desc: '盤の形を見て、囲いの名前を当てよう', count: () => D.castles.length },
     { id: 'tesuji', icon: '筋', name: '手筋パラパラ', desc: '動く絵で出る手筋の名前は？ 全部アニメで出題', count: () => D.tesuji.length },
     { id: 'senpou', icon: '戦', name: '戦法パラパラ', desc: '序盤の指し手をパラパラ漫画で。何の戦法かな', count: () => D.senpou.length },
-    { id: 'tsume', icon: '詰', name: '1手詰クイズ', desc: 'この局面、1手で詰ますのはどれ？', count: () => D.tsume.length },
-    { id: 'knowledge', icon: '言', name: '知識・格言', desc: 'ルール、戦法、将棋のことわざ', count: () => D.knowledge.length },
-    { id: 'mix', icon: '番', name: 'ミックス十番勝負', desc: 'ぜんぶまぜて実力チェック！', count: () => 0 }
+    { id: 'knowledge', icon: '言', name: '知識・格言', desc: 'ルール、戦法、将棋のことわざ', count: () => D.knowledge.length }
   ];
+  // 'tsume' と 'mix' は core 側には残してあるが、項目が多くなるのでメニューには出さない
 
   function renderTitle() {
     const list = $('mode-list');
@@ -384,7 +383,8 @@
     z.addEventListener('click', () => showZukan());
     list.appendChild(z);
 
-    const total = D.castles.length + D.tesuji.length + D.senpou.length + D.knowledge.length + D.tsume.length;
+    // メニューに出しているモードの問題数だけを数える
+    const total = MODES.reduce((n, m) => n + m.count(), 0);
     $('total-note').textContent = '全 ' + total + ' 問 ／ 出題のたびに順番も選択肢も変わるよ';
   }
 
