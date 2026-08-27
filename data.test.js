@@ -16,6 +16,9 @@ test('囲いの名前とふりがなはダブりなし', () => {
     assert.ok(c.kana && c.expl, c.name + ' に かな か 解説がない');
     assert.ok(c.lv >= 1 && c.lv <= 3, c.name + ' の むずかしさが 1〜3 でない');
     assert.ok(c.crop === 'left' || c.crop === 'right');
+    // ずかんでくわしく読ませるための2項目。空だと見出しだけが出てしまう
+    assert.ok(c.aisho && c.aisho.length >= 15, c.name + ' の相性が書かれていない');
+    assert.ok(c.jakuten && c.jakuten.length >= 15, c.name + ' の弱点が書かれていない');
   }
 });
 

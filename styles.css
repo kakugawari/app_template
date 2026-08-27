@@ -522,6 +522,18 @@ body {
 .z-name .kana { display: block; font-family: "M PLUS Rounded 1c", sans-serif; font-size: .68rem; color: var(--usu); letter-spacing: .1em; margin-top: 3px; }
 .z-lv { font-size: .74rem; color: var(--wood-edge); letter-spacing: .1em; }
 .z-expl { font-size: .82rem; font-weight: 500; line-height: 1.9; color: var(--sumi-2); }
+/* ずかんのくわしい説明。見出しを行の頭に置いて、拾い読みできるようにする */
+.z-note {
+  width: 100%;
+  font-size: .78rem; font-weight: 500; line-height: 1.85; color: var(--sumi-2);
+  /* 2行目以降を見出しのぶん下げる。em は親子で基準が変わるので rem でそろえる */
+  padding-left: 3.4rem; text-indent: -3.4rem;
+}
+.z-note b {
+  display: inline-block; width: 2.6rem; margin-right: .8rem;
+  font-weight: 700; font-size: .72rem; color: var(--shu);
+  text-indent: 0; letter-spacing: .08em;
+}
 
 /* 駒ふぶき */
 .confetti { position: fixed; top: -6vh; z-index: 70; font-size: 1.3rem; pointer-events: none; animation: fall linear forwards;

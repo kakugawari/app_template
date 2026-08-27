@@ -741,6 +741,15 @@
     card.appendChild(bar);
     card.appendChild(cap);
     card.appendChild(el('p', 'z-expl', item.expl));
+    // ずかんだけ、見出しつきでもう少しくわしく書く。
+    // クイズ中の判定シートは短いまま (答え合わせのテンポを落とさないため)
+    for (const [label, text] of [['相性', item.aisho], ['弱点', item.jakuten]]) {
+      if (!text) continue;
+      const note = el('p', 'z-note');
+      note.appendChild(el('b', null, label));
+      note.appendChild(document.createTextNode(text));
+      card.appendChild(note);
+    }
     return card;
   }
 
