@@ -767,7 +767,7 @@
       $('zukan-count').textContent = D.tesuji.length + '種類';
     } else {
       $('zukan-note').textContent = '▶ボタンで、平手の初形からの出だしを1手ずつ見られるよ';
-      for (const cat of ['furi', 'ibisha', 'kishu']) {
+      for (const cat of ['furi', 'ibisha', 'migi', 'kishu']) {
         const items = D.senpou.filter((s) => s.cat === cat);
         if (!items.length) continue;
         list.appendChild(el('div', 'zukan-fam', D.CAT_LABEL[cat]));

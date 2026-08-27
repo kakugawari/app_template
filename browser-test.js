@@ -197,6 +197,13 @@ async function run() {
     await phone.evaluate(() => window.__app.start('tsume'));
     await phone.waitForTimeout(300);
     ok(await phone.locator('#hands').isVisible(), '持ち駒が出ている');
+    // 持ち駒が空の問題 (開き王手など) もあるので、
+    // 「持ち駒のある問題」を名ざしで出して駒札を確かめる
+    await phone.evaluate(() => {
+      const D = window.__app.data;
+      window.__app.showOne('tsume', D.tsume.find((t) => t.hand));
+    });
+    await phone.waitForTimeout(200);
     ok(await phone.locator('#hands .hk').count() >= 1, '持ち駒が駒の形でならぶ');
     ok(await phone.locator('#player').isHidden(), '詰将棋では再生バーが隠れている');
     const moveChoices = await phone.locator('.pill.move').count();
