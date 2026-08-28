@@ -193,3 +193,52 @@ test('同じ seed なら、まったく同じ問題が出る (作り直せる)',
   const b = C.buildRound(D, 'mix', C.mulberry32(123));
   assert.deepStrictEqual(a.map((q) => q.choices.map((c) => c.name)), b.map((q) => q.choices.map((c) => c.name)));
 });
+
+/* ---------------- 序盤にタダで駒を取られる手が混ざっていないか ----------------
+   こどもに「この局面はおかしい」と言われて足した見張り。戦法の手順を 1 手ずつ
+   再生し、指したあとに相手が「香・桂・銀・金・角・飛」をタダ (または得して)
+   取れる形になっていないか調べる。歩の取り合いは横歩取りなどで普通に起きるので
+   数えない。直前の手が取りかえしを残している (交換の途中) 局面も、まだ勝ち負けが
+   決まっていないので数えない。 */
+test('戦法の手順に、相手にタダで大駒や金銀を取られる手がない', () => {
+  const VAL = { 歩: 1, 香: 4, 桂: 4, 銀: 6, 金: 6, 角: 9, 飛: 11, 玉: 999,
+                と: 6, 杏: 6, 圭: 6, 全: 6, 馬: 13, 龍: 15 };
+  const val = (k) => VAL[k] || 0;
+
+  /** (f,r) を取れる side の駒があるか。 */
+  const attacked = (b, f, r, side) => {
+    for (let rr = 1; rr <= 9; rr++) {
+      for (let ff = 1; ff <= 9; ff++) {
+        const p = C.at(b, ff, rr);
+        if (!p || p.s !== side) continue;
+        if (C.movesFrom(b, ff, rr).some(([tf, tr]) => tf === f && tr === r)) return true;
+      }
+    }
+    return false;
+  };
+
+  for (const s of D.senpou) {
+    if (!s.kifu) continue;
+    let b = C.initialBoard();
+    let side = C.SENTE;
+    let prevTo = null;
+    s.kifu.forEach((text, i) => {
+      const played = C.parseMove(b, text, side, prevTo);
+      b = C.applyMove(b, played);
+      prevTo = played.to;
+      side = 1 - side;
+      // 直前の手で取りかえしが残っている (駒の交換の途中) なら、まだ数えない
+      if (attacked(b, played.to[0], played.to[1], side)) return;
+      for (const m of C.legalMoves(b, side)) {
+        if (m.drop) continue;
+        const target = C.at(b, m.to[0], m.to[1]);
+        if (!target) continue;
+        const nb = C.applyMove(b, m);
+        const mine = m.promote ? val(C.PROMOTE[m.k]) : val(m.k);
+        const gain = attacked(nb, m.to[0], m.to[1], 1 - side) ? val(target.k) - mine : val(target.k);
+        assert.ok(gain < 4, s.name + ': ' + (i + 1) + '手目 ' + text + ' のあと、'
+          + C.moveText(m) + ' で ' + target.k + ' をタダで取られる');
+      }
+    });
+  }
+});
