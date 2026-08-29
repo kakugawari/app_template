@@ -291,6 +291,146 @@ body {
   color: var(--muted);
 }
 
+/* ---------------------------------------------------------- スタンプカード */
+
+.stampCard {
+  width: 100%;
+  padding: 12px 14px 10px;
+  background: var(--bg);
+  border: 2px dashed var(--line);
+  border-radius: 6px;
+}
+
+.stampHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: 0 0 10px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .18em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.stampCount { letter-spacing: .06em; }
+
+/* 5 列 2 段の 10 マス。マスの数が変わっても崩れないよう列数だけ決める */
+.stampSlots {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 7px;
+}
+
+.slot {
+  aspect-ratio: 1;
+  border: 2px dotted var(--line);
+  border-radius: 50%;
+  opacity: .5;
+  display: grid;
+  place-items: center;
+}
+
+.slot.is-filled {
+  border-style: solid;
+  border-color: transparent;
+  opacity: 1;
+}
+
+.stampMark {
+  width: 100%;
+  height: 100%;
+  color: var(--accent);
+}
+
+.stampNote {
+  /* 中身が入れ替わっても高さを変えない。ここが伸び縮みすると
+     カードごと下の要素が動く */
+  margin: 10px 0 0;
+  min-height: 2.8em;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+/* ---------------------------------------------------------- きせかえ */
+
+.customGroup { width: 100%; }
+
+.customLabel {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .18em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.chip {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  background: var(--bg);
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  padding: 0 16px;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.chip[aria-pressed="true"] {
+  background: var(--accent);
+  border-color: var(--accent-2);
+  color: var(--accent-ink);
+}
+
+.chip:disabled {
+  opacity: .4;
+  cursor: default;
+}
+
+/* アプリの人につける飾り。地の色と分けたいので accent で塗る */
+.gear {
+  stroke: var(--accent);
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.gear-fill {
+  fill: var(--accent);
+  stroke: none;
+}
+
+/* スタンプカードのぶん縦を使うので、人の大きさは画面の高さに合わせる。
+   決め打ちにすると、縦の短い端末で「はじめる」が画面の外に出る。 */
+.mascot {
+  width: clamp(56px, 14vh, 108px);
+  height: clamp(56px, 14vh, 108px);
+}
+
+/* ---------------------------------------------------------- もらえる色
+   地の色はそのままに、差し色だけ入れ替える。明るい画面と暗い画面の
+   どちらでも文字が読めるよう、accent-ink も色ごとに決めておく。 */
+
+:root[data-skin="midnight"] { --accent: #2f5d80; --accent-2: #c69749; --accent-ink: #f4ecd8; }
+:root[data-skin="forest"]   { --accent: #4a6741; --accent-2: #a8541f; --accent-ink: #f4ecd8; }
+:root[data-skin="sunset"]   { --accent: #c2521f; --accent-2: #6b3f6b; --accent-ink: #fbf2e0; }
+
+@media (prefers-color-scheme: dark) {
+  :root[data-skin="midnight"]:not([data-theme="light"]) { --accent: #5b90bb; --accent-2: #e0b566; --accent-ink: #1a2430; }
+  :root[data-skin="forest"]:not([data-theme="light"])   { --accent: #7d9e6f; --accent-2: #d98b4a; --accent-ink: #1c2419; }
+  :root[data-skin="sunset"]:not([data-theme="light"])   { --accent: #e07a45; --accent-2: #b98ab9; --accent-ink: #2a1a12; }
+}
+
 /* 横向きなど、縦が短いとき。1 コマを大きくしたぶん、そのままだと
    「できた」が画面の下に隠れてしまう。詰めて必ず収める。 */
 @media (max-height: 560px) {
@@ -309,6 +449,17 @@ body {
   .stepInfo { gap: 10px; }
   .exerciseName { font-size: 18px; }
   #reps { font-size: 34px; }
+
+  /* 横に広いので、スタンプは 2 段ではなく 1 列に並べる。
+     こうすると縦を 100px ぶん返せて「はじめる」が画面に収まる */
+  .stampSlots {
+    grid-template-columns: repeat(10, 1fr);
+    gap: 5px;
+  }
+
+  .stampCard { padding: 8px 12px 6px; }
+  .stampHead { margin-bottom: 6px; }
+  .stampNote { margin-top: 6px; min-height: 2.4em; font-size: 11px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

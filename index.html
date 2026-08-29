@@ -480,10 +480,40 @@
   <main id="stage">
 
     <section id="screenWarmup" class="screen">
-      <svg class="illustration" aria-hidden="true"><use href="#iconWarmup"></use></svg>
+      <!-- アプリの人。飾りがつくので <use> ではなく app.js が直に組み立てる
+           (<use> の中身は影の木に入り、外から一部だけ出し入れできない) -->
+      <svg class="illustration mascot" id="mascot" viewBox="0 0 120 120" aria-hidden="true"></svg>
       <p class="badge">WARM UP</p>
       <p class="lead" id="warmupText">—</p>
-      <button type="button" id="btnStart" class="btn btn-primary">はじめる</button>
+
+      <!-- スタンプカード。1 周やりきるごとに 1 個たまる -->
+      <div class="stampCard">
+        <p class="stampHead">
+          <span>STAMP CARD</span>
+          <span id="cardCount" class="stampCount">—</span>
+        </p>
+        <div class="stampSlots" id="stampSlots" aria-hidden="true"></div>
+        <p class="stampNote" id="stampNote" aria-live="polite">—</p>
+      </div>
+
+      <div class="actions">
+        <button type="button" id="btnCustom" class="btn" hidden>きせかえ</button>
+        <button type="button" id="btnStart" class="btn btn-primary">はじめる</button>
+      </div>
+    </section>
+
+    <section id="screenCustom" class="screen" hidden>
+      <svg class="illustration mascot" id="mascotPreview" viewBox="0 0 120 120" aria-hidden="true"></svg>
+      <p class="badge">CUSTOM</p>
+      <div class="customGroup">
+        <p class="customLabel">いろ</p>
+        <div class="chips" id="skinChips"></div>
+      </div>
+      <div class="customGroup">
+        <p class="customLabel">かざり</p>
+        <div class="chips" id="gearChips"></div>
+      </div>
+      <button type="button" id="btnCloseCustom" class="btn btn-primary">とじる</button>
     </section>
 
     <section id="screenRun" class="screen" hidden>

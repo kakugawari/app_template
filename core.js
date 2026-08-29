@@ -218,9 +218,119 @@
     return Math.min(session.index, total) / total;
   }
 
+  // ------------------------------------------------------------------
+  // スタンプカード
+  //
+  // 1 周やりきるごとにスタンプが 1 個たまる。10 個でカードが 1 枚うまり、
+  // ごほうびが 1 つ増える。ごほうびは見た目 (色と、タイトル画面の人の飾り)。
+  //
+  // 持っているのは「通算いくつ押したか」だけにしてある。カードの枚数も
+  // 何がもらえたかも、そこから毎回計算する。2 か所に数を持つと必ずずれる。
+  // ------------------------------------------------------------------
+
+  /** カード 1 枚のマス目 */
+  const CARD_SIZE = 10;
+
+  /** カードを 1 枚うめるたびに、この順で 1 つずつもらえる */
+  const REWARDS = [
+    { id: 'midnight', kind: 'skin', name: 'ミッドナイト' },
+    { id: 'headband', kind: 'gear', name: 'ヘッドバンド' },
+    { id: 'forest', kind: 'skin', name: 'フォレスト' },
+    { id: 'wristband', kind: 'gear', name: 'リストバンド' },
+    { id: 'sunset', kind: 'skin', name: 'サンセット' },
+    { id: 'cape', kind: 'gear', name: 'マント' }
+  ];
+
+  const DEFAULT_SKIN = 'classic';
+
+  function createRecord() {
+    return { stamps: 0, skin: DEFAULT_SKIN, gear: [] };
+  }
+
+  function addStamp(record) {
+    return Object.assign({}, record, { stamps: record.stamps + 1 });
+  }
+
+  /** うまったカードの枚数 */
+  function completedCards(record) {
+    return Math.floor(record.stamps / CARD_SIZE);
+  }
+
+  /**
+   * いま見えているカードの、押されているマスの数。
+   *
+   * ちょうど 10 個目を押した直後は「新しい空のカード」ではなく
+   * 「うまったカード」を見せたいので、0 ではなく CARD_SIZE を返す。
+   */
+  function filledSlots(record) {
+    if (record.stamps === 0) return 0;
+    return ((record.stamps - 1) % CARD_SIZE) + 1;
+  }
+
+  /** もらったごほうび (もらった順) */
+  function unlockedRewards(record) {
+    return REWARDS.slice(0, Math.min(completedCards(record), REWARDS.length));
+  }
+
+  function isUnlocked(record, id) {
+    return unlockedRewards(record).some(function (r) { return r.id === id; });
+  }
+
+  /** このスタンプでカードがちょうどうまったか (ごほうびを見せる合図) */
+  function justFilledCard(record) {
+    return record.stamps > 0 && record.stamps % CARD_SIZE === 0;
+  }
+
+  /** そのスタンプでもらえたごほうび。無ければ null */
+  function rewardAt(record) {
+    if (!justFilledCard(record)) return null;
+    return REWARDS[completedCards(record) - 1] || null;
+  }
+
+  /** 使える色の一覧 (既定はいつでも使える) */
+  function availableSkins(record) {
+    return [DEFAULT_SKIN].concat(
+      unlockedRewards(record)
+        .filter(function (r) { return r.kind === 'skin'; })
+        .map(function (r) { return r.id; }));
+  }
+
+  /**
+   * 保存されていた記録を、安全な形に整える。
+   * 壊れていても、書き換えられていても、必ず使える記録を返す
+   * (もらっていないごほうびが混ざっていたら落とす)。
+   */
+  function normalizeRecord(raw) {
+    const base = createRecord();
+    if (!raw || typeof raw !== 'object') return base;
+
+    const stamps = Number(raw.stamps);
+    base.stamps = Number.isFinite(stamps) && stamps > 0 ? Math.floor(stamps) : 0;
+
+    if (availableSkins(base).indexOf(raw.skin) >= 0) base.skin = raw.skin;
+
+    base.gear = (Array.isArray(raw.gear) ? raw.gear : []).filter(function (id, i, all) {
+      return all.indexOf(id) === i && isUnlocked(base, id);
+    });
+    return base;
+  }
+
   return {
     WARMUP_NOTE: WARMUP_NOTE,
     SIDE_LABELS: SIDE_LABELS,
+    CARD_SIZE: CARD_SIZE,
+    REWARDS: REWARDS,
+    DEFAULT_SKIN: DEFAULT_SKIN,
+    createRecord: createRecord,
+    addStamp: addStamp,
+    completedCards: completedCards,
+    filledSlots: filledSlots,
+    unlockedRewards: unlockedRewards,
+    isUnlocked: isUnlocked,
+    justFilledCard: justFilledCard,
+    rewardAt: rewardAt,
+    availableSkins: availableSkins,
+    normalizeRecord: normalizeRecord,
     DEFAULT_EXERCISES: DEFAULT_EXERCISES,
     buildSteps: buildSteps,
     createSession: createSession,

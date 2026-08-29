@@ -199,3 +199,81 @@ test('uniqueFrames は出てきた順のまま重複だけ取り除く', () => {
   assert.deepStrictEqual(Core.uniqueFrames(Core.SWING_FRAMES), ['center', 'left', 'right']);
   assert.deepStrictEqual(Core.uniqueFrames(['before', 'after']), ['before', 'after']);
 });
+
+// ------------------------------------------------------------ スタンプカード
+
+test('スタンプは 0 から始まり、1 周やるごとに 1 個増える', () => {
+  let record = Core.createRecord();
+  assert.strictEqual(record.stamps, 0);
+  assert.strictEqual(Core.filledSlots(record), 0);
+  record = Core.addStamp(record);
+  assert.strictEqual(record.stamps, 1);
+  assert.strictEqual(Core.filledSlots(record), 1);
+});
+
+test('10 個目でカードが 1 枚うまり、そのときだけ満杯の 10 マスを見せる', () => {
+  let record = Core.createRecord();
+  for (let i = 0; i < 10; i++) record = Core.addStamp(record);
+  assert.strictEqual(Core.filledSlots(record), 10, '10 個目は満杯のカードを見せる');
+  assert.strictEqual(Core.completedCards(record), 1);
+  assert.ok(Core.justFilledCard(record));
+});
+
+test('11 個目から新しいカードの 1 マス目になる', () => {
+  let record = Core.createRecord();
+  for (let i = 0; i < 11; i++) record = Core.addStamp(record);
+  assert.strictEqual(Core.filledSlots(record), 1);
+  assert.strictEqual(Core.completedCards(record), 1);
+  assert.ok(!Core.justFilledCard(record));
+});
+
+test('ごほうびはカードを 1 枚うめるごとに 1 つずつ、決まった順で増える', () => {
+  let record = Core.createRecord();
+  assert.deepStrictEqual(Core.unlockedRewards(record), []);
+  for (let i = 0; i < 10; i++) record = Core.addStamp(record);
+  assert.deepStrictEqual(Core.unlockedRewards(record).map((r) => r.id), ['midnight']);
+  assert.deepStrictEqual(Core.rewardAt(record), Core.REWARDS[0]);
+  for (let i = 0; i < 10; i++) record = Core.addStamp(record);
+  assert.deepStrictEqual(Core.unlockedRewards(record).map((r) => r.id), ['midnight', 'headband']);
+});
+
+test('カードがうまっていない回では、ごほうびは出ない', () => {
+  let record = Core.createRecord();
+  for (let i = 0; i < 5; i++) record = Core.addStamp(record);
+  assert.strictEqual(Core.rewardAt(record), null);
+});
+
+test('ごほうびを配り終えても、スタンプは増え続けて落ちない', () => {
+  let record = Core.createRecord();
+  for (let i = 0; i < Core.CARD_SIZE * (Core.REWARDS.length + 3); i++) record = Core.addStamp(record);
+  assert.strictEqual(Core.unlockedRewards(record).length, Core.REWARDS.length);
+  assert.strictEqual(Core.rewardAt(record), null, '配り終えたあとは新しいごほうびは無い');
+});
+
+test('既定の色はスタンプ 0 個でも使える', () => {
+  assert.deepStrictEqual(Core.availableSkins(Core.createRecord()), [Core.DEFAULT_SKIN]);
+});
+
+test('normalizeRecord: 壊れた記録でも必ず使える形にする', () => {
+  assert.deepStrictEqual(Core.normalizeRecord(null), Core.createRecord());
+  assert.deepStrictEqual(Core.normalizeRecord('こわれた'), Core.createRecord());
+  assert.deepStrictEqual(Core.normalizeRecord({ stamps: -5 }).stamps, 0);
+  assert.deepStrictEqual(Core.normalizeRecord({ stamps: 'あ' }).stamps, 0);
+  assert.deepStrictEqual(Core.normalizeRecord({ stamps: 3.7 }).stamps, 3);
+});
+
+test('normalizeRecord: もらっていないごほうびは落とす', () => {
+  // 書き換えられた記録でも、スタンプの数に見合ったものしか残さない
+  const cheated = Core.normalizeRecord({ stamps: 0, skin: 'sunset', gear: ['cape', 'headband'] });
+  assert.strictEqual(cheated.skin, Core.DEFAULT_SKIN);
+  assert.deepStrictEqual(cheated.gear, []);
+
+  const earned = Core.normalizeRecord({ stamps: 20, skin: 'midnight', gear: ['headband', 'cape'] });
+  assert.strictEqual(earned.skin, 'midnight');
+  assert.deepStrictEqual(earned.gear, ['headband'], 'まだの cape は落ちる');
+});
+
+test('normalizeRecord: 同じ飾りが重なっていたら 1 つにする', () => {
+  const r = Core.normalizeRecord({ stamps: 20, gear: ['headband', 'headband'] });
+  assert.deepStrictEqual(r.gear, ['headband']);
+});

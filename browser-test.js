@@ -562,6 +562,209 @@ async function run() {
       await calm.close();
     }
 
+    // ------------------------------------------------ スタンプカード
+    section('1 周やりきるとスタンプがたまり、次に開いても残っている');
+    {
+      const ctx = await browser.newContext({ ...devices['iPhone 13'] });
+      const page = await ctx.newPage();
+      page.on('pageerror', (e) => errors.push('stamp: ' + e.message));
+      await page.goto(URL);
+      await page.waitForFunction(() => window.__app);
+
+      const slots = await page.evaluate(() =>
+        document.querySelectorAll('#stampSlots .slot').length);
+      ok(slots === 10, `スタンプカードのマスが 10 個 (${slots})`);
+      const before = await page.evaluate(() =>
+        document.querySelectorAll('#stampSlots .slot.is-filled').length);
+      ok(before === 0, `はじめは 1 つも押されていない (${before})`);
+
+      // 1 周まるごとやりきる
+      await page.evaluate(() => {
+        window.__app.start();
+        const total = window.__app.state().session.steps.length;
+        for (let i = 0; i < total; i++) window.__app.complete();
+      });
+      const afterRun = await page.evaluate(() => ({
+        stamps: window.__app.state().record.stamps,
+        done: !document.getElementById('screenDone').hidden
+      }));
+      ok(afterRun.done && afterRun.stamps === 1,
+        `やりきるとスタンプが 1 個たまる (${afterRun.stamps} 個)`);
+
+      // 開き直しても残っている (保存できている)
+      await page.reload();
+      await page.waitForFunction(() => window.__app);
+      const kept = await page.evaluate(() => ({
+        stamps: window.__app.state().record.stamps,
+        filled: document.querySelectorAll('#stampSlots .slot.is-filled').length
+      }));
+      ok(kept.stamps === 1 && kept.filled === 1,
+        `開き直してもスタンプが残っている (${kept.stamps} 個 / ${kept.filled} マス)`);
+
+      // 押すところが動く。「アニメを作った」ではなく「本当に動いた」を見る
+      await page.evaluate(() => {
+        window.__app.start();
+        const total = window.__app.state().session.steps.length;
+        for (let i = 0; i < total; i++) window.__app.complete();
+      });
+      await page.locator('#btnAgain').tap();
+      const shape = () => page.evaluate(() => {
+        const marks = document.querySelectorAll('#stampSlots .slot.is-filled .stampMark');
+        const m = marks[marks.length - 1];
+        const t = getComputedStyle(m).transform;
+        const n = t.startsWith('matrix') ? t.slice(7, -1).split(',').map(Number) : null;
+        return {
+          running: document.getAnimations().length,
+          scale: n ? Math.round(Math.sqrt(n[0] * n[0] + n[1] * n[1]) * 100) / 100 : null
+        };
+      });
+      await page.waitForTimeout(60);
+      const pressing = await shape();
+      await page.waitForTimeout(180);
+      const settling = await shape();
+      await page.waitForTimeout(600);
+      const settled = await shape();
+
+      ok(pressing.running > 0, `押している最中は動きが走っている (${pressing.running} 件)`);
+      ok(pressing.scale > 1.5, `はじめは大きく浮いている (${pressing.scale} 倍)`);
+      ok(settling.scale < pressing.scale, `降りてきている (${pressing.scale} → ${settling.scale} 倍)`);
+      ok(settled.running === 0 && Math.abs(settled.scale - 1) < 0.02,
+        `押し終わると等倍で止まる (${settled.scale} 倍 / 動き ${settled.running} 件)`);
+      await ctx.close();
+    }
+
+    section('動きを減らす設定では、スタンプを動かさずに押した状態で出す');
+    {
+      const ctx = await browser.newContext({ ...devices['iPhone 13'], reducedMotion: 'reduce' });
+      const page = await ctx.newPage();
+      page.on('pageerror', (e) => errors.push('calm-stamp: ' + e.message));
+      await page.goto(URL);
+      await page.waitForFunction(() => window.__app);
+      await page.evaluate(() => {
+        window.__app.start();
+        const total = window.__app.state().session.steps.length;
+        for (let i = 0; i < total; i++) window.__app.complete();
+      });
+      await page.locator('#btnAgain').tap();
+      await page.waitForTimeout(80);
+      const calm = await page.evaluate(() => ({
+        running: document.getAnimations().length,
+        filled: document.querySelectorAll('#stampSlots .slot.is-filled').length
+      }));
+      ok(calm.running === 0 && calm.filled === 1,
+        `動かさずにスタンプが出ている (動き ${calm.running} 件 / ${calm.filled} マス)`);
+      await ctx.close();
+    }
+
+    section('10 個たまるとごほうびがもらえて、きせかえができる');
+    {
+      const ctx = await browser.newContext({ ...devices['iPhone 13'] });
+      const page = await ctx.newPage();
+      page.on('pageerror', (e) => errors.push('reward: ' + e.message));
+      await page.goto(URL);
+      await page.waitForFunction(() => window.__app);
+
+      const before = await page.evaluate(() =>
+        document.getElementById('btnCustom').hidden);
+      ok(before, 'ごほうびが無いうちは、きせかえボタンを出さない');
+
+      await page.evaluate(() => window.__app.setStamps(10));
+      const at10 = await page.evaluate(() => ({
+        filled: document.querySelectorAll('#stampSlots .slot.is-filled').length,
+        customShown: !document.getElementById('btnCustom').hidden,
+        rewards: window.__app.state().record.stamps
+      }));
+      ok(at10.filled === 10, `10 個目でカードが満杯になる (${at10.filled} マス)`);
+      ok(at10.customShown, 'きせかえボタンが出る');
+
+      // 色を変えると、本当に画面の色が変わる
+      await page.locator('#btnCustom').tap();
+      await page.waitForTimeout(80);
+      const accentBefore = await page.evaluate(() =>
+        getComputedStyle(document.documentElement).getPropertyValue('--accent').trim());
+      await page.locator('#skinChips .chip:not(:disabled)').nth(1).tap();
+      await page.waitForTimeout(80);
+      const accentAfter = await page.evaluate(() =>
+        getComputedStyle(document.documentElement).getPropertyValue('--accent').trim());
+      ok(accentBefore !== accentAfter, `色が本当に変わる (${accentBefore} → ${accentAfter})`);
+
+      // まだもらっていないごほうびは選べない (10 個の時点で飾りは 1 つも無い)
+      const locked = await page.evaluate(() =>
+        Array.from(document.querySelectorAll('#gearChips .chip')).map((b) => b.disabled));
+      ok(locked.length > 0 && locked.every(Boolean),
+        `まだのごほうびは押せない (${locked.join(',')})`);
+
+      // 20 個たまると飾りが 1 つ使える。きせかえ画面にいるまま増やす
+      await page.evaluate(() => window.__app.setStamps(20));
+      await page.waitForTimeout(80);
+      const gearBefore = await page.evaluate(() =>
+        document.querySelectorAll('#mascotPreview .gear, #mascotPreview .gear-fill').length);
+      await page.locator('#gearChips .chip:not(:disabled)').first().tap();
+      await page.waitForTimeout(80);
+      const gearAfter = await page.evaluate(() => ({
+        preview: document.querySelectorAll('#mascotPreview .gear, #mascotPreview .gear-fill').length,
+        saved: window.__app.state().record.gear.length
+      }));
+      ok(gearBefore === 0 && gearAfter.preview > 0 && gearAfter.saved === 1,
+        `飾りをつけると人に増える (${gearBefore} → ${gearAfter.preview} 個)`);
+
+      // とじると準備画面に戻り、飾りがついたままの人が出る
+      await page.locator('#btnCloseCustom').tap();
+      await page.waitForTimeout(80);
+      const back = await page.evaluate(() => ({
+        warmup: getComputedStyle(document.getElementById('screenWarmup')).display !== 'none',
+        gear: document.querySelectorAll('#mascot .gear, #mascot .gear-fill').length
+      }));
+      ok(back.warmup && back.gear > 0, `とじると飾りつきの人が準備画面に出る (${back.gear} 個)`);
+      await ctx.close();
+    }
+
+    section('記録が壊れていても落ちない');
+    {
+      const ctx = await browser.newContext({ ...devices['iPhone 13'] });
+      const page = await ctx.newPage();
+      const broke = [];
+      page.on('pageerror', (e) => broke.push(e.message));
+      await page.goto(URL);
+      await page.evaluate(() => localStorage.setItem('stretch-routine-record', 'こわれている{{'));
+      await page.reload();
+      await page.waitForFunction(() => window.__app);
+      const recovered = await page.evaluate(() => window.__app.state().record.stamps);
+      ok(broke.length === 0 && recovered === 0,
+        `読めない記録でも 0 個から始まる (エラー ${broke.length} 件)`);
+
+      // もらっていないごほうびを書き足しても、そのままは通さない
+      await page.evaluate(() => localStorage.setItem('stretch-routine-record',
+        JSON.stringify({ stamps: 0, skin: 'sunset', gear: ['cape'] })));
+      await page.reload();
+      await page.waitForFunction(() => window.__app);
+      const cheat = await page.evaluate(() => window.__app.state().record);
+      ok(cheat.skin === 'classic' && cheat.gear.length === 0,
+        `もらっていないごほうびは落とす (${cheat.skin} / ${cheat.gear.length} 個)`);
+      await ctx.close();
+    }
+
+    section('スタンプカードを足しても「はじめる」が画面に収まる');
+    for (const [label, opts] of [
+      ['縦 390x664', { ...devices['iPhone 13'] }],
+      ['横 844x390', { viewport: { width: 844, height: 390 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 }],
+      ['小 320x568', { viewport: { width: 320, height: 568 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 }]
+    ]) {
+      const ctx = await browser.newContext(opts);
+      const page = await ctx.newPage();
+      page.on('pageerror', (e) => errors.push(label + ': ' + e.message));
+      await page.goto(URL);
+      await page.waitForFunction(() => window.__app);
+      await page.evaluate(() => window.__app.setStamps(40));
+      await page.waitForTimeout(80);
+      const fit = await page.evaluate(() => {
+        const r = document.getElementById('btnStart').getBoundingClientRect();
+        return { bottom: Math.round(r.bottom), vh: window.innerHeight };
+      });
+      ok(fit.bottom <= fit.vh, `${label}: はじめるが収まる (下端 ${fit.bottom} / 画面 ${fit.vh})`);
+      await ctx.close();
+    }
+
     // ------------------------------------------------ アイコン (用意していれば)
     section('アイコン');
     const desk = await browser.newPage();
