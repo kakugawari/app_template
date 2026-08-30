@@ -111,6 +111,15 @@ async function run() {
       title: document.querySelector('h1') ? document.querySelector('h1').textContent.trim() : ''
     }));
     ok(fit.wide <= 1, 'スマホ幅で横スクロールが出ない');
+
+    // 連打で画面が拡大しないか。ピンチでの拡大は残っているか
+    const zoom = await phone.evaluate(() => ({
+      body: getComputedStyle(document.body).touchAction,
+      scalable: (document.querySelector('meta[name="viewport"]').content || '')
+        .replace(/\s/g, '').includes('user-scalable=no')
+    }));
+    ok(zoom.body === 'manipulation', `連打しても拡大しない (body: ${zoom.body})`);
+    ok(!zoom.scalable, 'ピンチでの拡大は残してある (読めない人が困るため)');
     ok(fit.title.length > 0, `見出しが出ている (${fit.title})`);
 
     // ------------------------------------------------ ここにアプリごとの確認を足す

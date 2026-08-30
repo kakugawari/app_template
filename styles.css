@@ -31,6 +31,16 @@ html, body {
   height: 100%;
   overflow: hidden;
   overscroll-behavior: none;
+  /*
+   * 連打しても画面が拡大しないようにする (ダブルタップの拡大を切る)。
+   * manipulation は「なぞる」と「ピンチでの拡大」だけを残すので、
+   * **指二本での拡大は残る**。そこまで潰すと、文字を大きくして
+   * 読みたい人が読めなくなる。
+   *
+   * viewport に user-scalable=no は書かない。同じ理由に加えて、
+   * iOS はそもそも無視する。
+   */
+  touch-action: manipulation;
 }
 
 body {
