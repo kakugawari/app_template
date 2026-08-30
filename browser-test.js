@@ -101,7 +101,17 @@ async function run() {
     const context = await browser.newContext({ ...devices['iPhone 13'] });
     const phone = await context.newPage();
     phone.on('pageerror', (e) => errors.push('スマホ: ' + e.message));
-    phone.on('console', (m) => { if (m.type() === 'error') errors.push('スマホ: ' + m.text()); });
+    // 外から取る書体が届かないのは、アプリの不具合ではない (端末の書体に退避する)。
+    // 読み込み失敗のメッセージ本文には URL が入らないので、発生場所で見分ける。
+    const isFontHost = (t) => /fonts\.(googleapis|gstatic)\.com/.test(t);
+    let fontBlocked = false;
+    phone.on('console', (m) => {
+      if (m.type() !== 'error') return;
+      const where = (m.location() && m.location().url) || '';
+      if (isFontHost(where) || isFontHost(m.text())) { fontBlocked = true; return; }
+      errors.push('スマホ: ' + m.text() + (where ? ' <' + where + '>' : ''));
+    });
+    phone.on('requestfailed', (r) => { if (isFontHost(r.url())) fontBlocked = true; });
     await phone.goto(URL);
     await phone.waitForFunction(() => window.__app);
     ok(true, 'ページが開いて、画面のしくみが立ち上がる');
@@ -120,6 +130,18 @@ async function run() {
     }));
     ok(zoom.body === 'manipulation', `連打しても拡大しない (body: ${zoom.body})`);
     ok(!zoom.scalable, 'ピンチでの拡大は残してある (読めない人が困るため)');
+
+    // hidden を付けたら必ず消えるか。display を持つ要素では効かないことがある
+    const hiding = await phone.evaluate(() => {
+      const box = document.createElement('div');
+      box.style.display = 'flex';
+      box.hidden = true;
+      document.body.append(box);
+      const h = box.getBoundingClientRect().height;
+      box.remove();
+      return h;
+    });
+    ok(hiding === 0, `hidden を付けたものは、ちゃんと消える (高さ ${hiding}px)`);
     ok(fit.title.length > 0, `見出しが出ている (${fit.title})`);
 
     // ------------------------------------------------ ここにアプリごとの確認を足す
@@ -183,8 +205,11 @@ async function run() {
       // 直したものが 1 回のリロードで出るか (キャッシュ優先だと古い画面が出る)
       const indexPath = path.join(ROOT, 'index.html');
       const original = fs.readFileSync(indexPath, 'utf8');
+      // タグごと差し替える。中身の文字だけを置きに行くと、同じ文字が
+      // <title> など手前にあったとき、そちらに当たってしまう
       const marker = original.match(/<h1[^>]*>([^<]*)<\/h1>/);
-      fs.writeFileSync(indexPath, original.replace(marker[1], 'こうしんかくにん'));
+      const rewritten = marker[0].replace(marker[1], 'こうしんかくにん');
+      fs.writeFileSync(indexPath, original.replace(marker[0], rewritten));
       await swPage.reload();
       await swPage.waitForTimeout(400);
       const title = await swPage.textContent('h1');
@@ -202,6 +227,7 @@ async function run() {
     }
 
     section('エラー');
+    if (fontBlocked) skip('外の書体が取れない環境なので、端末の書体に退避したまま確かめた');
     ok(errors.length === 0, errors.length ? '画面のエラー: ' + errors.join(' / ') : 'JS エラーなし');
   } finally {
     await browser.close();
