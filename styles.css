@@ -101,6 +101,15 @@ body {
 .btn:hover { border-color: var(--accent-2); }
 .btn:active { transform: translateY(1px); }
 
+/* 「できた」を連打しても素通りできないよう、押した直後は
+   一瞬だけ無効にする (app.js の tapDone)。押せない見た目にして、
+   もう一度押そうとする指を止める。 */
+.btn:disabled {
+  opacity: .45;
+  cursor: default;
+  transform: none;
+}
+
 .btn-primary {
   background: var(--accent);
   border-color: var(--accent-2);

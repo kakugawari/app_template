@@ -345,7 +345,32 @@
 
   function start() {
     state.screen = 'running';
+    // 前のセッションで押した「できた」の連打よけがまだ解けていなくても、
+    // 新しく始めるならここで必ず解いておく。解けるまで待たせると、
+    // 最初のステップの「できた」が理由もなく反応しないことがある。
+    doneLocked = false;
+    els.btnDone.disabled = false;
     render();
+  }
+
+  /**
+   * 「できた」を連打すると、実際にストレッチをしていなくても
+   * 一瞬で 17 ステップぶん進んでスタンプまでついてしまう
+   * (実測: 連続で押すと index が 0 → 2 のように 2 つ以上進む)。
+   * 一定時間は次のタップを受け付けないことで、連打で素通りできないようにする。
+   */
+  const TAP_COOLDOWN_MS = 500;
+  let doneLocked = false;
+
+  function tapDone() {
+    if (doneLocked) return;
+    doneLocked = true;
+    els.btnDone.disabled = true;
+    complete();
+    setTimeout(function () {
+      doneLocked = false;
+      els.btnDone.disabled = false;
+    }, TAP_COOLDOWN_MS);
   }
 
   function complete() {
@@ -379,7 +404,7 @@
   function main() {
     els.btnStart.addEventListener('click', start);
     els.btnBack.addEventListener('click', goBack);
-    els.btnDone.addEventListener('click', complete);
+    els.btnDone.addEventListener('click', tapDone);
     els.btnAgain.addEventListener('click', restart);
     els.btnRestart.addEventListener('click', restart);
     els.btnCustom.addEventListener('click', function () {
@@ -402,6 +427,7 @@
       goBack: goBack,
       render: render,
       flipMs: FLIP_MS,
+      tapCooldownMs: TAP_COOLDOWN_MS,
       /** テストから、たまった状態を作って見た目を確かめるための入口 */
       setStamps: function (n) {
         state.record = C.normalizeRecord({ stamps: n, skin: state.record.skin, gear: state.record.gear });

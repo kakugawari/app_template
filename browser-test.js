@@ -216,6 +216,64 @@ async function run() {
     ok(live && live.value === 'polite' && live.hasName && !live.hasButton,
       '種目名まわりが読み上げ対象になっていて、ボタンは含まれていない');
 
+    section('「できた」を連打しても、実際にストレッチしたぶんしか進まない');
+    {
+      // 直したきっかけの不具合: 連打すると、体を動かしていなくても
+      // 一瞬で何ステップも進んでしまっていた
+      // (実測: btn.click() を続けて呼ぶと index が 0 → 2 のように動いた)。
+      //
+      // Playwright の locator.tap() は要素が「押せる」状態になるまで
+      // 待ってしまうので、それだと本物の連打を再現できない。指が追いつく
+      // 間もなく撃つのが連打なので、ここでは素の click() を待たずに
+      // 続けて呼ぶ (=同じタイミングで何度もタップした状態)。
+      const cooldownMs = await phone.evaluate(() => window.__app.tapCooldownMs);
+      // 直前の操作の連打よけが残っていると、はじめの 1 回まで
+      // すり抜けなくなってしまうので、押せる状態になってから測る
+      await phone.waitForFunction(() => !document.getElementById('btnDone').disabled);
+      const indexBefore = await phone.evaluate(() => window.__app.state().session.index);
+
+      await phone.evaluate(() => {
+        const btn = document.getElementById('btnDone');
+        for (let i = 0; i < 8; i++) btn.click();
+      });
+      const indexAfterMash = await phone.evaluate(() => window.__app.state().session.index);
+      ok(indexAfterMash - indexBefore === 1,
+        `8 連打しても 1 つしか進まない (${indexBefore} → ${indexAfterMash})`);
+
+      const disabledRightAfter = await phone.evaluate(() => document.getElementById('btnDone').disabled);
+      ok(disabledRightAfter, '連打した直後は、見た目にも押せない状態になっている');
+
+      await phone.waitForTimeout(cooldownMs + 200);
+      const afterCooldown = await phone.evaluate(() => document.getElementById('btnDone').disabled);
+      ok(!afterCooldown, `${cooldownMs}ms 待つと、また押せる状態に戻る`);
+
+      const indexAfterWait = await phone.evaluate(() => window.__app.state().session.index);
+      await phone.locator('#btnDone').tap();
+      const indexAfterNext = await phone.evaluate(() => window.__app.state().session.index);
+      ok(indexAfterNext - indexAfterWait === 1,
+        `待ってからならふつうに次へ進める (${indexAfterWait} → ${indexAfterNext})`);
+    }
+
+    section('連打でセッションをまたいでも、次の「はじめる」が固まらない');
+    {
+      // 前のセッションで押した連打よけがまだ解けていなくても、
+      // 新しいセッションの最初の「できた」まで反応しなくなってはいけない
+      await phone.locator('#btnRestart').tap();
+      await phone.locator('#btnStart').tap();
+      await phone.evaluate(() => { document.getElementById('btnDone').click(); });
+      await phone.locator('#btnRestart').tap(); // クールダウンが残ったまま次を始める
+      await phone.locator('#btnStart').tap();
+      const idx0 = await phone.evaluate(() => window.__app.state().session.index);
+      await phone.locator('#btnDone').tap();
+      const idx1 = await phone.evaluate(() => window.__app.state().session.index);
+      ok(idx1 - idx0 === 1,
+        `間を置かずに次を始めても、最初の「できた」はすぐ反応する (${idx0} → ${idx1})`);
+      // 続くテストが「実行画面の最初のステップ」を前提にしているので、そこへ戻す
+      await phone.locator('#btnRestart').tap();
+      await phone.locator('#btnStart').tap();
+      await phone.waitForTimeout(80);
+    }
+
     section('コマがパラパラ漫画のように入れ替わる');
     // どの種目でも「今どのコマが見えているか」を読む道具
     const readFrames = () => phone.evaluate(() => Array.from(
