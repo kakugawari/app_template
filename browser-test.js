@@ -137,6 +137,12 @@ async function run() {
     ok(fit.wide <= 1, 'スマホ幅で横スクロールが出ない');
     ok(fit.title.length > 0, `見出しが出ている (${fit.title})`);
 
+    // ボタンを続けてタップすると、ブラウザが「ダブルタップで拡大」と
+    // 勘違いして画面ごと拡大することがある。manipulation にしておくと
+    // それだけを止められる (指を広げるピンチズームは残る)。
+    const touchAction = await phone.evaluate(() => getComputedStyle(document.documentElement).touchAction);
+    ok(touchAction === 'manipulation', `ダブルタップでの拡大を止めている (touch-action: ${touchAction})`);
+
     // ------------------------------------------------ ここにアプリごとの確認を足す
     // hidden 属性の有無 (el.hidden) だけでは、CSS が display:flex で上書きして
     // 実際には表示されたままになる事故を見逃す。getComputedStyle で実際の見え方を見る。
