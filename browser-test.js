@@ -1011,6 +1011,55 @@ async function run() {
       }
     }
 
+    // ------------------------------------------------ ホーム画面から独立起動
+    section('ホーム画面から、ブラウザではなくアプリとして開ける');
+    {
+      const page = await browser.newPage();
+      page.on('pageerror', (e) => errors.push('manifest: ' + e.message));
+      await page.goto(URL);
+      await page.waitForFunction(() => window.__app);
+
+      const href = await page.evaluate(() => {
+        const l = document.querySelector('link[rel="manifest"]');
+        return l ? l.getAttribute('href') : null;
+      });
+      ok(href === './manifest.json', `manifest が読み込まれている (${href})`);
+
+      // ブラウザ自身に読ませて、書き方の間違いを見つけてもらう。
+      // 自分で JSON.parse するだけだと、アイコンの綴り違いなどは通ってしまう
+      const cdp = await page.context().newCDPSession(page);
+      const parsed = await cdp.send('Page.getAppManifest');
+      ok(parsed.errors.length === 0,
+        parsed.errors.length ? 'ブラウザが見つけた間違い: ' + JSON.stringify(parsed.errors)
+                             : 'ブラウザが manifest を読めて、間違いも無い');
+
+      const mf = await (await page.request.get(URL + 'manifest.json')).json();
+      ok(mf.display === 'standalone',
+        `アドレスバー無しで開く指定 (display: ${mf.display})`);
+      // GitHub Pages は /リポジトリ名/ の下に置かれるので、絶対パスだと壊れる
+      ok(mf.start_url === './' && mf.scope === './',
+        `パスが相対 (start_url: ${mf.start_url} / scope: ${mf.scope})`);
+
+      // 宣言した大きさと、実物の大きさが合っているか
+      const icons = [];
+      for (const icon of mf.icons) {
+        const real = await page.evaluate((src) => new Promise((resolve) => {
+          const img = new Image();
+          img.onload = () => resolve(img.width + 'x' + img.height);
+          img.onerror = () => resolve('読めない');
+          img.src = src;
+        }), icon.src);
+        icons.push({ src: icon.src, real: real, said: icon.sizes });
+      }
+      const wrong = icons.filter((i) => i.real !== i.said);
+      ok(wrong.length === 0,
+        wrong.length ? '大きさが宣言と違う: ' + JSON.stringify(wrong)
+                     : `アイコンが宣言どおりの大きさ (${icons.map((i) => i.said).join(', ')})`);
+      ok(mf.icons.some((i) => i.purpose === 'maskable'),
+        'Android で好きな形に切り抜かれる用のアイコンがある');
+      await page.close();
+    }
+
     // ------------------------------------------------ 更新とオフライン (sw.js があれば)
     section('更新とオフライン');
     if (!fs.existsSync(path.join(ROOT, 'sw.js'))) {

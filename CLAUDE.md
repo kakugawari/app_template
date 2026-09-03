@@ -50,6 +50,8 @@ app.js                    操作・描画
 core.test.js              ロジックのテスト (node --test)
 browser-test.js           ブラウザで動かすテスト
 serve.js                  開発用サーバー
+sw.js                     電波が無くても開けるようにする。ネット優先
+manifest.json             ホーム画面から独立したアプリとして開くための設定
 icon.svg                  アイコンの元。直すのはここだけ
 make-icons.js             icon.svg から PNG を書き出す (npm run icons)
 apple-touch-icon.png      ホーム画面用 (180)。以下 3 つは書き出したもの。手で直さない

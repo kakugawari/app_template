@@ -527,6 +527,12 @@
       state.screen = 'warmup';
       render();
     });
+    // 電波が無くても開けるようにする。
+    // テストプレイ用の 1 枚 HTML には sw.js が無いので、失敗しても黙って続ける
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(function () {});
+    }
+
     // 画面を閉じたりタブを移ると、ブラウザが Wake Lock を勝手に解除する。
     // 戻ってきたときに握り直さないと、そこから先は画面が消えるようになる。
     document.addEventListener('visibilitychange', function () {
