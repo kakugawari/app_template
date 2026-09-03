@@ -626,6 +626,105 @@ async function run() {
       await calm.close();
     }
 
+    // ------------------------------------------------ 途中から再開
+    section('途中で閉じても、開き直せば続きから再開できる');
+    {
+      const ctx = await browser.newContext({ ...devices['iPhone 13'] });
+      const page = await ctx.newPage();
+      page.on('pageerror', (e) => errors.push('resume: ' + e.message));
+      await page.goto(URL);
+      await page.waitForFunction(() => window.__app);
+
+      const fresh = await page.evaluate(() => document.getElementById('btnResume').hidden);
+      ok(fresh, 'はじめて開いたときは「つづきから」を出さない');
+
+      // 8 ステップめまで進めたところで閉じる (電話・画面ロックを想定)
+      await page.evaluate(() => {
+        window.__app.start();
+        for (let i = 0; i < 8; i++) window.__app.complete();
+      });
+      await page.reload();
+      await page.waitForFunction(() => window.__app);
+
+      const reopened = await page.evaluate(() => ({
+        screen: window.__app.state().screen,
+        shown: !document.getElementById('btnResume').hidden,
+        note: document.getElementById('stampNote').textContent.trim(),
+        startIsPrimary: document.getElementById('btnStart').classList.contains('btn-primary'),
+        // 幅が足りないとボタンの中で文字が折り返し、ボタンごと縦に伸びて
+        // 下のものを画面の外へ押し出す
+        rowH: Math.round(document.querySelector('#screenWarmup .actions').getBoundingClientRect().height)
+      }));
+      ok(reopened.screen === 'warmup' && reopened.shown,
+        '開き直すと準備画面に「つづきから」が出る');
+      ok(reopened.note.startsWith('9 / 17 まで進んでいます'),
+        `どこまでやったかが読める (${reopened.note})`);
+      ok(!reopened.startIsPrimary, '続きがあるときは「つづきから」が主なボタンになる');
+      ok(reopened.rowH <= 56, `ボタンが 1 段に収まっている (${reopened.rowH}px)`);
+
+      await page.locator('#btnResume').tap();
+      await page.waitForTimeout(80);
+      const resumed = await page.evaluate(() => ({
+        index: window.__app.state().session.index,
+        progress: document.getElementById('progress').textContent.trim()
+      }));
+      ok(resumed.index === 8 && resumed.progress === '9 / 17',
+        `閉じたところから再開する (${resumed.progress})`);
+
+      // はじめから を選べば 1 ステップめに戻り、続きは消える
+      await page.locator('#btnRestart').tap();
+      await page.waitForTimeout(60);
+      const afterRestart = await page.evaluate(() => ({
+        shown: !document.getElementById('btnResume').hidden,
+        saved: localStorage.getItem('stretch-routine-progress')
+      }));
+      ok(!afterRestart.shown && afterRestart.saved === null,
+        'はじめからを選ぶと、続きは消える');
+
+      // やりきったら続きは残らない (次の日また最初から始められる)
+      await page.evaluate(() => {
+        window.__app.start();
+        const total = window.__app.state().session.steps.length;
+        for (let i = 0; i < total; i++) window.__app.complete();
+      });
+      const afterFinish = await page.evaluate(() =>
+        localStorage.getItem('stretch-routine-progress'));
+      ok(afterFinish === null, 'やりきったあとは続きが残らない');
+
+      // 種目の数が変わったら、古い続きは捨てる
+      // (種目を足したあとに復元すると、違う種目から再開してしまう)
+      await page.evaluate(() => localStorage.setItem('stretch-routine-progress',
+        JSON.stringify({ index: 8, total: 10 })));
+      await page.reload();
+      await page.waitForFunction(() => window.__app);
+      const stale = await page.evaluate(() => document.getElementById('btnResume').hidden);
+      ok(stale, '種目の数が変わった古い続きは出さない');
+      await ctx.close();
+    }
+
+    section('ストレッチ中は画面を消さない');
+    {
+      const ctx = await browser.newContext({ ...devices['iPhone 13'] });
+      const page = await ctx.newPage();
+      page.on('pageerror', (e) => errors.push('wakelock: ' + e.message));
+      await page.goto(URL);
+      await page.waitForFunction(() => window.__app);
+
+      const onWarmup = await page.evaluate(() => window.__app.screenHeldOn());
+      ok(!onWarmup, '準備画面では、画面の消灯を止めていない');
+
+      await page.locator('#btnStart').tap();
+      await page.waitForTimeout(150);
+      const onRun = await page.evaluate(() => window.__app.screenHeldOn());
+      ok(onRun, '実行画面に入ると、画面の消灯を止める');
+
+      await page.locator('#btnRestart').tap();
+      await page.waitForTimeout(150);
+      const backOnWarmup = await page.evaluate(() => window.__app.screenHeldOn());
+      ok(!backOnWarmup, '実行画面から離れたら、止めるのをやめる (電池を無駄にしない)');
+      await ctx.close();
+    }
+
     // ------------------------------------------------ スタンプカード
     section('1 周やりきるとスタンプがたまり、次に開いても残っている');
     {
@@ -805,6 +904,42 @@ async function run() {
       const cheat = await page.evaluate(() => window.__app.state().record);
       ok(cheat.skin === 'classic' && cheat.gear.length === 0,
         `もらっていないごほうびは落とす (${cheat.skin} / ${cheat.gear.length} 個)`);
+      await ctx.close();
+    }
+
+    section('「つづきから」が増えても、狭い画面でボタンが崩れない');
+    for (const [label, opts] of [
+      ['縦 390x664', { ...devices['iPhone 13'] }],
+      ['小 320x568', { viewport: { width: 320, height: 568 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 }]
+    ]) {
+      const ctx = await browser.newContext(opts);
+      const page = await ctx.newPage();
+      page.on('pageerror', (e) => errors.push(label + ': ' + e.message));
+      await page.goto(URL);
+      await page.waitForFunction(() => window.__app);
+      // ボタンが 3 つ出る、いちばん混む状態を作る
+      await page.evaluate(() => {
+        window.__app.setStamps(24);
+        window.__app.start();
+        for (let i = 0; i < 8; i++) window.__app.complete();
+      });
+      await page.reload();
+      await page.waitForFunction(() => window.__app);
+      await page.waitForTimeout(80);
+      const m = await page.evaluate(() => {
+        const row = document.querySelector('#screenWarmup .actions').getBoundingClientRect();
+        const btns = ['btnCustom', 'btnStart', 'btnResume']
+          .map((id) => document.getElementById(id).getBoundingClientRect());
+        return {
+          rowH: Math.round(row.height),
+          bottom: Math.round(Math.max(...btns.map((b) => b.bottom))),
+          vh: window.innerHeight,
+          shown: btns.filter((b) => b.width > 0).length
+        };
+      });
+      ok(m.shown === 3, `${label}: ボタンが 3 つ出ている (${m.shown})`);
+      ok(m.rowH <= 56, `${label}: ボタンの中で文字が折り返していない (段の高さ ${m.rowH}px)`);
+      ok(m.bottom <= m.vh, `${label}: 画面に収まっている (下端 ${m.bottom} / 画面 ${m.vh})`);
       await ctx.close();
     }
 

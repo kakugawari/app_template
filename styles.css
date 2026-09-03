@@ -101,6 +101,18 @@ body {
   /* 指で押す目安の 44px を下回らないようにする */
   min-height: 44px;
   min-width: 44px;
+  /* 幅が足りないとボタンの中で文字が折り返し、ボタンごと 2 倍の高さに
+     なって下のものを画面の外へ押し出す。折り返さずに詰める */
+  white-space: nowrap;
+}
+
+/* 狭い画面ではボタンが 3 つ並ばないので、字と余白を詰める */
+@media (max-width: 360px) {
+  .btn {
+    padding: 9px 10px;
+    font-size: 12px;
+    letter-spacing: 0;
+  }
 }
 
 .btn:hover { border-color: var(--accent-2); }

@@ -277,3 +277,38 @@ test('normalizeRecord: 同じ飾りが重なっていたら 1 つにする', () 
   const r = Core.normalizeRecord({ stamps: 20, gear: ['headband', 'headband'] });
   assert.deepStrictEqual(r.gear, ['headband']);
 });
+
+// ------------------------------------------------------------ 途中の位置
+
+test('createProgress は今の位置とステップ数を持つ', () => {
+  let session = Core.createSession(Core.DEFAULT_EXERCISES);
+  session = Core.advanceSession(session);
+  session = Core.advanceSession(session);
+  assert.deepStrictEqual(Core.createProgress(session), { index: 2, total: 17 });
+});
+
+test('途中まで進んだ位置は、続きとして取り出せる', () => {
+  assert.deepStrictEqual(Core.normalizeProgress({ index: 8, total: 17 }, 17), { index: 8, total: 17 });
+});
+
+test('まだ始めていない (0) 位置は、続きにしない', () => {
+  assert.strictEqual(Core.normalizeProgress({ index: 0, total: 17 }, 17), null);
+});
+
+test('もう終わっている位置は、続きにしない', () => {
+  assert.strictEqual(Core.normalizeProgress({ index: 17, total: 17 }, 17), null);
+  assert.strictEqual(Core.normalizeProgress({ index: 99, total: 17 }, 17), null);
+});
+
+test('種目の数が変わっていたら、古い続きは捨てる', () => {
+  // 種目を足したあとに古い位置を復元すると、まったく違う種目から再開してしまう
+  assert.strictEqual(Core.normalizeProgress({ index: 8, total: 10 }, 17), null);
+});
+
+test('normalizeProgress は壊れた値でも落ちない', () => {
+  assert.strictEqual(Core.normalizeProgress(null, 17), null);
+  assert.strictEqual(Core.normalizeProgress('こわれた', 17), null);
+  assert.strictEqual(Core.normalizeProgress({ index: 'あ', total: 17 }, 17), null);
+  assert.strictEqual(Core.normalizeProgress({ index: -3, total: 17 }, 17), null);
+  assert.deepStrictEqual(Core.normalizeProgress({ index: 4.7, total: 17 }, 17), { index: 4, total: 17 });
+});

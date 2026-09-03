@@ -21,6 +21,7 @@
     cardCount: document.getElementById('cardCount'),
     skinChips: document.getElementById('skinChips'),
     gearChips: document.getElementById('gearChips'),
+    btnResume: document.getElementById('btnResume'),
     btnCustom: document.getElementById('btnCustom'),
     btnCloseCustom: document.getElementById('btnCloseCustom'),
     warmupText: document.getElementById('warmupText'),
@@ -56,10 +57,39 @@
     }
   }
 
+  /** 途中でやめた位置。スタンプの記録とは別のものなので、しまう場所も分ける */
+  const PROGRESS_KEY = 'stretch-routine-progress';
+
+  function loadProgress(total) {
+    try {
+      return C.normalizeProgress(JSON.parse(localStorage.getItem(PROGRESS_KEY)), total);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function saveProgress(session) {
+    try {
+      localStorage.setItem(PROGRESS_KEY, JSON.stringify(C.createProgress(session)));
+    } catch (e) {
+      // 保存できなくても、いまやっている 1 周は最後まで続けられる
+    }
+  }
+
+  function clearProgress() {
+    try {
+      localStorage.removeItem(PROGRESS_KEY);
+    } catch (e) {
+      // 消せなくても、次に読むとき normalizeProgress が弾く
+    }
+  }
+
   const state = {
     screen: 'warmup', // 'warmup' | 'running' | 'done' | 'custom'
     session: C.createSession(C.DEFAULT_EXERCISES),
     record: loadRecord(),
+    /** 前回とちゅうでやめた位置。無ければ null */
+    resume: loadProgress(C.buildSteps(C.DEFAULT_EXERCISES).length),
     /** 押したてのスタンプ。準備画面に戻ったときに 1 度だけ動かす */
     freshStamp: false
   };
@@ -77,6 +107,43 @@
   function stopFlip() {
     flipAnimations.forEach(function (a) { a.cancel(); });
     flipAnimations = [];
+  }
+
+  // ---------------------------------------------------------------- 画面の消灯
+
+  /**
+   * ストレッチ中は画面を消さない。
+   *
+   * 20 回やっているあいだはスマホを触れないので、放っておくと必ず消灯し、
+   * 次の種目に進むのに毎回ロック解除が要る。
+   *
+   * 使えない端末や、断られた場合は黙って諦める (画面が消えるだけで、
+   * アプリとしては困らない)。
+   */
+  let screenLock = null;
+
+  function keepScreenOn() {
+    if (screenLock || !('wakeLock' in navigator)) return;
+    navigator.wakeLock.request('screen').then(function (lock) {
+      // 待っているあいだに実行画面から離れていたら、すぐ返す
+      if (state.screen !== 'running') {
+        lock.release().catch(function () {});
+        return;
+      }
+      screenLock = lock;
+      // 画面を閉じたりタブを移ると、ブラウザが勝手に解除する。
+      // 持っているつもりのまま握り直せなくなるので、参照も捨てる。
+      lock.addEventListener('release', function () { screenLock = null; });
+    }).catch(function () {
+      // 電池残量が少ないときなどは断られる。そのまま続ける
+    });
+  }
+
+  function letScreenSleep() {
+    if (!screenLock) return;
+    const lock = screenLock;
+    screenLock = null;
+    lock.release().catch(function () {});
   }
 
   const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -239,6 +306,12 @@
   function stampNote(pressNewest) {
     const record = state.record;
     const reward = C.rewardAt(record);
+    // 途中でやめていたら、まずどこまでやったかを知らせる。
+    // いま開いた人がいちばん知りたいのはそこ
+    if (state.resume) {
+      return state.resume.index + 1 + ' / ' + state.resume.total + ' まで進んでいます。'
+        + '通算スタンプ ' + record.stamps + ' 個。';
+    }
     if (pressNewest && reward) {
       return 'カードが ' + C.completedCards(record) + ' 枚うまりました。'
         + '「' + reward.name + '」をもらいました。きせかえから使えます。';
@@ -309,7 +382,12 @@
     els.screenRun.hidden = state.screen !== 'running';
     els.screenDone.hidden = state.screen !== 'done';
 
-    if (state.screen !== 'running') stopFlip();
+    if (state.screen === 'running') {
+      keepScreenOn();
+    } else {
+      stopFlip();
+      letScreenSleep();
+    }
 
     if (state.screen === 'custom') {
       renderCustom();
@@ -326,6 +404,14 @@
       renderStampCard(pressNewest);
       els.stampNote.textContent = stampNote(pressNewest);
       els.btnCustom.hidden = C.unlockedRewards(state.record).length === 0;
+
+      // 途中でやめていたら「つづきから」を出し、そちらを主なボタンにする。
+      // 「はじめる」は残しておく (最初からやり直したい日もある)
+      // どこまで進んだかはボタンに入れず、下の文章に出す。
+      // 狭い画面だとボタンの中で文字が折り返し、ボタンごと縦に伸びるため
+      const canResume = !!state.resume;
+      els.btnResume.hidden = !canResume;
+      els.btnStart.classList.toggle('btn-primary', !canResume);
       return;
     }
 
@@ -343,8 +429,23 @@
     }
   }
 
+  /** はじめから。途中の位置は捨てて 1 ステップめに戻す */
   function start() {
+    state.session = C.createSession(C.DEFAULT_EXERCISES);
+    clearProgress();
+    enterRunning();
+  }
+
+  /** つづきから。閉じたところから再開する */
+  function resume() {
+    if (!state.resume) return start();
+    state.session = Object.assign({}, state.session, { index: state.resume.index });
+    enterRunning();
+  }
+
+  function enterRunning() {
     state.screen = 'running';
+    state.resume = null;
     // 前のセッションで押した「できた」の連打よけがまだ解けていなくても、
     // 新しく始めるならここで必ず解いておく。解けるまで待たせると、
     // 最初のステップの「できた」が理由もなく反応しないことがある。
@@ -381,6 +482,11 @@
       state.record = C.addStamp(state.record);
       saveRecord(state.record);
       state.freshStamp = true;
+      clearProgress(); // やりきったので、続きはもう無い
+    } else {
+      // 1 ステップ進むたびに位置を残す。ここで残しておかないと、
+      // 電話や画面ロックで閉じたときに最初からやり直しになる
+      saveProgress(state.session);
     }
     render();
   }
@@ -388,6 +494,8 @@
   function restart() {
     state.screen = 'warmup';
     state.session = C.createSession(C.DEFAULT_EXERCISES);
+    state.resume = null;
+    clearProgress();
     render();
   }
 
@@ -395,14 +503,18 @@
   function goBack() {
     if (state.session.index === 0) {
       state.screen = 'warmup';
+      // 1 ステップめまで戻ったので、続きとして残すものは無い
+      clearProgress();
     } else {
       state.session = C.retreatSession(state.session);
+      saveProgress(state.session);
     }
     render();
   }
 
   function main() {
     els.btnStart.addEventListener('click', start);
+    els.btnResume.addEventListener('click', resume);
     els.btnBack.addEventListener('click', goBack);
     els.btnDone.addEventListener('click', tapDone);
     els.btnAgain.addEventListener('click', restart);
@@ -415,6 +527,12 @@
       state.screen = 'warmup';
       render();
     });
+    // 画面を閉じたりタブを移ると、ブラウザが Wake Lock を勝手に解除する。
+    // 戻ってきたときに握り直さないと、そこから先は画面が消えるようになる。
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'visible' && state.screen === 'running') keepScreenOn();
+    });
+
     applySkin();
     render();
 
@@ -422,6 +540,9 @@
     window.__app = {
       state: function () { return state; },
       start: start,
+      resume: resume,
+      /** いま画面の消灯を止めているか */
+      screenHeldOn: function () { return !!screenLock; },
       complete: complete,
       restart: restart,
       goBack: goBack,

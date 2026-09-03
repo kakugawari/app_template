@@ -315,9 +315,43 @@
     return base;
   }
 
+  // ------------------------------------------------------------------
+  // 途中でやめたときの位置
+  //
+  // 17 ステップは何分もかかるので、電話が来たり画面がロックされたりして
+  // 閉じることがある。どこまでやったかを覚えておいて、次に開いたときに
+  // 「つづきから」を出せるようにする。
+  //
+  // スタンプの記録とは別ものなので、しまう場所も分ける。途中の位置が
+  // 壊れても、積み上げたスタンプまで巻き添えにしないため。
+  // ------------------------------------------------------------------
+
+  function createProgress(session) {
+    return { index: session.index, total: session.steps.length };
+  }
+
+  /**
+   * しまってあった位置を、いま使える形にする。続きが無ければ null。
+   *
+   * total を一緒に見るのは、種目を足したり並べ替えたりしたあとで
+   * 古い位置を復元すると、まったく違う種目から再開してしまうため。
+   * 数が変わっていたら、その位置はもう意味がないので捨てる。
+   */
+  function normalizeProgress(raw, total) {
+    if (!raw || typeof raw !== 'object') return null;
+    if (raw.total !== total) return null;
+    const index = Number(raw.index);
+    // 0 は「まだ始めていない」、total 以上は「もう終わっている」。
+    // どちらも続きではないので出さない。
+    if (!Number.isFinite(index) || index <= 0 || index >= total) return null;
+    return { index: Math.floor(index), total: total };
+  }
+
   return {
     WARMUP_NOTE: WARMUP_NOTE,
     SIDE_LABELS: SIDE_LABELS,
+    createProgress: createProgress,
+    normalizeProgress: normalizeProgress,
     CARD_SIZE: CARD_SIZE,
     REWARDS: REWARDS,
     DEFAULT_SKIN: DEFAULT_SKIN,
