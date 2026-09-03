@@ -294,12 +294,12 @@ async function run() {
       const first = rows[0].querySelector('.n-name').textContent;
       // 連覇でまとめているので、行数は期の数以下になる
       return { first: first, rows: rows.length, ki: t.holders.length,
-               want: t.holders[0].name, kari: !document.getElementById('nenpyo-kari').hidden,
-               provisional: window.Titles.PROVISIONAL };
+               want: t.holders[0].name,
+               range: document.getElementById('nenpyo-range').textContent };
     });
     ok(nenpyo.first === nenpyo.want, `いちばん古い期の人が先頭に出る (${nenpyo.first})`);
-    ok(nenpyo.rows <= nenpyo.ki, `連覇はひとまとめになる (${nenpyo.ki} 期 → ${nenpyo.rows} 行)`);
-    ok(nenpyo.kari === nenpyo.provisional, '仮データの帯が、仮のときだけ出る');
+    ok(nenpyo.rows < nenpyo.ki, `連覇はひとまとめになる (${nenpyo.ki} 年 → ${nenpyo.rows} 行)`);
+    ok(/\d{4}年度 〜 \d{4}年度/.test(nenpyo.range), `収録の年度が出ている (${nenpyo.range.slice(0, 24)}…)`);
     await phone.locator('#nenpyo-tabs .tab').nth(1).tap();
     await phone.waitForTimeout(300);
     ok(await phone.locator('#nenpyo-list .n-row').count() >= 3, 'タブを変えると別の棋戦が出る');

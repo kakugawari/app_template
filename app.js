@@ -833,8 +833,11 @@
     const list = $('nenpyo-list');
     list.innerHTML = '';
     $('nenpyo-note').textContent = title.note;
-    $('nenpyo-count').textContent = '第' + title.holders[title.holders.length - 1].ki + '期まで';
-    $('nenpyo-kari').hidden = !T.PROVISIONAL;
+    const from = title.holders[0].year;
+    const to = title.holders[title.holders.length - 1].year;
+    $('nenpyo-count').textContent = title.holders.length + '年ぶん';
+    $('nenpyo-range').textContent = '収録は ' + from + '年度 〜 ' + to + '年度。'
+      + 'それより前と、それより新しい年度はまだ入っていないよ';
 
     const line = el('ol', 'nenpyo');
     for (const run of runsOf(title.holders)) {
@@ -850,9 +853,6 @@
       li.appendChild(years);
       const body = el('span', 'n-body');
       body.appendChild(el('span', 'n-name', run.name));
-      const ki = first.ki === last.ki ? '第' + first.ki + '期'
-        : '第' + first.ki + '〜' + last.ki + '期';
-      body.appendChild(el('span', 'n-ki', ki));
       if (run.rows.length > 1) body.appendChild(el('span', 'n-renpa', run.rows.length + '連覇'));
       li.appendChild(body);
       line.appendChild(li);
@@ -866,7 +866,7 @@
     for (const t of tally) {
       const li = el('li');
       li.appendChild(el('span', 'n-name', t.name));
-      li.appendChild(el('span', 'n-ki', t.ki + '期'));
+      li.appendChild(el('span', 'n-ki', t.ki + '年'));
       top.appendChild(li);
     }
     list.appendChild(top);

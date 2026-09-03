@@ -564,10 +564,10 @@ body {
 /* 棋戦は 8 つまで増える。3 列固定だとあふれるので、幅に合わせて折り返す */
 #nenpyo-tabs { grid-template-columns: repeat(auto-fit, minmax(64px, 1fr)); }
 
-.kari-band {
+.n-range {
   margin: 10px 0 0; padding: 7px 10px; border-radius: 10px;
-  font-size: .72rem; font-weight: 700; text-align: center; line-height: 1.6;
-  color: var(--shu-dark); background: var(--shu-usu); border: 1px dashed var(--shu);
+  font-size: .7rem; font-weight: 500; text-align: center; line-height: 1.6;
+  color: var(--murasaki); background: #f4f0f7; border: 1px solid #e2d8ea;
 }
 
 /* 朱のたて線に、年を古い順に打っていく */
@@ -709,7 +709,7 @@ button:focus-visible, .tab:focus-visible { outline: 3px solid var(--shu); outlin
     </div>
     <div class="tabs" id="nenpyo-tabs"></div>
     <p class="zukan-note" id="nenpyo-note"></p>
-    <p class="kari-band" id="nenpyo-kari" hidden>仮データ。ほんとうの記録に入れかえる前の見本だよ。</p>
+    <p class="n-range" id="nenpyo-range"></p>
     <div id="nenpyo-list"></div>
   </section>
 
@@ -2017,21 +2017,15 @@ button:focus-visible, .tab:focus-visible { outline: 3px solid var(--shu); outlin
  *
  * ★ このファイルだけは、将棋エンジンで検算できない ★
  * 囲い・手筋・戦法は core.js が実際に指して確かめているが、
- * 「何年に誰がタイトルを取ったか」は将棋のルールから導けない。
- * だから中身は日本将棋連盟の歴代一覧を写して入れる。写しまちがいだけは
- * titles.test.js が調べる (期が1つずつ増えるか、年が前へもどっていないか、
- * 同じ期が2回出ていないか)。名前そのものが合っているかは、写す人の責任。
+ * 「何年度に誰がタイトルを取ったか」は将棋のルールから導けない。
+ * だから外の記録を写して入れる。名前が合っているかは写す人の責任。
+ * 写しまちがい (年のとばし・重複・逆順、名前のゆれ、肩書きの混入) だけは
+ * titles.test.js が落とす。
  *
- * provisional: true のあいだは、画面の上に「仮データ」の帯が出る。
- * 本物を写し終えたら false にする。
- *
- * 書き方:
- *   { key: 'ryuou', name: '竜王', kana: 'りゅうおう', since: 1988,
- *     note: '一行で棋戦の紹介',
- *     holders: [ { ki: 1, year: 1988, name: '島朗' }, ... ] }
- *   ki   … 期 (第何期)
- *   year … その期の決着した年
- *   name … タイトルを取った人 (連続で防衛したときも、期ごとに 1 行書く)
+ * 中身は「年度 × 棋戦」の表のまま書く。もとの表と同じ形にしておけば、
+ * 1 行ずつ目で見くらべられるため (並べかえて写すと、まちがえたとき気づけない)。
+ * 空文字 '' は「その年度はまだタイトル戦になっていない」。
+ * 行は古い順。新しい年度は下に足す。
  */
 (function (root, factory) {
   'use strict';
@@ -2043,41 +2037,63 @@ button:focus-visible, .tab:focus-visible { outline: 3px solid var(--shu); outlin
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
-  const PROVISIONAL = true;
-
-  const TITLES = [
-    { key: 'ryuou', name: '竜王', kana: 'りゅうおう', since: 1988,
-      note: '賞金がいちばん高いタイトル。1988年にできた、八大タイトルの中では新しいほう',
-      holders: [
-        { ki: 1, year: 1988, name: '島朗' },
-        { ki: 2, year: 1989, name: '羽生善治' },
-        { ki: 3, year: 1990, name: '谷川浩司' },
-        { ki: 4, year: 1991, name: '谷川浩司' },
-        { ki: 5, year: 1992, name: '羽生善治' },
-        { ki: 6, year: 1993, name: '佐藤康光' },
-        { ki: 7, year: 1994, name: '羽生善治' },
-        { ki: 8, year: 1995, name: '羽生善治' },
-        { ki: 9, year: 1996, name: '谷川浩司' },
-        { ki: 10, year: 1997, name: '谷川浩司' }
-      ] },
-
-    { key: 'meijin', name: '名人', kana: 'めいじん', since: 1937,
-      note: 'いちばん古いタイトル。順位戦のA級で1位になった人だけが挑戦できる',
-      holders: [
-        { ki: 1, year: 1937, name: '木村義雄' },
-        { ki: 2, year: 1940, name: '木村義雄' },
-        { ki: 3, year: 1942, name: '木村義雄' },
-        { ki: 4, year: 1943, name: '木村義雄' },
-        { ki: 5, year: 1945, name: '木村義雄' },
-        { ki: 6, year: 1947, name: '塚田正夫' },
-        { ki: 7, year: 1948, name: '塚田正夫' },
-        { ki: 8, year: 1949, name: '木村義雄' },
-        { ki: 9, year: 1950, name: '木村義雄' },
-        { ki: 10, year: 1951, name: '木村義雄' }
-      ] }
+  /* 棋戦の並びは、表の左から右と同じ */
+  const META = [
+    { key: 'ryuou',  name: '竜王',   kana: 'りゅうおう', note: '賞金がいちばん高いタイトル。1988年度にはじまった、八大タイトルの中では新しいほう' },
+    { key: 'meijin', name: '名人',   kana: 'めいじん',   note: 'いちばん古いタイトル。順位戦のA級で1位になった人だけが挑戦できる' },
+    { key: 'eiou',   name: '叡王',   kana: 'えいおう',   note: 'いちばん新しいタイトル。2018年度からタイトル戦になった' },
+    { key: 'oui',    name: '王位',   kana: 'おうい',     note: '挑戦者は、紅組と白組に分かれたリーグ戦で決める' },
+    { key: 'ouza',   name: '王座',   kana: 'おうざ',     note: '五番勝負で決めるタイトル' },
+    { key: 'kiou',   name: '棋王',   kana: 'きおう',     note: '挑戦者を決める勝ちぬき戦に、負けた人がもう一度上がれる道があるのが特ちょう' },
+    { key: 'oushou', name: '王将',   kana: 'おうしょう', note: '挑戦者は、7人のリーグ戦で決める' },
+    { key: 'kisei',  name: '棋聖',   kana: 'きせい',     note: '五番勝負で決めるタイトル' }
   ];
 
-  return { TITLES: TITLES, PROVISIONAL: PROVISIONAL };
+  /* 年度 / 竜王 / 名人 / 叡王 / 王位 / 王座 / 棋王 / 王将 / 棋聖 */
+  const ROWS = [
+    [1995, '羽生善治', '羽生善治', '',         '羽生善治', '羽生善治', '羽生善治', '羽生善治', '羽生善治'],
+    [1996, '谷川浩司', '羽生善治', '',         '羽生善治', '羽生善治', '羽生善治', '羽生善治', '三浦弘行'],
+    [1997, '谷川浩司', '谷川浩司', '',         '羽生善治', '羽生善治', '羽生善治', '羽生善治', '屋敷伸之'],
+    [1998, '藤井猛',   '佐藤康光', '',         '羽生善治', '羽生善治', '羽生善治', '羽生善治', '郷田真隆'],
+    [1999, '藤井猛',   '佐藤康光', '',         '羽生善治', '羽生善治', '羽生善治', '羽生善治', '谷川浩司'],
+    [2000, '藤井猛',   '丸山忠久', '',         '羽生善治', '羽生善治', '羽生善治', '羽生善治', '羽生善治'],
+    [2001, '羽生善治', '丸山忠久', '',         '羽生善治', '羽生善治', '羽生善治', '佐藤康光', '郷田真隆'],
+    [2002, '羽生善治', '森内俊之', '',         '谷川浩司', '羽生善治', '丸山忠久', '羽生善治', '佐藤康光'],
+    [2003, '森内俊之', '羽生善治', '',         '谷川浩司', '羽生善治', '谷川浩司', '森内俊之', '佐藤康光'],
+    [2004, '渡辺明',   '森内俊之', '',         '羽生善治', '羽生善治', '羽生善治', '羽生善治', '佐藤康光'],
+    [2005, '渡辺明',   '森内俊之', '',         '羽生善治', '羽生善治', '森内俊之', '羽生善治', '佐藤康光'],
+    [2006, '渡辺明',   '森内俊之', '',         '羽生善治', '羽生善治', '佐藤康光', '羽生善治', '佐藤康光'],
+    [2007, '渡辺明',   '森内俊之', '',         '深浦康市', '羽生善治', '佐藤康光', '羽生善治', '佐藤康光'],
+    [2008, '渡辺明',   '羽生善治', '',         '深浦康市', '羽生善治', '久保利明', '羽生善治', '羽生善治'],
+    [2009, '渡辺明',   '羽生善治', '',         '深浦康市', '羽生善治', '久保利明', '久保利明', '羽生善治'],
+    [2010, '渡辺明',   '羽生善治', '',         '広瀬章人', '羽生善治', '久保利明', '久保利明', '羽生善治'],
+    [2011, '渡辺明',   '森内俊之', '',         '羽生善治', '渡辺明',   '郷田真隆', '佐藤康光', '羽生善治'],
+    [2012, '渡辺明',   '森内俊之', '',         '羽生善治', '羽生善治', '渡辺明',   '渡辺明',   '羽生善治'],
+    [2013, '森内俊之', '森内俊之', '',         '羽生善治', '羽生善治', '渡辺明',   '渡辺明',   '羽生善治'],
+    [2014, '糸谷哲郎', '羽生善治', '',         '羽生善治', '羽生善治', '渡辺明',   '郷田真隆', '羽生善治'],
+    [2015, '渡辺明',   '羽生善治', '',         '羽生善治', '羽生善治', '渡辺明',   '郷田真隆', '羽生善治'],
+    [2016, '渡辺明',   '佐藤天彦', '',         '羽生善治', '羽生善治', '渡辺明',   '久保利明', '羽生善治'],
+    [2017, '羽生善治', '佐藤天彦', '',         '菅井竜也', '中村太地', '渡辺明',   '久保利明', '羽生善治'],
+    [2018, '広瀬章人', '佐藤天彦', '高見泰地', '豊島将之', '斎藤慎太郎', '渡辺明', '渡辺明',   '豊島将之'],
+    [2019, '豊島将之', '豊島将之', '永瀬拓矢', '木村一基', '永瀬拓矢', '渡辺明',   '渡辺明',   '渡辺明'],
+    [2020, '豊島将之', '渡辺明',   '豊島将之', '藤井聡太', '永瀬拓矢', '渡辺明',   '渡辺明',   '藤井聡太'],
+    [2021, '藤井聡太', '渡辺明',   '藤井聡太', '藤井聡太', '永瀬拓矢', '渡辺明',   '藤井聡太', '藤井聡太'],
+    [2022, '藤井聡太', '渡辺明',   '藤井聡太', '藤井聡太', '永瀬拓矢', '藤井聡太', '藤井聡太', '藤井聡太'],
+    [2023, '藤井聡太', '藤井聡太', '藤井聡太', '藤井聡太', '藤井聡太', '藤井聡太', '藤井聡太', '藤井聡太'],
+    [2024, '藤井聡太', '藤井聡太', '伊藤匠',   '藤井聡太', '藤井聡太', '藤井聡太', '藤井聡太', '藤井聡太']
+  ];
+
+  /* 表を棋戦ごとの並びに組みかえる。手で二度書きしないための計算 */
+  const TITLES = META.map((m, col) => {
+    const holders = [];
+    for (const row of ROWS) {
+      const name = row[col + 1];
+      if (name) holders.push({ year: row[0], name: name });
+    }
+    return { key: m.key, name: m.name, kana: m.kana, note: m.note, holders: holders };
+  });
+
+  return { TITLES: TITLES, ROWS: ROWS, META: META };
 });
 
 /*!
@@ -2915,8 +2931,11 @@ button:focus-visible, .tab:focus-visible { outline: 3px solid var(--shu); outlin
     const list = $('nenpyo-list');
     list.innerHTML = '';
     $('nenpyo-note').textContent = title.note;
-    $('nenpyo-count').textContent = '第' + title.holders[title.holders.length - 1].ki + '期まで';
-    $('nenpyo-kari').hidden = !T.PROVISIONAL;
+    const from = title.holders[0].year;
+    const to = title.holders[title.holders.length - 1].year;
+    $('nenpyo-count').textContent = title.holders.length + '年ぶん';
+    $('nenpyo-range').textContent = '収録は ' + from + '年度 〜 ' + to + '年度。'
+      + 'それより前と、それより新しい年度はまだ入っていないよ';
 
     const line = el('ol', 'nenpyo');
     for (const run of runsOf(title.holders)) {
@@ -2932,9 +2951,6 @@ button:focus-visible, .tab:focus-visible { outline: 3px solid var(--shu); outlin
       li.appendChild(years);
       const body = el('span', 'n-body');
       body.appendChild(el('span', 'n-name', run.name));
-      const ki = first.ki === last.ki ? '第' + first.ki + '期'
-        : '第' + first.ki + '〜' + last.ki + '期';
-      body.appendChild(el('span', 'n-ki', ki));
       if (run.rows.length > 1) body.appendChild(el('span', 'n-renpa', run.rows.length + '連覇'));
       li.appendChild(body);
       line.appendChild(li);
@@ -2948,7 +2964,7 @@ button:focus-visible, .tab:focus-visible { outline: 3px solid var(--shu); outlin
     for (const t of tally) {
       const li = el('li');
       li.appendChild(el('span', 'n-name', t.name));
-      li.appendChild(el('span', 'n-ki', t.ki + '期'));
+      li.appendChild(el('span', 'n-ki', t.ki + '年'));
       top.appendChild(li);
     }
     list.appendChild(top);
