@@ -21,7 +21,10 @@ const DEPLOY_FILES = ['apple-touch-icon.png', 'icon-192.png', 'icon-512.png', 'a
 
 function build() {
   const css = read('styles.css');
-  const js = ['core.js', 'data.js', 'app.js'].map(read).join('\n')
+  // 読みこむ順番は index.html の <script> の並びと同じ。ここに足したら
+  // index.html にも足すこと (足しわすれると、下の「焼きのこし」で落ちる)
+  const JS_FILES = ['core.js', 'data.js', 'titles.js', 'app.js'];
+  const js = JS_FILES.map(read).join('\n')
     .replace(/\/\* build:strip-start[\s\S]*?build:strip-end \*\//g, '');
   // 画面に出す絵と favicon は icon-192.png (小さいほう) を埋めこむ。
   // 原寸の icon.png は 1MB を超えるので、ページの重さのためにここでは使わない。
@@ -32,7 +35,7 @@ function build() {
     .replace(/<link rel="icon"[^>]*>/, '<link rel="icon" href="' + icon + '" type="image/png">')
     .replace('src="./icon-192.png"', 'src="' + icon + '"')
     .replace(
-      /<script src="\.\/core\.js"><\/script>\s*<script src="\.\/data\.js"><\/script>\s*<script src="\.\/app\.js"><\/script>/,
+      new RegExp(JS_FILES.map((f) => '<script src="\\./' + f.replace('.', '\\.') + '"></script>').join('\\s*')),
       '<script>\n' + js + '\n</script>'
     );
 

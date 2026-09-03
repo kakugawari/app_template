@@ -39,6 +39,7 @@
   --shu-usu:  #f7ece7;          /* 朱のうすい面 */
   --ai:       #2f5d8a;          /* 藍 (✕ などのさし色) */
   --kon:      #22406b;          /* 紺 (ずかん) */
+  --murasaki: #5b4370;          /* 紫 (年表) */
   --cream:    #fff7e8;
   --radius:   14px;
   /* 紙に置いた影。濃い影より、うすく広い影のほうが和紙になじむ */
@@ -539,6 +540,66 @@ body {
 .confetti { position: fixed; top: -6vh; z-index: 70; font-size: 1.3rem; pointer-events: none; animation: fall linear forwards;
   font-family: "Shippori Mincho B1", serif; }
 @keyframes fall { to { transform: translateY(112vh) rotate(680deg); opacity: .85; } }
+
+/* ---------------- 年表（歴代タイトルホルダー） ---------------- */
+
+/* 棋戦は 8 つまで増える。3 列固定だとあふれるので、幅に合わせて折り返す */
+#nenpyo-tabs { grid-template-columns: repeat(auto-fit, minmax(64px, 1fr)); }
+
+.kari-band {
+  margin: 10px 0 0; padding: 7px 10px; border-radius: 10px;
+  font-size: .72rem; font-weight: 700; text-align: center; line-height: 1.6;
+  color: var(--shu-dark); background: var(--shu-usu); border: 1px dashed var(--shu);
+}
+
+/* 朱のたて線に、年を古い順に打っていく */
+.nenpyo { list-style: none; margin: 18px 0 0; padding: 0 0 0 4px; position: relative; }
+.nenpyo::before {
+  content: ""; position: absolute; left: 62px; top: 6px; bottom: 6px; width: 2px;
+  background: linear-gradient(180deg, var(--sen-2), var(--shu) 12%, var(--shu) 88%, var(--sen-2));
+  opacity: .5;
+}
+.n-row { display: flex; align-items: flex-start; gap: 20px; padding: 0 0 14px; position: relative; }
+.n-row::before {                       /* たて線の上に置く節 */
+  content: ""; position: absolute; left: 58px; top: 7px; width: 10px; height: 10px;
+  border-radius: 50%; background: var(--kami); border: 2px solid var(--shu); z-index: 1;
+}
+.n-year {
+  width: 50px; flex: none; text-align: right; padding-top: 1px;
+  display: flex; flex-direction: column; align-items: flex-end; line-height: 1.25;
+}
+.n-year b {
+  font-family: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: .88rem; font-weight: 700; color: var(--sumi-2); letter-spacing: .02em;
+}
+.n-dash { font-size: .62rem; color: var(--usu); line-height: 1; }
+.n-body {
+  flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 9px;
+  background: var(--kami-2); border: 1px solid var(--sen); border-radius: 11px;
+  box-shadow: var(--shadow); padding: 9px 12px 10px;
+}
+.n-name {
+  font-family: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: 1.06rem; font-weight: 700; color: var(--sumi); letter-spacing: .04em;
+}
+.n-ki { font-size: .7rem; font-weight: 500; color: var(--usu); }
+.n-renpa {
+  font-size: .68rem; font-weight: 700; color: #fff; background: var(--shu);
+  border-radius: 999px; padding: 2px 8px; letter-spacing: .04em;
+}
+.n-tally { list-style: none; margin: 0; padding: 0; }
+.n-tally li {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+  padding: 9px 12px; border-bottom: 1px solid var(--sen);
+}
+.n-tally li:last-child { border-bottom: 0; }
+.n-tally .n-name { font-size: .98rem; }
+
+.mode-btn.is-nenpyo { border-color: #ddd0e4; }
+.mode-btn.is-nenpyo .medal {
+  background: linear-gradient(180deg, #efe9f2, #ded2e6); color: var(--murasaki);
+}
+.mode-btn.is-nenpyo .name { color: var(--murasaki); }
 
 button:focus-visible, .tab:focus-visible { outline: 3px solid var(--shu); outline-offset: 2px; }
 

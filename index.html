@@ -85,6 +85,19 @@
     </div>
   </section>
 
+  <!-- ============ 年表 ============ -->
+  <section class="screen" id="screen-nenpyo">
+    <div class="hud">
+      <button class="icon-btn" id="btn-nenpyo-back" type="button" aria-label="タイトルへもどる">◀</button>
+      <span class="hud-count">年表</span>
+      <span class="hud-score" id="nenpyo-count"></span>
+    </div>
+    <div class="tabs" id="nenpyo-tabs"></div>
+    <p class="zukan-note" id="nenpyo-note"></p>
+    <p class="kari-band" id="nenpyo-kari" hidden>仮データ。ほんとうの記録に入れかえる前の見本だよ。</p>
+    <div id="nenpyo-list"></div>
+  </section>
+
   <!-- ============ ずかん ============ -->
   <section class="screen" id="screen-zukan">
     <div class="hud">
@@ -116,6 +129,7 @@
 
 <script src="./core.js"></script>
 <script src="./data.js"></script>
+<script src="./titles.js"></script>
 <script src="./app.js"></script>
 </body>
 </html>

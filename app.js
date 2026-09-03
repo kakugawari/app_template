@@ -7,6 +7,7 @@
 
   const C = window.Core;
   const D = window.Data;
+  const T = window.Titles;
   const $ = (id) => document.getElementById(id);
 
   const RANK_KANJI = ['一', '二', '三', '四', '五', '六', '七', '八', '九'];
@@ -385,6 +386,17 @@
     z.appendChild(zb);
     z.addEventListener('click', () => showZukan());
     list.appendChild(z);
+
+    const y = el('button', 'mode-btn is-nenpyo');
+    y.type = 'button';
+    y.appendChild(el('span', 'medal', '年'));
+    const yb = el('span', 'body');
+    yb.appendChild(el('span', 'name', '年表'));
+    yb.appendChild(el('span', 'desc',
+      T.TITLES.length + 'つの棋戦の、歴代タイトルホルダーを古い順に。誰が何連覇したかも見られる'));
+    y.appendChild(yb);
+    y.addEventListener('click', () => showNenpyo());
+    list.appendChild(y);
 
     // メニューに出しているモードの問題数だけを数える
     const total = MODES.reduce((n, m) => n + m.count(), 0);
@@ -791,6 +803,93 @@
     }
   }
 
+  /* ============================================================
+     年表 (歴代タイトルホルダー)
+     ============================================================ */
+
+  let nenpyoTab = null;
+
+  /** 同じ人が続いたところを 1 かたまりにまとめる (「4連覇」と見せるため)。 */
+  function runsOf(holders) {
+    const runs = [];
+    for (const h of holders) {
+      const last = runs[runs.length - 1];
+      if (last && last.name === h.name) last.rows.push(h);
+      else runs.push({ name: h.name, rows: [h] });
+    }
+    return runs;
+  }
+
+  /** 通算で何期取ったか。多い順に。 */
+  function tallyOf(holders) {
+    const n = {};
+    for (const h of holders) n[h.name] = (n[h.name] || 0) + 1;
+    return Object.keys(n).map((name) => ({ name: name, ki: n[name] }))
+      .sort((a, b) => b.ki - a.ki || a.name.localeCompare(b.name));
+  }
+
+  function buildNenpyo(key) {
+    const title = T.TITLES.find((t) => t.key === key) || T.TITLES[0];
+    const list = $('nenpyo-list');
+    list.innerHTML = '';
+    $('nenpyo-note').textContent = title.note;
+    $('nenpyo-count').textContent = '第' + title.holders[title.holders.length - 1].ki + '期まで';
+    $('nenpyo-kari').hidden = !T.PROVISIONAL;
+
+    const line = el('ol', 'nenpyo');
+    for (const run of runsOf(title.holders)) {
+      const first = run.rows[0];
+      const last = run.rows[run.rows.length - 1];
+      const li = el('li', 'n-row');
+      const years = el('span', 'n-year');
+      years.appendChild(el('b', null, String(first.year)));
+      if (run.rows.length > 1) {
+        years.appendChild(el('span', 'n-dash', '〜'));
+        years.appendChild(el('b', null, String(last.year)));
+      }
+      li.appendChild(years);
+      const body = el('span', 'n-body');
+      body.appendChild(el('span', 'n-name', run.name));
+      const ki = first.ki === last.ki ? '第' + first.ki + '期'
+        : '第' + first.ki + '〜' + last.ki + '期';
+      body.appendChild(el('span', 'n-ki', ki));
+      if (run.rows.length > 1) body.appendChild(el('span', 'n-renpa', run.rows.length + '連覇'));
+      li.appendChild(body);
+      line.appendChild(li);
+    }
+    list.appendChild(line);
+
+    // 通算獲得数は holders から数える (書き足したら勝手に合う)
+    const tally = tallyOf(title.holders).slice(0, 5);
+    list.appendChild(el('div', 'zukan-fam', '通算で多い人'));
+    const top = el('ul', 'n-tally');
+    for (const t of tally) {
+      const li = el('li');
+      li.appendChild(el('span', 'n-name', t.name));
+      li.appendChild(el('span', 'n-ki', t.ki + '期'));
+      top.appendChild(li);
+    }
+    list.appendChild(top);
+  }
+
+  function showNenpyo(key) {
+    stopPlayer();
+    nenpyoTab = key || nenpyoTab || T.TITLES[0].key;
+    const tabs = $('nenpyo-tabs');
+    tabs.innerHTML = '';
+    for (const t of T.TITLES) {
+      const b = el('button', 'tab' + (t.key === nenpyoTab ? ' is-on' : ''), t.name);
+      b.type = 'button';
+      b.dataset.tab = t.key;
+      b.addEventListener('click', () => showNenpyo(t.key));
+      tabs.appendChild(b);
+    }
+    buildNenpyo(nenpyoTab);
+    showScreen('screen-nenpyo');
+  }
+
+  $('btn-nenpyo-back').addEventListener('click', () => { showScreen('screen-title'); renderTitle(); });
+
   function showZukan(tab) {
     stopPlayer();
     zukanTab = tab || zukanTab;
@@ -820,6 +919,7 @@
       start: start,
       showScreen: showScreen,
       showZukan: showZukan,
+      showNenpyo: showNenpyo,
       answer: (i) => {
         const btn = document.querySelector('#choices button[data-i="' + i + '"]');
         if (btn) btn.click();

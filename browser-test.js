@@ -122,7 +122,7 @@ async function run() {
     // ------------------------------------------------ タイトル
     section('タイトル');
     const modes = await phone.locator('.mode-btn').count();
-    ok(modes === 5, `モードのボタンが並ぶ (${modes} 個: クイズ4 + ずかん)`);
+    ok(modes === 6, `モードのボタンが並ぶ (${modes} 個: クイズ4 + ずかん + 年表)`);
     const totalNote = await phone.textContent('#total-note');
     ok(/全 \d+ 問/.test(totalNote), `問題数が出ている (${totalNote.trim()})`);
 
@@ -279,12 +279,38 @@ async function run() {
     ok(senpouCards >= 10, `戦法ずかんにならぶ (${senpouCards} 枚)`);
     ok(await phone.locator('.z-card .board .koma').first().isVisible(), 'ずかんの盤にも駒が出る');
 
+    // ------------------------------------------------ 年表
+    section('年表');
+    await phone.evaluate(() => window.__app.showNenpyo());
+    await phone.waitForTimeout(400);
+    const nTabs = await phone.locator('#nenpyo-tabs .tab').count();
+    const nRows = await phone.locator('#nenpyo-list .n-row').count();
+    ok(nTabs === (await phone.evaluate(() => window.Titles.TITLES.length)),
+      `棋戦のタブが全部出る (${nTabs} 個)`);
+    ok(nRows >= 3, `年表がならぶ (${nRows} 行)`);
+    const nenpyo = await phone.evaluate(() => {
+      const t = window.Titles.TITLES[0];
+      const rows = [...document.querySelectorAll('#nenpyo-list .n-row')];
+      const first = rows[0].querySelector('.n-name').textContent;
+      // 連覇でまとめているので、行数は期の数以下になる
+      return { first: first, rows: rows.length, ki: t.holders.length,
+               want: t.holders[0].name, kari: !document.getElementById('nenpyo-kari').hidden,
+               provisional: window.Titles.PROVISIONAL };
+    });
+    ok(nenpyo.first === nenpyo.want, `いちばん古い期の人が先頭に出る (${nenpyo.first})`);
+    ok(nenpyo.rows <= nenpyo.ki, `連覇はひとまとめになる (${nenpyo.ki} 期 → ${nenpyo.rows} 行)`);
+    ok(nenpyo.kari === nenpyo.provisional, '仮データの帯が、仮のときだけ出る');
+    await phone.locator('#nenpyo-tabs .tab').nth(1).tap();
+    await phone.waitForTimeout(300);
+    ok(await phone.locator('#nenpyo-list .n-row').count() >= 3, 'タブを変えると別の棋戦が出る');
+
     // ------------------------------------------------ 画面のはみ出し
     section('スマホ幅');
     for (const [name, go] of [
       ['タイトル', "window.__app.showScreen('screen-title')"],
       ['戦法クイズ', "window.__app.start('senpou')"],
-      ['ずかん', "window.__app.showZukan('tesuji')"]
+      ['ずかん', "window.__app.showZukan('tesuji')"],
+      ['年表', "window.__app.showNenpyo()"]
     ]) {
       await phone.evaluate(go);
       await phone.waitForTimeout(250);

@@ -5,7 +5,7 @@
  */
 const CACHE = 'shogi-quiz-dojo-v1';
 const FILES = [
-  './', './index.html', './styles.css', './core.js', './data.js', './app.js',
+  './', './index.html', './styles.css', './core.js', './data.js', './titles.js', './app.js',
   './icon-192.png', './icon-512.png', './apple-touch-icon.png', './app.webmanifest'
 ];
 
