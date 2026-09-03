@@ -295,11 +295,27 @@ async function run() {
       // 連覇でまとめているので、行数は期の数以下になる
       return { first: first, rows: rows.length, ki: t.holders.length,
                want: t.holders[0].name,
+               gaps: document.querySelectorAll('#nenpyo-list .n-gap').length,
                range: document.getElementById('nenpyo-range').textContent };
     });
     ok(nenpyo.first === nenpyo.want, `いちばん古い期の人が先頭に出る (${nenpyo.first})`);
     ok(nenpyo.rows < nenpyo.ki, `連覇はひとまとめになる (${nenpyo.ki} 年 → ${nenpyo.rows} 行)`);
-    ok(/\d{4}年度 〜 \d{4}年度/.test(nenpyo.range), `収録の年度が出ている (${nenpyo.range.slice(0, 24)}…)`);
+    ok(/\d{4}年度 〜 \d{4}年度/.test(nenpyo.range), `収録の年度が出ている (${nenpyo.range.slice(0, 22)}…)`);
+    // 名人戦には、行われなかった年度が 5 つある。その札が出るか
+    await phone.evaluate(() => window.__app.showNenpyo('meijin'));
+    await phone.waitForTimeout(300);
+    const meijinGaps = await phone.evaluate(() => ({
+      gaps: document.querySelectorAll('#nenpyo-list .n-gap').length,
+      want: Object.keys(window.Titles.TITLES.find((t) => t.key === 'meijin').gaps).length
+    }));
+    ok(meijinGaps.gaps === meijinGaps.want,
+      `行われなかった年度の札が出る (${meijinGaps.gaps} 件)`);
+    // 棋聖戦は1994年度まで年2回。前期/後期が年に付くか
+    await phone.evaluate(() => window.__app.showNenpyo('kisei'));
+    await phone.waitForTimeout(300);
+    const kiseiYear = await phone.evaluate(() =>
+      document.querySelector('#nenpyo-list .n-row .n-year b').textContent);
+    ok(/^\d{4}(前|後)$/.test(kiseiYear), `棋聖戦は前期・後期が付く (${kiseiYear})`);
     await phone.locator('#nenpyo-tabs .tab').nth(1).tap();
     await phone.waitForTimeout(300);
     ok(await phone.locator('#nenpyo-list .n-row').count() >= 3, 'タブを変えると別の棋戦が出る');

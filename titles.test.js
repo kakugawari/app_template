@@ -4,27 +4,17 @@
  * このデータだけは将棋エンジンで検算できない (「何年度に誰が取ったか」は
  * 将棋のルールから導けない)。だから「名前が合っているか」は調べられない。
  * そのかわり、表を写すときに起きるまちがい ── 年のとばし・重複・逆順、
- * 列のずれ、名前のゆれ、肩書きや数字の混入 ── はぜんぶここで落とす。
+ * 前期/後期の書きもれ、名前のゆれ、肩書きや数字の混入 ── はぜんぶここで落とす。
  */
 const test = require('node:test');
 const assert = require('node:assert');
 const T = require('./titles.js');
 
-test('表の形がそろっている (列のずれ・行のとばしがない)', () => {
-  assert.ok(T.ROWS.length > 0, '年度の行が 1 つもない');
-  for (const row of T.ROWS) {
-    assert.strictEqual(row.length, T.META.length + 1,
-      row[0] + '年度: マスの数が ' + (row.length - 1) + ' 個 (棋戦は ' + T.META.length + ' つ)');
-  }
-  T.ROWS.forEach((row, i) => {
-    if (i === 0) return;
-    assert.strictEqual(row[0], T.ROWS[i - 1][0] + 1,
-      row[0] + '年度の 1 つ前が ' + T.ROWS[i - 1][0] + '年度 (年のとばしか重複、または並びが古い順でない)');
-  });
-});
+const NOW = 2026;   // これより新しい年度は、まだ終わっていないので入らない
 
 test('棋戦の書き方がそろっている', () => {
-  const keys = T.META.map((m) => m.key);
+  assert.ok(T.TITLES.length >= 1, '棋戦が 1 つもない');
+  const keys = T.TITLES.map((t) => t.key);
   assert.strictEqual(new Set(keys).size, keys.length, '同じ key の棋戦が 2 つある');
   for (const t of T.TITLES) {
     for (const f of ['key', 'name', 'kana', 'note']) {
@@ -34,29 +24,83 @@ test('棋戦の書き方がそろっている', () => {
   }
 });
 
-test('どの棋戦も、はじまった年度からとぎれずに続いている', () => {
-  // 途中の年度が空だと「タイトル戦が 1 年なかった」ことになる。まず写しまちがい
+test('年は古い順にならび、同じ年度の同じ期が 2 回出てこない', () => {
   for (const t of T.TITLES) {
-    t.holders.forEach((h, i) => {
+    const seen = new Set();
+    let prev = 0;
+    for (const h of t.holders) {
+      const where = t.name + ' ' + h.year + '年度' + h.term;
+      assert.ok(h.year >= 1937 && h.year <= NOW, where + ': 年度が ' + h.year);
+      assert.ok(h.year >= prev, where + ': 年が前へもどっている (' + prev + ' のあと)');
+      const key = h.year + h.term;
+      assert.ok(!seen.has(key), where + ': 同じ年度が 2 回出ている');
+      seen.add(key);
+      prev = h.year;
+    }
+  }
+});
+
+test('年がとぶところには、かならず理由が書いてある', () => {
+  // 理由のない飛びは「写すときに 1 行落とした」とみなす
+  for (const t of T.TITLES) {
+    for (let i = 1; i < t.holders.length; i++) {
+      const prev = t.holders[i - 1].year;
+      const now = t.holders[i].year;
+      for (let y = prev + 1; y < now; y++) {
+        assert.ok(t.gaps[y],
+          t.name + ': ' + y + '年度がぬけている。写しもれなら足す、ほんとうに行われて'
+          + 'いないなら gaps に理由を書く');
+      }
+    }
+  }
+});
+
+test('gaps に書いた年度が、ほんとうに空いている', () => {
+  // 直したあとに理由だけ残っていると、うそが残る
+  for (const t of T.TITLES) {
+    const years = new Set(t.holders.map((h) => h.year));
+    for (const y of Object.keys(t.gaps)) {
+      assert.ok(!years.has(Number(y)),
+        t.name + ': gaps に ' + y + ' と書いてあるのに、その年度の中身がある');
+      assert.ok(Number(y) > t.holders[0].year && Number(y) < t.holders[t.holders.length - 1].year,
+        t.name + ': gaps の ' + y + ' が、この棋戦のある期間の外にある');
+    }
+  }
+});
+
+test('前期・後期の書き方がそろっている', () => {
+  for (const t of T.TITLES) {
+    const withTerm = t.holders.filter((h) => h.term);
+    if (!withTerm.length) continue;
+    // 前期・後期があるのは棋聖戦だけ。前だけ・後だけの年がないか見る
+    const byYear = new Map();
+    for (const h of withTerm) byYear.set(h.year, (byYear.get(h.year) || '') + h.term);
+    const years = [...byYear.keys()].sort();
+    years.forEach((y, i) => {
+      const terms = byYear.get(y);
+      // いちばん古い年だけは後期しかないことがある (棋聖戦の第1期)
       if (i === 0) return;
-      assert.strictEqual(h.year, t.holders[i - 1].year + 1,
-        t.name + ': ' + t.holders[i - 1].year + '年度の次が ' + h.year + '年度 (途中が空)');
+      assert.ok(terms.includes('前') && terms.includes('後'),
+        t.name + ' ' + y + '年度: 前期か後期が書かれていない (' + terms + ')');
     });
-    const last = T.ROWS[T.ROWS.length - 1][0];
-    assert.strictEqual(t.holders[t.holders.length - 1].year, last,
-      t.name + ': いちばん新しい年度 (' + last + ') が空になっている');
+    // 前期・後期があるのは、ある年より前だけ (途中でまざらない)
+    const lastTerm = withTerm[withTerm.length - 1].year;
+    for (const h of t.holders) {
+      if (h.year <= lastTerm) assert.ok(h.term,
+        t.name + ' ' + h.year + '年度: 前期/後期が書かれていない');
+    }
   }
 });
 
 test('名前の書き方がそろっている (空白・数字・肩書きが混ざっていない)', () => {
   for (const t of T.TITLES) {
     for (const h of t.holders) {
-      const where = t.name + ' ' + h.year + '年度';
+      const where = t.name + ' ' + h.year + '年度' + h.term;
       assert.ok(h.name.length >= 2, where + ': 名前が短すぎる (' + h.name + ')');
       assert.ok(!/[\s　]/.test(h.name), where + ': 名前に空白が入っている (' + h.name + ')');
       assert.ok(!/[０-９0-9]/.test(h.name), where + ': 名前に数字が入っている (' + h.name + ')');
-      assert.ok(!/(段|冠|位|名人|竜王|王将|棋聖)$/.test(h.name),
-        where + ': 名前に肩書きが付いている (' + h.name + ')');
+      assert.ok(!/(段|冠|初|終|永|全冠)$/.test(h.name),
+        where + ': 名前に印や肩書きが付いたまま (' + h.name + ')');
     }
   }
 });
@@ -74,21 +118,14 @@ test('同じ人の名前が、ゆれずに書かれている', () => {
   }
 });
 
-test('空マスは、棋戦がはじまる前にしかない', () => {
-  // 列をずらして写すと、空マスが変なところに移る。その見張り
-  T.META.forEach((m, col) => {
-    const start = T.ROWS.findIndex((row) => row[col + 1]);
-    assert.ok(start >= 0, m.name + ': 中身が 1 つもない');
-    T.ROWS.forEach((row, i) => {
-      const filled = !!row[col + 1];
-      assert.strictEqual(filled, i >= start,
-        m.name + ' ' + row[0] + '年度: ' + (filled ? 'はじまる前なのに名前がある' : '空になっている'));
-    });
-  });
-});
-
-test('タイトルの数が、その年度に開かれた棋戦の数と合う', () => {
-  const total = T.TITLES.reduce((n, t) => n + t.holders.length, 0);
-  const cells = T.ROWS.reduce((n, row) => n + row.slice(1).filter(Boolean).length, 0);
-  assert.strictEqual(total, cells, '表のマスの数と、棋戦ごとに数えた数が合わない');
+test('1 つの年度に、同じ棋戦のタイトルを 2 人が持っていない', () => {
+  // 棋聖戦の前期・後期をのぞけば、1 年度 1 人。列をずらして写すと崩れる
+  for (const t of T.TITLES) {
+    const byYear = new Map();
+    for (const h of t.holders) {
+      if (h.term) continue;
+      assert.ok(!byYear.has(h.year), t.name + ' ' + h.year + '年度: 2 人書かれている');
+      byYear.set(h.year, h.name);
+    }
+  }
 });

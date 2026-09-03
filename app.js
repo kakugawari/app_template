@@ -809,12 +809,15 @@
 
   let nenpyoTab = null;
 
-  /** 同じ人が続いたところを 1 かたまりにまとめる (「4連覇」と見せるため)。 */
+  /** 同じ人が続いたところを 1 かたまりにまとめる (「4連覇」と見せるため)。
+      年がとんでいるところではまとめない (続けて取ったわけではないので)。 */
   function runsOf(holders) {
     const runs = [];
     for (const h of holders) {
-      const last = runs[runs.length - 1];
-      if (last && last.name === h.name) last.rows.push(h);
+      const run = runs[runs.length - 1];
+      const prev = run && run.rows[run.rows.length - 1];
+      const tsuzuki = prev && (h.year === prev.year || h.year === prev.year + 1);
+      if (run && run.name === h.name && tsuzuki) run.rows.push(h);
       else runs.push({ name: h.name, rows: [h] });
     }
     return runs;
@@ -835,20 +838,35 @@
     $('nenpyo-note').textContent = title.note;
     const from = title.holders[0].year;
     const to = title.holders[title.holders.length - 1].year;
-    $('nenpyo-count').textContent = title.holders.length + '年ぶん';
-    $('nenpyo-range').textContent = '収録は ' + from + '年度 〜 ' + to + '年度。'
-      + 'それより前と、それより新しい年度はまだ入っていないよ';
+    $('nenpyo-count').textContent = title.holders.length + '回ぶん';
+    $('nenpyo-range').textContent =
+      from + '年度 〜 ' + to + '年度、' + title.holders.length + '回ぶん。'
+      + 'タイトル戦になる前（一般棋戦だったころ）は入れていないよ';
 
     const line = el('ol', 'nenpyo');
+    let prevYear = null;
     for (const run of runsOf(title.holders)) {
       const first = run.rows[0];
       const last = run.rows[run.rows.length - 1];
+
+      // 年がとんでいるところには、その理由を書いた札をはさむ
+      if (prevYear !== null) {
+        for (let y = prevYear + 1; y < first.year; y++) {
+          const why = title.gaps[y];
+          const gap = el('li', 'n-gap');
+          gap.appendChild(el('b', null, String(y)));
+          gap.appendChild(document.createTextNode(why || 'この年度は行われていない'));
+          line.appendChild(gap);
+        }
+      }
+      prevYear = last.year;
+
       const li = el('li', 'n-row');
       const years = el('span', 'n-year');
-      years.appendChild(el('b', null, String(first.year)));
-      if (run.rows.length > 1) {
+      years.appendChild(el('b', null, String(first.year) + first.term));
+      if (first.year + first.term !== last.year + last.term) {
         years.appendChild(el('span', 'n-dash', '〜'));
-        years.appendChild(el('b', null, String(last.year)));
+        years.appendChild(el('b', null, String(last.year) + last.term));
       }
       li.appendChild(years);
       const body = el('span', 'n-body');
@@ -860,13 +878,13 @@
     list.appendChild(line);
 
     // 通算獲得数は holders から数える (書き足したら勝手に合う)
-    const tally = tallyOf(title.holders).slice(0, 5);
+    const tally = tallyOf(title.holders).slice(0, 8);
     list.appendChild(el('div', 'zukan-fam', '通算で多い人'));
     const top = el('ul', 'n-tally');
     for (const t of tally) {
       const li = el('li');
       li.appendChild(el('span', 'n-name', t.name));
-      li.appendChild(el('span', 'n-ki', t.ki + '年'));
+      li.appendChild(el('span', 'n-ki', t.ki + '回'));
       top.appendChild(li);
     }
     list.appendChild(top);
