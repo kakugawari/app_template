@@ -20,7 +20,11 @@
     --line: #5c4630;
     --text: #f1e3c2;
     --muted: #b9a377;
-    --accent: #c1552e;
+    /* accent は「できた」の地にも、見出しや回数の文字にも使う。
+       前者は accent-ink (=ページの地の色) との差、後者は bg-2 との差が
+       それぞれ基準 (4.5) を満たす必要がある。実測でボタン 3.76・見出し
+       3.45 だったので、色味はそのままに明るくした (→ 5.01 / 4.60)。 */
+    --accent: #d46e4a;
     --accent-ink: #221a12;
     --accent-2: #d3a039;
     color-scheme: dark;
@@ -449,7 +453,10 @@ body {
 
 :root[data-skin="midnight"] { --accent: #2f5d80; --accent-2: #c69749; --accent-ink: #f4ecd8; }
 :root[data-skin="forest"]   { --accent: #4a6741; --accent-2: #a8541f; --accent-ink: #f4ecd8; }
-:root[data-skin="sunset"]   { --accent: #c2521f; --accent-2: #6b3f6b; --accent-ink: #fbf2e0; }
+/* sunset は明るい画面でのボタン文字 4.18・見出し文字 (title/reps) 4.51 と、
+   どちらも基準 (4.5) ぎりぎりか未満だったので、色味はそのままに
+   accent を暗くした (→ 4.81 / 4.67) */
+:root[data-skin="sunset"]   { --accent: #b24b1c; --accent-2: #6b3f6b; --accent-ink: #fbf2e0; }
 
 @media (prefers-color-scheme: dark) {
   :root[data-skin="midnight"]:not([data-theme="light"]) { --accent: #5b90bb; --accent-2: #e0b566; --accent-ink: #1a2430; }

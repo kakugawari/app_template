@@ -531,6 +531,59 @@ async function run() {
       await themed.close();
     }
 
+    section('色を変えても、文字の読みやすさ (コントラスト比 4.5) を割らない');
+    {
+      // WCAG の相対輝度からコントラスト比を出す。地と文字それぞれの
+      // 色だけでなく、実際に使っている場所どうしを比べる
+      const contrastFormula = `
+        function lum(rgb) {
+          const c = rgb.map((v) => {
+            const s = v / 255;
+            return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+          });
+          return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+        }
+        function ratio(a, b) {
+          const l1 = lum(a), l2 = lum(b);
+          return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+        }
+        function parse(css) { return (css.match(/\\d+/g) || []).slice(0, 3).map(Number); }
+      `;
+      for (const scheme of ['light', 'dark']) {
+        const ctx = await browser.newContext({ ...devices['iPhone 13'], colorScheme: scheme });
+        const page = await ctx.newPage();
+        page.on('pageerror', (e) => errors.push('contrast/' + scheme + ': ' + e.message));
+        await page.goto(URL);
+        await page.waitForFunction(() => window.__app);
+
+        for (const skin of ['classic', 'midnight', 'forest', 'sunset']) {
+          const r = await page.evaluate(({ formula, skin }) => {
+            // eslint-disable-next-line no-eval
+            eval(formula);
+            document.documentElement.dataset.skin = skin;
+            const cs = getComputedStyle(document.documentElement);
+            const v = (n) => cs.getPropertyValue(n).trim();
+            const probe = document.createElement('div');
+            document.body.appendChild(probe);
+            const rgb = (color) => { probe.style.color = color; return parse(getComputedStyle(probe).color); };
+            const accent = rgb(v('--accent'));
+            const ink = rgb(v('--accent-ink'));
+            const bg2 = rgb(v('--bg-2'));
+            probe.remove();
+            return {
+              // 「できた」ボタンなど、accent を地に ink を文字にする場所
+              button: Math.round(ratio(accent, ink) * 100) / 100,
+              // 見出し・回数の数字など、bg-2 の上に accent を文字として使う場所
+              heading: Math.round(ratio(accent, bg2) * 100) / 100
+            };
+          }, { formula: contrastFormula, skin });
+          ok(r.button >= 4.5, `${scheme}/${skin}: できたボタンの文字が読める (比 ${r.button})`);
+          ok(r.heading >= 4.5, `${scheme}/${skin}: 見出し・回数の文字が読める (比 ${r.heading})`);
+        }
+        await ctx.close();
+      }
+    }
+
     // ------------------------------------------------ ステップをまたいだ位置の固定
     section('どのステップでもカードの高さと回数の位置が変わらない');
     {
