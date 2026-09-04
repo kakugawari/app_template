@@ -596,6 +596,47 @@ body {
   font-family: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif;
   color: var(--sumi-2); margin-right: 8px;
 }
+/* --- 8つのタイトルを横にならべた表 --- */
+/* 1年ぶんの高さ。app.js の ROW_H と対で直すこと (縦書きの名前が入るかの計算に使う) */
+.n-grid-wrap { --row-h: 18px; margin-top: 16px; overflow-x: auto; }
+.n-grid { border-collapse: collapse; width: 100%; table-layout: fixed; }
+.n-grid th, .n-grid td { border: 1px solid var(--sen); padding: 0; }
+.n-gh {
+  position: sticky; top: 0; z-index: 2;
+  font-family: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: .74rem; font-weight: 700; color: var(--sumi); letter-spacing: .04em;
+  background: var(--kami-3); padding: 6px 0; white-space: nowrap;
+}
+.n-gy {
+  width: 34px; height: var(--row-h);
+  font-size: .58rem; font-weight: 500; color: var(--usu);
+  background: var(--kami); text-align: center; white-space: nowrap;
+}
+.n-gh.n-gy { font-size: .68rem; color: var(--sumi); background: var(--kami-3); }
+.n-cell { text-align: center; vertical-align: middle; cursor: pointer; overflow: hidden; }
+.n-none { background: repeating-linear-gradient(45deg, transparent, transparent 3px, #f0ece3 3px, #f0ece3 6px); }
+/* 名前は縦に置く。writing-mode は使わない (表のセルの中では字送りが 0 になる。
+   下の落とし穴の表を見よ)。幅を 1 文字ぶんにして、1 文字ずつ折り返させる */
+.n-tate {
+  display: block; width: 1em; margin: 0 auto;
+  font-size: .66rem; font-weight: 700; line-height: 1.2;
+  color: var(--sumi); text-align: center; word-break: break-all;
+}
+.n-cell.is-pick { outline: 2px solid var(--shu); outline-offset: -2px; }
+.n-pick {
+  margin: 10px 0 0; padding: 9px 12px; border-radius: 10px;
+  font-size: .84rem; font-weight: 700; text-align: center; line-height: 1.6;
+  color: var(--sumi); background: var(--cream); border: 1px solid var(--sen-2);
+}
+.n-legend { list-style: none; margin: 0; padding: 0; }
+.n-legend li {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 12px; border-bottom: 1px solid var(--sen);
+}
+.n-legend li:last-child { border-bottom: 0; }
+.n-legend .n-name { font-size: .9rem; flex: 1; }
+.n-chip { width: 20px; height: 20px; border-radius: 6px; border: 1px solid var(--sen-2); flex: none; }
+
 .n-tally { list-style: none; margin: 0; padding: 0; }
 .n-tally li {
   display: flex; align-items: baseline; justify-content: space-between; gap: 10px;

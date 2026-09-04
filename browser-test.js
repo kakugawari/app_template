@@ -281,15 +281,16 @@ async function run() {
 
     // ------------------------------------------------ 年表
     section('年表');
-    await phone.evaluate(() => window.__app.showNenpyo());
+    await phone.evaluate(() => window.__app.showNenpyo('ryuou'));
     await phone.waitForTimeout(400);
     const nTabs = await phone.locator('#nenpyo-tabs .tab').count();
     const nRows = await phone.locator('#nenpyo-list .n-row').count();
-    ok(nTabs === (await phone.evaluate(() => window.Titles.TITLES.length)),
-      `棋戦のタブが全部出る (${nTabs} 個)`);
+    // 「ぜんぶ」 + 棋戦ごとのタブ
+    ok(nTabs === (await phone.evaluate(() => window.Titles.TITLES.length)) + 1,
+      `棋戦のタブが全部出る (${nTabs} 個: ぜんぶ + 棋戦10)`);
     ok(nRows >= 3, `年表がならぶ (${nRows} 行)`);
     const nenpyo = await phone.evaluate(() => {
-      const t = window.Titles.TITLES[0];
+      const t = window.Titles.TITLES.find((x) => x.key === 'ryuou');
       const rows = [...document.querySelectorAll('#nenpyo-list .n-row')];
       const first = rows[0].querySelector('.n-name').textContent;
       // 連覇でまとめているので、行数は期の数以下になる
@@ -310,6 +311,45 @@ async function run() {
     }));
     ok(meijinGaps.gaps === meijinGaps.want,
       `行われなかった年度の札が出る (${meijinGaps.gaps} 件)`);
+    // 8タイトルを横にならべた一覧
+    await phone.evaluate(() => window.__app.showNenpyo('all'));
+    await phone.waitForTimeout(400);
+    const grid = await phone.evaluate(() => {
+      const wrap = document.querySelector('.n-grid-wrap');
+      const tate = document.querySelector('.n-tate');
+      const r = tate.getBoundingClientRect();
+      // 縦に置いた名前が、1文字ずつちゃんと下へならんでいるか (重なっていないか)
+      const t = tate.firstChild;
+      const ys = [];
+      for (let i = 0; i < t.length; i++) {
+        const g = document.createRange();
+        g.setStart(t, i); g.setEnd(t, i + 1);
+        ys.push(Math.round(g.getBoundingClientRect().y));
+      }
+      return {
+        head: [...document.querySelectorAll('.n-gh')].map((e) => e.textContent).join(''),
+        cells: document.querySelectorAll('.n-cell').length,
+        named: document.querySelectorAll('.n-tate').length,
+        over: wrap.scrollWidth - wrap.clientWidth,
+        tateH: Math.round(r.height),
+        chars: t.length,
+        kasanari: ys.some((y, i) => i > 0 && y <= ys[i - 1])
+      };
+    });
+    ok(grid.head === '年度竜王名人叡王王位王座棋王王将棋聖',
+      `8タイトルが横にならぶ (${grid.head})`);
+    ok(grid.cells > 100, `一覧にマスがならぶ (${grid.cells} マス)`);
+    ok(grid.over <= 1, `一覧が画面の幅におさまる (はみ出し ${grid.over}px)`);
+    ok(!grid.kasanari && grid.tateH > grid.chars * 8,
+      `名前が縦に、重ならずにならぶ (${grid.chars}文字で高さ${grid.tateH}px)`);
+    await phone.locator('.n-cell').first().tap();
+    await phone.waitForTimeout(200);
+    const pick = await phone.evaluate(() => {
+      const p = document.getElementById('nenpyo-pick');
+      return { hidden: p.hidden, text: p.textContent };
+    });
+    ok(!pick.hidden && /年度/.test(pick.text), `マスをおすと、だれか出る (${pick.text})`);
+
     // 棋聖戦は1994年度まで年2回。前期/後期が年に付くか
     await phone.evaluate(() => window.__app.showNenpyo('kisei'));
     await phone.waitForTimeout(300);
