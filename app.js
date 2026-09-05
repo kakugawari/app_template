@@ -1054,13 +1054,22 @@
   /* いまある八大タイトル。表に横に並べる順番 */
   /* いまある八大タイトル。表に横に並べる順番 (もらった表と同じ) */
   const GRID = ['ryuou', 'meijin', 'eiou', 'oui', 'ouza', 'kiou', 'oushou', 'kisei'];
-  /** 表のマスに置く名前。5文字以上は姓と名で行を分ける
-      (幅まかせだと「加藤一 / 二三」と切れてしまうため)。 */
+  /* 姓が 1 文字の人。ここに無い人は姓を 2 文字とみなす。
+     日本人の名前は姓が 1〜2 文字で、名前の長さからは決められないので表で持つ。
+     ここに書いた人が中身にいるかは、ブラウザのテストが確かめる */
+  const SEI1 = ['南芳一', '森雞二'];
+
+  /**
+   * 表のマスに置く名前。姓と名で行を分ける。
+   * 幅まかせに折り返すと「森雞 / 二」「加藤一 / 二三」と、変なところで切れる。
+   */
   function nameSpan(name) {
-    if (name.length < 5) return el('span', 'n-nm', name);
-    const nm = el('span', 'n-nm is-long');
-    nm.appendChild(el('span', null, name.slice(0, 2)));
-    nm.appendChild(el('span', null, name.slice(2)));
+    if (name.length < 3) return el('span', 'n-nm', name);
+    const sei = SEI1.indexOf(name) >= 0 ? 1 : 2;
+    const gyou = [name.slice(0, sei), name.slice(sei)];
+    // 3 文字の行はそのままだとマスからはみ出すので、その札だけ字を小さくする
+    const nm = el('span', 'n-nm' + (gyou.some((g) => g.length >= 3) ? ' is-long' : ''));
+    for (const g of gyou) nm.appendChild(el('span', null, g));
     return nm;
   }
 
@@ -1331,6 +1340,7 @@
       missItems: missItems,
       render: renderQuestion,
       home: () => { showScreen('screen-title'); renderTitle(); },
+      SEI1: SEI1,
       showNenpyo: showNenpyo,
       answer: (i) => {
         const btn = document.querySelector('#choices button[data-i="' + i + '"]');

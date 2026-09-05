@@ -327,9 +327,17 @@ async function run() {
     }));
     ok(maru.mark === '◯' && maru.score === '1', `詰む手を指すとマル (${maru.mark})`);
 
-    // まちがえると「にがて」に残り、正解すると消える
+    // まちがえると「にがて」に残り、正解すると消える。
+    // 出題はランダムなので、持ち駒で詰ます問題を 1 つ選んで固定する
+    // (持ち駒のない問題を引くと「まちがいの打つ手」が作れずテストがぶれる)
     await phone.evaluate(() => { localStorage.removeItem('shogi-quiz-dojo/v1'); });
-    await phone.evaluate(() => window.__app.start('sasu'));
+    await phone.evaluate(() => {
+      window.__app.start('sasu');
+      const st = window.__app.state();
+      st.round = [{ type: 'sasu', item: window.Data.tsume.find((t) => t.name === '銀を重ねる'), choices: [] }];
+      st.idx = 0;
+      window.__app.render();
+    });
     await phone.waitForTimeout(400);
     const namae = await phone.evaluate(() => window.__app.state().round[0].item.name);
     ok((await tapAnswer(false)) === 'ok', 'ちがう手も指せる');
@@ -507,18 +515,43 @@ async function run() {
     ok(iro.machigai.length === 0,
       `色は3段。時代を作った人 ${iro.koi}人 / 守ったことがある人 ${iro.usu}人 / 白 ${iro.shiro}人`
       + (iro.machigai.length ? ' ちがうもの: ' + iro.machigai.join(' ') : ''));
-    // 5文字の名前は、姓と名で行が分かれる
+    // 名前は姓と名で行が分かれる。姓が 1 文字の人 (南芳一・森雞二) もいるので、
+    // 長さだけでは決められない。app.js の表と、実際の割れ方が合っているか見る
     const wake = await phone.evaluate(() => {
-      const out = [];
-      for (const nm of document.querySelectorAll('.n-nm.is-long')) {
-        const spans = [...nm.querySelectorAll('span')].map((s) => s.textContent);
-        if (spans.length !== 2 || spans[0].length !== 2) out.push(nm.textContent);
+      const sei1 = window.__app.SEI1;
+      const warui = [], mihatsu = [];
+      const seen = new Set();
+      const cellW = document.querySelector('.n-cell').getBoundingClientRect().width;
+      let hamidashi = 0;
+      for (const nm of document.querySelectorAll('.n-nm')) {
+        const n = nm.textContent;
+        const spans = [...nm.querySelectorAll('span')];
+        for (const sp of spans) {
+          // 字がマスからはみ出していないか (1文字ずつの右はしで見る)
+          const t = sp.firstChild;
+          const g = document.createRange();
+          g.setStart(t, 0); g.setEnd(t, t.length);
+          if (g.getBoundingClientRect().width > cellW - 2) hamidashi++;
+        }
+        if (seen.has(n)) continue;
+        seen.add(n);
+        if (n.length < 3) { if (spans.length) warui.push(n + '(2文字なのに割れている)'); continue; }
+        const sei = sei1.indexOf(n) >= 0 ? 1 : 2;
+        if (spans.length !== 2 || spans[0].textContent !== n.slice(0, sei)) {
+          warui.push(n + ' → ' + spans.map((x) => x.textContent).join('/'));
+        }
       }
-      return { warui: out, kazu: document.querySelectorAll('.n-nm.is-long').length };
+      // 表に書いた人が、ほんとうに中身にいるか (書いたまま古くならないように)
+      const zenbu = new Set();
+      for (const t of window.Titles.TITLES) for (const h of t.holders) zenbu.add(h.name);
+      for (const n of sei1) if (!zenbu.has(n)) mihatsu.push(n);
+      return { warui: warui, mihatsu: mihatsu, hamidashi: hamidashi, kazu: seen.size };
     });
-    ok(wake.warui.length === 0 && wake.kazu > 0,
-      `5文字の名前は姓と名で行が分かれる (${wake.kazu} マス)`
+    ok(wake.warui.length === 0, `名前が姓と名で行に分かれる (${wake.kazu} 人ぶん)`
       + (wake.warui.length ? ' ちがうもの: ' + wake.warui.join(' ') : ''));
+    ok(wake.mihatsu.length === 0, '「姓が1文字の人」の表に、いない人が書かれていない'
+      + (wake.mihatsu.length ? ' → ' + wake.mihatsu.join(' ') : ''));
+    ok(wake.hamidashi === 0, `どの行もマスからはみ出さない (はみ出し ${wake.hamidashi} 件)`);
     ok(grid.over <= 1, `一覧が画面の幅におさまる (はみ出し ${grid.over}px)`);
     ok(Number(grid.first) > Number(grid.last),
       `新しい年が上にくる (${grid.first} → ${grid.last})`);

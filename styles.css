@@ -675,17 +675,16 @@ body {
   background: var(--kami); color: var(--usu);
   font-size: .66rem; font-weight: 700; text-align: center; letter-spacing: .04em;
 }
-/* 名前は 1 行 2 文字で折り返す。writing-mode は表のマスの中では使えない
-   (字送りが 0 になる。下の落とし穴の表を見よ) */
+/* 名前は姓と名で行を分ける (どこで切るかは app.js が決める)。幅まかせに
+   折り返すと「森雞 / 二」「加藤一 / 二三」と、変なところで切れてしまう。
+   writing-mode は表のマスの中では使えない (字送りが 0 になる。落とし穴の表を見よ) */
 .n-nm {
-  display: block; width: 2em; margin: 0 auto;
-  font-size: .78rem; font-weight: 700; line-height: 1.12;
-  word-break: break-all; letter-spacing: 0;
+  display: block; margin: 0 auto;
+  font-size: .78rem; font-weight: 700; line-height: 1.12; letter-spacing: 0;
 }
-/* 5文字の名前 (加藤一二三・斎藤慎太郎) は、姓と名で行を分ける。
-   幅まかせだと「加藤一 / 二三」と切れてしまう */
-.n-nm.is-long { width: auto; font-size: .7rem; }
-.n-nm.is-long span { display: block; }
+.n-nm span { display: block; }
+/* 3 文字ならぶ行 (加藤 / 一二三 の下の行など) は、そのままだとマスからはみ出す */
+.n-nm.is-long { font-size: .7rem; }
 .n-cell.is-pick { outline: 2px solid var(--sumi); outline-offset: -2px; }
 .n-pick {
   margin: 10px 0 0; padding: 9px 12px; border-radius: 10px;
