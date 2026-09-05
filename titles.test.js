@@ -129,3 +129,36 @@ test('1 つの年度に、同じ棋戦のタイトルを 2 人が持っていな
     }
   }
 });
+
+test('いまの保持者と獲得期数が、出どころの表と合う', () => {
+  // この 1 つの検算で「その人がその棋戦で取った年ぜんぶ」を裏取りできる。
+  // どこか 1 年でも写しまちがえていれば、期数がずれて落ちる
+  const g = T.GENZAI;
+  assert.strictEqual(g.list.length, 8, '八大タイトルぶん書かれていない');
+  for (const w of g.list) {
+    const t = T.TITLES.find((x) => x.key === w.key);
+    assert.ok(t, w.key + ' という棋戦がない');
+    const ki = t.holders.filter((h) => h.name === w.name).length;
+    assert.strictEqual(ki, w.ki,
+      t.name + ': ' + w.name + ' は表では ' + w.ki + '期。数えると ' + ki + '期');
+    const last = t.holders[t.holders.length - 1];
+    assert.strictEqual(last.name, w.name,
+      t.name + ': いまの保持者は ' + w.name + ' のはずが、最後の年度は ' + last.name);
+  }
+});
+
+test('次回の防衛戦の予定と、入っている年度が合う', () => {
+  // 年度は 4月はじまり。1〜3月に指す王将戦・棋王戦は、たとえば 2027年1月の
+  // 対局が「2026年度」ぶんになる。カレンダーの年で数えるとここを取りちがえる
+  const g = T.GENZAI;
+  for (const w of g.list) {
+    const m = /^(\d{4})年(\d{1,2})月/.exec(w.next);
+    assert.ok(m, w.key + ': next の書き方がちがう (' + w.next + ')');
+    const nendo = Number(m[2]) >= 4 ? Number(m[1]) : Number(m[1]) - 1;
+    const t = T.TITLES.find((x) => x.key === w.key);
+    const last = t.holders[t.holders.length - 1].year;
+    assert.strictEqual(last, nendo - 1,
+      t.name + ': 次回が ' + w.next + ' = ' + nendo + '年度ぶん。'
+      + 'それなら入っているのは ' + (nendo - 1) + '年度までのはずが ' + last + '年度まで');
+  }
+});

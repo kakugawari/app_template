@@ -857,6 +857,7 @@
       const t = T.TITLES.find((x) => x.key === key);
       const m = new Map();
       for (const h of t.holders) m.set(h.year, h.name);   // 後期が前期を上書きする
+      m.saigo = t.holders[t.holders.length - 1].year;     // この棋戦が入っている最後の年度
       per[key] = m;
       lo = Math.min(lo, t.holders[0].year);
       hi = Math.max(hi, t.holders[t.holders.length - 1].year);
@@ -879,7 +880,8 @@
     rank.slice(0, IRO.length).forEach((name, i) => { iro[name] = IRO[i]; });
 
     $('nenpyo-note').textContent =
-      'いま行われている8つのタイトルを、横にならべた年表。新しい年が上だよ';
+      'いま行われている8つのタイトルを、横にならべた年表。新しい年が上だよ。'
+      + '「まだ」は、これから指すか、まだ決まっていないところ';
     $('nenpyo-count').textContent = years.length + '年ぶん';
     $('nenpyo-range').textContent =
       years[years.length - 1] + '年度 〜 ' + years[0] + '年度。マスをおすと、大きな字で出るよ。'
@@ -898,7 +900,12 @@
       tr.appendChild(el('th', 'n-gy', String(year)));
       for (const key of GRID) {
         const name = per[key].get(year);
-        if (!name) { tr.appendChild(el('td', 'n-none')); continue; }
+        if (!name) {
+          // 「その棋戦がまだ無かった年」と「これから指す年」は別もの。見た目も分ける
+          if (year > per[key].saigo) tr.appendChild(el('td', 'n-mada', 'まだ'));
+          else tr.appendChild(el('td', 'n-none'));
+          continue;
+        }
         const td = el('td', 'n-cell');
         const c = iro[name];
         if (c) { td.style.background = c.ji2; td.style.color = c.ji; }

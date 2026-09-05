@@ -619,7 +619,13 @@ body {
   text-align: center; vertical-align: middle; cursor: pointer;
   background: var(--kami-2); color: var(--sumi-2); padding: 3px 0;
 }
+/* その棋戦がまだ無かった年 */
 .n-none { background: repeating-linear-gradient(45deg, #f7f4ee, #f7f4ee 3px, #ece7dc 3px, #ece7dc 6px); }
+/* これから指す年 (勝負がついていない) */
+.n-mada {
+  background: var(--kami); color: var(--usu);
+  font-size: .66rem; font-weight: 700; text-align: center; letter-spacing: .04em;
+}
 /* 名前は 1 行 2 文字で折り返す。writing-mode は表のマスの中では使えない
    (字送りが 0 になる。下の落とし穴の表を見よ) */
 .n-nm {

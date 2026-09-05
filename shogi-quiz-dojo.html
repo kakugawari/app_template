@@ -637,7 +637,13 @@ body {
   text-align: center; vertical-align: middle; cursor: pointer;
   background: var(--kami-2); color: var(--sumi-2); padding: 3px 0;
 }
+/* その棋戦がまだ無かった年 */
 .n-none { background: repeating-linear-gradient(45deg, #f7f4ee, #f7f4ee 3px, #ece7dc 3px, #ece7dc 6px); }
+/* これから指す年 (勝負がついていない) */
+.n-mada {
+  background: var(--kami); color: var(--usu);
+  font-size: .66rem; font-weight: 700; text-align: center; letter-spacing: .04em;
+}
 /* 名前は 1 行 2 文字で折り返す。writing-mode は表のマスの中では使えない
    (字送りが 0 になる。下の落とし穴の表を見よ) */
 .n-nm {
@@ -2142,14 +2148,15 @@ button:focus-visible, .tab:focus-visible { outline: 3px solid var(--shu); outlin
       '2011 森内俊之', '2012 森内俊之', '2013 森内俊之', '2014 羽生善治',
       '2015 羽生善治', '2016 佐藤天彦', '2017 佐藤天彦', '2018 佐藤天彦',
       '2019 豊島将之', '2020 渡辺明', '2021 渡辺明', '2022 渡辺明',
-      '2023 藤井聡太', '2024 藤井聡太', '2025 藤井聡太'
+      '2023 藤井聡太', '2024 藤井聡太', '2025 藤井聡太', '2026 藤井聡太'
       ] },
     { key: 'eiou', name: '叡王', kana: 'えいおう',
       note: 'いちばん新しいタイトル。2018年度からタイトル戦になった',
       gaps: null,
       rows: [
       '2018 高見泰地', '2019 永瀬拓矢', '2020 豊島将之', '2021 藤井聡太',
-      '2022 藤井聡太', '2023 藤井聡太', '2024 伊藤匠', '2025 伊藤匠'
+      '2022 藤井聡太', '2023 藤井聡太', '2024 伊藤匠', '2025 伊藤匠',
+      '2026 伊藤匠'
       ] },
     { key: 'oui', name: '王位', kana: 'おうい',
       note: '挑戦者は、紅組と白組に分かれたリーグ戦で決める。1960年度からタイトル戦',
@@ -2258,7 +2265,8 @@ button:focus-visible, .tab:focus-visible { outline: 3px solid var(--shu); outlin
       '2010 羽生善治', '2011 羽生善治', '2012 羽生善治', '2013 羽生善治',
       '2014 羽生善治', '2015 羽生善治', '2016 羽生善治', '2017 羽生善治',
       '2018 豊島将之', '2019 渡辺明', '2020 藤井聡太', '2021 藤井聡太',
-      '2022 藤井聡太', '2023 藤井聡太', '2024 藤井聡太', '2025 藤井聡太'
+      '2022 藤井聡太', '2023 藤井聡太', '2024 藤井聡太', '2025 藤井聡太',
+      '2026 藤井聡太'
       ] },
     { key: 'judan', name: '十段', kana: 'じゅうだん',
       note: '竜王戦の前の名前。1962年度から1987年度まで。いまはもう行われていない',
@@ -2282,6 +2290,23 @@ button:focus-visible, .tab:focus-visible { outline: 3px solid var(--shu); outlin
       ] }
   ];
 
+  /* いま (2026年9月) の保持者と、その人がその棋戦で取った通算の期数。
+     出どころの一覧表をそのまま写したもの。上の KISEN を数えた結果と合うかを
+     titles.test.js が確かめる。**1 つの列の歴史ぜんぶを裏取りできる**ので、
+     新しい年度を足すときや、写しまちがいを疑ったときの答え合わせに使う。
+     next は次回の防衛戦の予定。これが翌年になっている棋戦だけ、その年度は
+     もう終わっている (だから2026年度は名人・叡王・棋聖の3つだけ入っている) */
+  const GENZAI = { asOf: 2026, list: [
+    { key: 'ryuou',  name: '藤井聡太', ki: 5, next: '2026年10月〜' },
+    { key: 'meijin', name: '藤井聡太', ki: 4, next: '2027年4月〜' },
+    { key: 'eiou',   name: '伊藤匠',   ki: 3, next: '2027年4月〜' },
+    { key: 'oui',    name: '藤井聡太', ki: 6, next: '2026年7月〜' },
+    { key: 'ouza',   name: '伊藤匠',   ki: 1, next: '2026年9月〜' },
+    { key: 'kisei',  name: '藤井聡太', ki: 7, next: '2027年6月〜' },
+    { key: 'kiou',   name: '藤井聡太', ki: 4, next: '2027年2月〜' },
+    { key: 'oushou', name: '藤井聡太', ki: 5, next: '2027年1月〜' }
+  ] };
+
   /* '1994後 羽生善治' を { year: 1994, term: '後', name: '羽生善治' } にほどく。
      書き方がくずれていたらここで止める (静かに変な形が通らないように)。 */
   const TITLES = KISEN.map((k) => {
@@ -2294,7 +2319,7 @@ button:focus-visible, .tab:focus-visible { outline: 3px solid var(--shu); outlin
              gaps: k.gaps || {}, holders: holders };
   });
 
-  return { TITLES: TITLES };
+  return { TITLES: TITLES, GENZAI: GENZAI };
 });
 
 /*!
@@ -3156,6 +3181,7 @@ button:focus-visible, .tab:focus-visible { outline: 3px solid var(--shu); outlin
       const t = T.TITLES.find((x) => x.key === key);
       const m = new Map();
       for (const h of t.holders) m.set(h.year, h.name);   // 後期が前期を上書きする
+      m.saigo = t.holders[t.holders.length - 1].year;     // この棋戦が入っている最後の年度
       per[key] = m;
       lo = Math.min(lo, t.holders[0].year);
       hi = Math.max(hi, t.holders[t.holders.length - 1].year);
@@ -3178,7 +3204,8 @@ button:focus-visible, .tab:focus-visible { outline: 3px solid var(--shu); outlin
     rank.slice(0, IRO.length).forEach((name, i) => { iro[name] = IRO[i]; });
 
     $('nenpyo-note').textContent =
-      'いま行われている8つのタイトルを、横にならべた年表。新しい年が上だよ';
+      'いま行われている8つのタイトルを、横にならべた年表。新しい年が上だよ。'
+      + '「まだ」は、これから指すか、まだ決まっていないところ';
     $('nenpyo-count').textContent = years.length + '年ぶん';
     $('nenpyo-range').textContent =
       years[years.length - 1] + '年度 〜 ' + years[0] + '年度。マスをおすと、大きな字で出るよ。'
@@ -3197,7 +3224,12 @@ button:focus-visible, .tab:focus-visible { outline: 3px solid var(--shu); outlin
       tr.appendChild(el('th', 'n-gy', String(year)));
       for (const key of GRID) {
         const name = per[key].get(year);
-        if (!name) { tr.appendChild(el('td', 'n-none')); continue; }
+        if (!name) {
+          // 「その棋戦がまだ無かった年」と「これから指す年」は別もの。見た目も分ける
+          if (year > per[key].saigo) tr.appendChild(el('td', 'n-mada', 'まだ'));
+          else tr.appendChild(el('td', 'n-none'));
+          continue;
+        }
         const td = el('td', 'n-cell');
         const c = iro[name];
         if (c) { td.style.background = c.ji2; td.style.color = c.ji; }

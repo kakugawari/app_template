@@ -344,6 +344,16 @@ async function run() {
       `8タイトルが横にならぶ (${grid.head})`);
     ok(grid.cells > 300 && grid.named === grid.cells,
       `どのマスにも名前が入る (${grid.named} / ${grid.cells} マス)`);
+    // まだ指していない年度は「まだ」。棋戦が無かった年 (ハッチ) とは別もの
+    const mada = await phone.evaluate(() => {
+      const rows = [...document.querySelectorAll('.n-grid tbody tr')];
+      const ue = rows[0];
+      return { ue: ue.querySelectorAll('.n-mada').length,
+               shita: rows[rows.length - 1].querySelectorAll('.n-mada').length,
+               nashi: document.querySelectorAll('.n-none').length };
+    });
+    ok(mada.ue > 0 && mada.shita === 0 && mada.nashi > 0,
+      `これから指す年は「まだ」、棋戦が無かった年とは別に出る (いちばん上の年に ${mada.ue} 件)`);
     ok(grid.over <= 1, `一覧が画面の幅におさまる (はみ出し ${grid.over}px)`);
     ok(Number(grid.first) > Number(grid.last),
       `新しい年が上にくる (${grid.first} → ${grid.last})`);
