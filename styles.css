@@ -597,35 +597,43 @@ body {
   color: var(--sumi-2); margin-right: 8px;
 }
 /* --- 8つのタイトルを横にならべた表 --- */
-/* 1年ぶんの高さ。app.js の ROW_H と対で直すこと (縦書きの名前が入るかの計算に使う) */
-.n-grid-wrap { --row-h: 18px; margin-top: 16px; overflow-x: auto; }
+.n-grid-wrap { margin-top: 16px; }
 .n-grid { border-collapse: collapse; width: 100%; table-layout: fixed; }
-.n-grid th, .n-grid td { border: 1px solid var(--sen); padding: 0; }
-.n-gh {
+.n-grid th, .n-grid td { border: 1px solid #fff; padding: 0; }
+.n-gh {                                   /* 赤い見出し。スクロールしても残る */
   position: sticky; top: 0; z-index: 2;
   font-family: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif;
-  font-size: .74rem; font-weight: 700; color: var(--sumi); letter-spacing: .04em;
-  background: var(--kami-3); padding: 6px 0; white-space: nowrap;
+  font-size: .78rem; font-weight: 700; letter-spacing: .04em;
+  color: #fff; background: var(--shu); border-color: var(--shu-dark);
+  padding: 7px 0; white-space: nowrap;
 }
 .n-gy {
-  width: 34px; height: var(--row-h);
-  font-size: .58rem; font-weight: 500; color: var(--usu);
-  background: var(--kami); text-align: center; white-space: nowrap;
+  /* 高さは行の下限。まるごと空の年 (戦争中など) だけ細くならないように */
+  width: 34px; height: 30px;
+  font-size: .6rem; font-weight: 700; color: var(--shu-dark);
+  background: var(--cream); text-align: center; white-space: nowrap;
+  border-color: #f0e2c8;
 }
-.n-gh.n-gy { font-size: .68rem; color: var(--sumi); background: var(--kami-3); }
-.n-cell { text-align: center; vertical-align: middle; cursor: pointer; overflow: hidden; }
-.n-none { background: repeating-linear-gradient(45deg, transparent, transparent 3px, #f0ece3 3px, #f0ece3 6px); }
-/* 名前は縦に置く。writing-mode は使わない (表のセルの中では字送りが 0 になる。
-   下の落とし穴の表を見よ)。幅を 1 文字ぶんにして、1 文字ずつ折り返させる */
-.n-tate {
-  display: block; width: 1em; margin: 0 auto;
-  font-size: .66rem; font-weight: 700; line-height: 1.2;
-  color: var(--sumi); text-align: center; word-break: break-all;
+.n-gh.n-gy { font-size: .7rem; color: #fff; background: var(--shu); border-color: var(--shu-dark); }
+.n-cell {
+  text-align: center; vertical-align: middle; cursor: pointer;
+  background: var(--kami-2); color: var(--sumi-2); padding: 3px 0;
 }
-.n-cell.is-pick { outline: 2px solid var(--shu); outline-offset: -2px; }
+.n-none { background: repeating-linear-gradient(45deg, #f7f4ee, #f7f4ee 3px, #ece7dc 3px, #ece7dc 6px); }
+/* 名前は 1 行 2 文字で折り返す。writing-mode は表のマスの中では使えない
+   (字送りが 0 になる。下の落とし穴の表を見よ) */
+.n-nm {
+  display: block; width: 2em; margin: 0 auto;
+  font-size: .78rem; font-weight: 700; line-height: 1.12;
+  word-break: break-all; letter-spacing: 0;
+}
+/* 5文字の名前 (加藤一二三・斎藤慎太郎) は、そのままだと 3 行になって
+   その年だけ背が高くなる。少し小さくして 3 文字 + 2 文字の 2 行におさめる */
+.n-nm.is-long { width: 3.2em; font-size: .62rem; }
+.n-cell.is-pick { outline: 2px solid var(--sumi); outline-offset: -2px; }
 .n-pick {
   margin: 10px 0 0; padding: 9px 12px; border-radius: 10px;
-  font-size: .84rem; font-weight: 700; text-align: center; line-height: 1.6;
+  font-size: .92rem; font-weight: 700; text-align: center; line-height: 1.6;
   color: var(--sumi); background: var(--cream); border: 1px solid var(--sen-2);
 }
 .n-legend { list-style: none; margin: 0; padding: 0; }
@@ -635,7 +643,7 @@ body {
 }
 .n-legend li:last-child { border-bottom: 0; }
 .n-legend .n-name { font-size: .9rem; flex: 1; }
-.n-chip { width: 20px; height: 20px; border-radius: 6px; border: 1px solid var(--sen-2); flex: none; }
+.n-chip { width: 20px; height: 20px; border-radius: 6px; border: 2px solid var(--sen-2); flex: none; }
 
 .n-tally { list-style: none; margin: 0; padding: 0; }
 .n-tally li {

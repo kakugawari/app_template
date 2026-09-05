@@ -313,35 +313,42 @@ async function run() {
       `行われなかった年度の札が出る (${meijinGaps.gaps} 件)`);
     // 8タイトルを横にならべた一覧
     await phone.evaluate(() => window.__app.showNenpyo('all'));
-    await phone.waitForTimeout(400);
+    await phone.waitForTimeout(500);
     const grid = await phone.evaluate(() => {
-      const wrap = document.querySelector('.n-grid-wrap');
-      const tate = document.querySelector('.n-tate');
-      const r = tate.getBoundingClientRect();
-      // 縦に置いた名前が、1文字ずつちゃんと下へならんでいるか (重なっていないか)
-      const t = tate.firstChild;
-      const ys = [];
-      for (let i = 0; i < t.length; i++) {
-        const g = document.createRange();
-        g.setStart(t, i); g.setEnd(t, i + 1);
-        ys.push(Math.round(g.getBoundingClientRect().y));
+      const rows = [...document.querySelectorAll('.n-grid tbody tr')];
+      const hs = rows.map((tr) => Math.round(tr.getBoundingClientRect().height));
+      // 名前が何行に折り返されたか (1文字ずつ y 座標を見る)
+      let ooi = 0;
+      for (const nm of document.querySelectorAll('.n-nm')) {
+        const t = nm.firstChild;
+        const ys = new Set();
+        for (let i = 0; i < t.length; i++) {
+          const r = document.createRange();
+          r.setStart(t, i); r.setEnd(t, i + 1);
+          ys.add(Math.round(r.getBoundingClientRect().y));
+        }
+        if (ys.size > 2) ooi++;
       }
       return {
         head: [...document.querySelectorAll('.n-gh')].map((e) => e.textContent).join(''),
         cells: document.querySelectorAll('.n-cell').length,
-        named: document.querySelectorAll('.n-tate').length,
-        over: wrap.scrollWidth - wrap.clientWidth,
-        tateH: Math.round(r.height),
-        chars: t.length,
-        kasanari: ys.some((y, i) => i > 0 && y <= ys[i - 1])
+        named: document.querySelectorAll('.n-nm').length,
+        over: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        first: rows[0].querySelector('.n-gy').textContent,
+        last: rows[rows.length - 1].querySelector('.n-gy').textContent,
+        lo: Math.min.apply(null, hs), hi: Math.max.apply(null, hs),
+        ooi: ooi
       };
     });
     ok(grid.head === '年度竜王名人叡王王位王座棋王王将棋聖',
       `8タイトルが横にならぶ (${grid.head})`);
-    ok(grid.cells > 100, `一覧にマスがならぶ (${grid.cells} マス)`);
+    ok(grid.cells > 300 && grid.named === grid.cells,
+      `どのマスにも名前が入る (${grid.named} / ${grid.cells} マス)`);
     ok(grid.over <= 1, `一覧が画面の幅におさまる (はみ出し ${grid.over}px)`);
-    ok(!grid.kasanari && grid.tateH > grid.chars * 8,
-      `名前が縦に、重ならずにならぶ (${grid.chars}文字で高さ${grid.tateH}px)`);
+    ok(Number(grid.first) > Number(grid.last),
+      `新しい年が上にくる (${grid.first} → ${grid.last})`);
+    ok(grid.ooi === 0, `名前が 2 行におさまる (3行になったもの ${grid.ooi} 件)`);
+    ok(grid.hi - grid.lo <= 6, `行の高さがそろう (${grid.lo}〜${grid.hi}px)`);
     await phone.locator('.n-cell').first().tap();
     await phone.waitForTimeout(200);
     const pick = await phone.evaluate(() => {

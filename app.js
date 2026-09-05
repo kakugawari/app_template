@@ -832,12 +832,22 @@
   }
 
   /* いまある八大タイトル。表に横に並べる順番 */
+  /* いまある八大タイトル。表に横に並べる順番 (もらった表と同じ) */
   const GRID = ['ryuou', 'meijin', 'eiou', 'oui', 'ouza', 'kiou', 'oushou', 'kisei'];
-  const ROW_H = 18;          // 1年ぶんの高さ (px)。CSS の --row-h と対で直すこと
-  /* 和紙になじむ、うすい 10 色。通算の多い 10 人に配る。
-     11 人目からは色を付けない (かたまりが見える人だけ色でおう) */
-  const IRO = ['#f5d0cc', '#f6e3c0', '#e2eec9', '#c9e6dc', '#cfe0f2',
-               '#ddd5ef', '#f2d3e6', '#e8ded0', '#d5ecef', '#e9e4b8'];
+  /* 通算の多い 10 人に配る色。地と字を対にして、和紙の上でも読めるようにする。
+     11 人目からは白いまま (時代を作った人だけが色でおえる) */
+  const IRO = [
+    { ji: '#b0342a', ji2: '#fbdcdc' },   // 紅
+    { ji: '#2f5182', ji2: '#dde6f5' },   // 藍
+    { ji: '#5f4383', ji2: '#e6def0' },   // 藤
+    { ji: '#7a6410', ji2: '#fdf1b5' },   // 黄
+    { ji: '#3d7040', ji2: '#ddeed9' },   // 若草
+    { ji: '#24666f', ji2: '#d6ecef' },   // 浅葱
+    { ji: '#96417a', ji2: '#f7dcec' },   // 桃
+    { ji: '#85582a', ji2: '#f0e0cd' },   // 茶
+    { ji: '#5f6a24', ji2: '#e9edcb' },   // 鶯
+    { ji: '#5c5750', ji2: '#e5e2da' }    // 鼠
+  ];
 
   /** 棋戦ごとに「年度 → 名前」を作る。棋聖戦の前期・後期は後期のほうを使う。 */
   function gridRows() {
@@ -869,11 +879,10 @@
     rank.slice(0, IRO.length).forEach((name, i) => { iro[name] = IRO[i]; });
 
     $('nenpyo-note').textContent =
-      'いま行われている8つのタイトルを、横にならべた年表。同じ人が続けて持っていたマスは'
-      + 'つなげて、色を付けてあるよ';
+      'いま行われている8つのタイトルを、横にならべた年表。新しい年が上だよ';
     $('nenpyo-count').textContent = years.length + '年ぶん';
     $('nenpyo-range').textContent =
-      years[0] + '年度 〜 ' + years[years.length - 1] + '年度。マスをおすと、だれが取ったか出るよ。'
+      years[years.length - 1] + '年度 〜 ' + years[0] + '年度。マスをおすと、大きな字で出るよ。'
       + '棋聖戦は1994年度まで年2回あったので、ここでは後期を出している';
 
     const table = el('table', 'n-grid');
@@ -882,29 +891,27 @@
     for (const key of GRID) head.appendChild(el('th', 'n-gh', T.TITLES.find((t) => t.key === key).name));
     table.appendChild(el('thead')).appendChild(head);
 
-    // どこまで rowspan でふさがっているかを棋戦ごとにおぼえておく
-    const covered = {};
-    for (const key of GRID) covered[key] = 0;
     const body = el('tbody');
-    for (const year of years) {
+    for (let i = years.length - 1; i >= 0; i--) {     // 新しい年が上
+      const year = years[i];
       const tr = el('tr');
       tr.appendChild(el('th', 'n-gy', String(year)));
       for (const key of GRID) {
-        if (covered[key] > 0) { covered[key]--; continue; }
         const name = per[key].get(year);
         if (!name) { tr.appendChild(el('td', 'n-none')); continue; }
-        let span = 1;
-        while (per[key].get(year + span) === name) span++;
-        covered[key] = span - 1;
         const td = el('td', 'n-cell');
-        if (span > 1) td.rowSpan = span;
-        td.style.background = iro[name] || 'var(--kami-3)';
+        const c = iro[name];
+        if (c) { td.style.background = c.ji2; td.style.color = c.ji; }
+        // 何年つづけて持っているか (押したときに「N連覇」と出すため)
+        let from = year;
+        while (per[key].get(from - 1) === name) from--;
+        let to = year;
+        while (per[key].get(to + 1) === name) to++;
         td.dataset.name = name;
-        td.dataset.year = year;
+        td.dataset.from = from;
+        td.dataset.to = to;
         td.dataset.kisen = T.TITLES.find((t) => t.key === key).name;
-        td.dataset.span = span;
-        // 縦に置いた名前が入る高さがあるときだけ、名前も出す
-        if (span * ROW_H >= name.length * 13 + 6) td.appendChild(el('span', 'n-tate', name));
+        td.appendChild(el('span', 'n-nm' + (name.length >= 5 ? ' is-long' : ''), name));
         tr.appendChild(td);
       }
       body.appendChild(tr);
@@ -920,7 +927,8 @@
     for (const name of rank.slice(0, IRO.length)) {
       const li = el('li');
       const chip = el('span', 'n-chip');
-      chip.style.background = iro[name];
+      chip.style.background = iro[name].ji2;
+      chip.style.borderColor = iro[name].ji;
       li.appendChild(chip);
       li.appendChild(el('span', 'n-name', name));
       li.appendChild(el('span', 'n-ki', count[name] + '回'));
@@ -934,13 +942,14 @@
       const prev = table.querySelector('.is-pick');
       if (prev) prev.classList.remove('is-pick');
       td.classList.add('is-pick');
-      const span = Number(td.dataset.span);
-      const from = Number(td.dataset.year);
-      const toshi = span > 1 ? from + '〜' + (from + span - 1) + '年度' : from + '年度';
+      const from = Number(td.dataset.from);
+      const to = Number(td.dataset.to);
+      const n = to - from + 1;
       const pick = $('nenpyo-pick');
       pick.hidden = false;
-      pick.textContent = toshi + '　' + td.dataset.kisen + '　' + td.dataset.name
-        + (span > 1 ? '（' + span + '連覇）' : '');
+      pick.textContent = (n > 1 ? from + '〜' + to + '年度' : from + '年度')
+        + '　' + td.dataset.kisen + '　' + td.dataset.name
+        + (n > 1 ? '（' + n + '連覇）' : '');
     });
   }
 
