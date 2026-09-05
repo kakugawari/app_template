@@ -122,7 +122,9 @@ async function run() {
     // ------------------------------------------------ タイトル
     section('タイトル');
     const modes = await phone.locator('.mode-btn').count();
-    ok(modes === 6, `モードのボタンが並ぶ (${modes} 個: クイズ4 + ずかん + 年表)`);
+    // クイズ4 + 指してみよう + ずかん + 年表。「にがて特訓」はまちがえた問題が
+    // あるときだけ出るので、ここでは数に入らない
+    ok(modes === 7, `モードのボタンが並ぶ (${modes} 個: クイズ4 + 指してみよう + ずかん + 年表)`);
     const totalNote = await phone.textContent('#total-note');
     ok(/全 \d+ 問/.test(totalNote), `問題数が出ている (${totalNote.trim()})`);
 
@@ -278,6 +280,108 @@ async function run() {
     const senpouCards = await phone.locator('.z-card').count();
     ok(senpouCards >= 10, `戦法ずかんにならぶ (${senpouCards} 枚)`);
     ok(await phone.locator('.z-card .board .koma').first().isVisible(), 'ずかんの盤にも駒が出る');
+
+    // ------------------------------------------------ 指してみよう (盤で1手詰)
+    section('指してみよう');
+    await phone.evaluate(() => window.__app.start('sasu'));
+    await phone.waitForTimeout(400);
+    const sasu = await phone.evaluate(() => ({
+      taps: document.querySelectorAll('.tap').length,
+      plates: document.querySelectorAll('#hands .hk[data-side="0"]').length,
+      choices: document.querySelectorAll('#choices button').length
+    }));
+    ok(sasu.taps > 0 && sasu.choices === 0,
+      `盤が押せるようになり、選択肢は出ない (${sasu.taps} マス)`);
+
+    /** いまの問題の、正しい詰みの手のマスを押す。ちがう手を押すこともできる */
+    const tapAnswer = async (atari) => await phone.evaluate((atari) => {
+      const C = window.Core, q = window.__app.state().round[window.__app.state().idx];
+      const b = C.parseBoard(q.item.board, q.item.hand);
+      const mates = C.legalMoves(b, C.SENTE).filter((m) => C.isMate(C.applyMove(b, m), C.GOTE));
+      const hazure = C.legalMoves(b, C.SENTE).filter((m) => m.drop && m.k === mates[0].k
+        && !C.isMate(C.applyMove(b, m), C.GOTE));
+      const m = atari ? mates[0] : hazure[0];
+      // 持ち駒なら板を押してから、盤のマスを押す
+      if (m.drop) {
+        const hk = document.querySelector('#hands .hk[data-side="0"][data-k="' + m.k + '"]');
+        if (!hk) return 'もちごまが見つからない';
+        hk.click();
+      } else {
+        const fr = String(m.from[0]) + ['一','二','三','四','五','六','七','八','九'][m.from[1] - 1];
+        const c = [...document.querySelectorAll('.tap')].find((x) => x.getAttribute('aria-label') === fr);
+        if (!c) return 'うごかす駒のマスが見つからない';
+        c.click();
+      }
+      const to = String(m.to[0]) + ['一','二','三','四','五','六','七','八','九'][m.to[1] - 1];
+      const cell = [...document.querySelectorAll('.tap')].find((x) => x.getAttribute('aria-label') === to);
+      if (!cell) return 'いく先のマスが見つからない';
+      cell.click();
+      return 'ok';
+    }, atari);
+
+    ok((await tapAnswer(true)) === 'ok', '持ち駒をおして、盤のマスをおせる');
+    await phone.waitForTimeout(900);
+    const maru = await phone.evaluate(() => ({
+      mark: document.querySelector('#judge-mark .mark').textContent,
+      score: document.getElementById('hud-score').textContent
+    }));
+    ok(maru.mark === '◯' && maru.score === '1', `詰む手を指すとマル (${maru.mark})`);
+
+    // まちがえると「にがて」に残り、正解すると消える
+    await phone.evaluate(() => { localStorage.removeItem('shogi-quiz-dojo/v1'); });
+    await phone.evaluate(() => window.__app.start('sasu'));
+    await phone.waitForTimeout(400);
+    const namae = await phone.evaluate(() => window.__app.state().round[0].item.name);
+    ok((await tapAnswer(false)) === 'ok', 'ちがう手も指せる');
+    await phone.waitForTimeout(900);
+    const batsu = await phone.evaluate(() => ({
+      mark: document.querySelector('#judge-mark .mark').textContent,
+      miss: window.__app.missItems().map((m) => m.item.name)
+    }));
+    ok(batsu.mark === '✕', `詰まない手を指すとバツ (${batsu.mark})`);
+    ok(batsu.miss.includes(namae), `まちがえた問題がにがてに残る (${batsu.miss.join(' ')})`);
+
+    // にがて特訓の札が出て、その問題が出る
+    await phone.evaluate(() => window.__app.home());
+    await phone.waitForTimeout(200);
+    const nigateBtn = await phone.evaluate(() => {
+      const b = document.querySelector('.mode-btn.is-nigate');
+      return b ? b.querySelector('.desc').textContent : null;
+    });
+    ok(nigateBtn && /まちがえた 1 問/.test(nigateBtn), `にがて特訓の札が出る (${nigateBtn})`);
+    await phone.evaluate(() => window.__app.start('nigate'));
+    await phone.waitForTimeout(400);
+    const nRound = await phone.evaluate(() => window.__app.state().round.map((q) => q.item.name));
+    ok(nRound.length === 1 && nRound[0] === namae,
+      `にがて特訓には、まちがえた問題だけが出る (${nRound.join(' ')})`);
+    ok((await tapAnswer(true)) === 'ok', 'にがて特訓でも盤で指せる');
+    await phone.waitForTimeout(900);
+    const naoru = await phone.evaluate(() => window.__app.missItems().length);
+    ok(naoru === 0, `正解するとにがてから消える (のこり ${naoru} 問)`);
+    await phone.evaluate(() => { localStorage.removeItem('shogi-quiz-dojo/v1'); });
+
+    // 盤の駒を持ち上げると行ける場所が光り、成れるときは聞いてくる
+    await phone.evaluate(() => window.__app.home());
+    const nari = await phone.evaluate(async () => {
+      const C = window.Core, D = window.Data;
+      const item = D.tsume.find((t) => t.name === '端玉に銀');
+      window.__app.start('sasu');
+      // その問題だけを出すように差しかえる
+      const st = window.__app.state();
+      st.round = [{ type: 'sasu', item: item, choices: [] }];
+      st.idx = 0;
+      window.__app.render();
+      await new Promise((r) => setTimeout(r, 300));
+      const push = (fr) => [...document.querySelectorAll('.tap')]
+        .find((x) => x.getAttribute('aria-label') === fr).click();
+      push('1三');                                   // 1三の銀を持ち上げる
+      const hikari = document.querySelectorAll('.tap.is-can').length;
+      push('1二');                                   // 成れる場所へ
+      return { hikari: hikari, nari: !document.getElementById('nari').hidden };
+    });
+    ok(nari.hikari > 0, `盤の駒を持ち上げると、行ける場所が光る (${nari.hikari} マス)`);
+    ok(nari.nari, '成れるときは「成る？」と聞いてくる');
+    await phone.evaluate(() => { localStorage.removeItem('shogi-quiz-dojo/v1'); });
 
     // ------------------------------------------------ 年表
     section('年表');

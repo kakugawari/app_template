@@ -138,6 +138,8 @@ test('1手詰は「答えの手で詰み、ほかの手では詰まない」', (
     const ans = C.parseMove(b, t.answer, C.SENTE, null);
     assert.strictEqual(C.isMate(C.applyMove(b, ans), C.GOTE), true, t.name + ': ' + t.answer + ' で詰まない');
 
+    // wrong は「4つから選ぶ」モード用。盤で指すモードには要らないので、無くてもよい
+    if (!t.wrong) continue;
     for (const w of t.wrong) {
       let move;
       try { move = C.parseMove(b, w, C.SENTE, null); } catch (e) {

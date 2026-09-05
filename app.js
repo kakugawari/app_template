@@ -164,6 +164,53 @@
         );
         return anim.finished.catch(() => {});
       },
+      /**
+       * マスをタップできるようにする。駒は left/top で浮かせて置いてあるので、
+       * 押す場所は透明なボタンを盤いっぱいに敷いて作る。
+       * onTap(f, r) が呼ばれる。
+       */
+      taps(onTap) {
+        if (api._taps) return api._taps;
+        const layer = el('div', 'taps');
+        const cells = new Map();
+        for (const r of ranks) {
+          for (const f of files) {
+            const c = el('button', 'tap');
+            c.type = 'button';
+            c.style.left = left(f);
+            c.style.top = top(r);
+            c.setAttribute('aria-label', f + RANK_KANJI[r - 1]);
+            c.addEventListener('click', () => onTap(f, r));
+            layer.appendChild(c);
+            cells.set(key(f, r), c);
+          }
+        }
+        board.appendChild(layer);
+        api._taps = {
+          /** 行ける場所に印をつける。sel は「いま持ち上げている駒」のマス。 */
+          mark(list, sel) {
+            cells.forEach((c) => c.classList.remove('is-can', 'is-sel'));
+            for (const [f, r] of list || []) {
+              const c = cells.get(key(f, r));
+              if (c) c.classList.add('is-can');
+            }
+            if (sel) {
+              const c = cells.get(key(sel[0], sel[1]));
+              if (c) c.classList.add('is-sel');
+            }
+          },
+          /** 押せないマスを押したときに、そこだけ光らせて知らせる */
+          flash(f, r) {
+            const c = cells.get(key(f, r));
+            if (!c) return;
+            c.classList.remove('is-ng');
+            void c.offsetWidth;              // いったん止めないと 2 回目が光らない
+            c.classList.add('is-ng');
+          },
+          off() { layer.querySelectorAll('.tap').forEach((c) => { c.disabled = true; }); }
+        };
+        return api._taps;
+      },
       edgeOf(side) {
         // 囲いアニメで、外から入ってくる駒のスタート位置
         const outside = files[0] > files[files.length - 1] ? -1 : 1;
@@ -305,6 +352,8 @@
       } else {
         for (const k of keys) {
           const hk = el('div', 'hk');
+          hk.dataset.k = k;
+          hk.dataset.side = String(side);
           hk.appendChild(el('div', 'p'));
           hk.appendChild(el('div', 'c', SHORT[k] || k));
           if (h[k] > 1) hk.appendChild(el('span', 'n', String(h[k])));
@@ -331,15 +380,47 @@
      ============================================================ */
 
   const STORE_KEY = 'shogi-quiz-dojo/v1';
+  /** 問題を1つに決める合言葉。にがての記録に使う */
+  function keyOf(q) { return q.type + ':' + (q.item.name || q.item.q); }
+
   function loadStore() {
     try { return JSON.parse(localStorage.getItem(STORE_KEY)) || { best: {} }; }
     catch (e) { return { best: {} }; }
+  }
+  function saveStore(s) {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(s)); } catch (e) { /* 使えなくても続ける */ }
   }
   function saveBest(mode, score, total) {
     const s = loadStore();
     const rate = score / total;
     if (!s.best[mode] || s.best[mode].rate < rate) s.best[mode] = { score: score, total: total, rate: rate };
-    try { localStorage.setItem(STORE_KEY, JSON.stringify(s)); } catch (e) { /* 使えなくても続ける */ }
+    saveStore(s);
+  }
+  /**
+   * まちがえた問題をおぼえておく。正解したら消す。
+   * 「にがて特訓」はここに残っているものだけを出す。
+   * 書き込みは1問ごとに1回だけ (毎回まるごと描き直さない。CLAUDE.md の落とし穴)。
+   */
+  function saveMiss(q, ok) {
+    const s = loadStore();
+    s.miss = s.miss || {};
+    const k = keyOf(q);
+    if (ok) delete s.miss[k];
+    else s.miss[k] = true;
+    saveStore(s);
+  }
+  /** にがてとして残っている問題を、いまのデータから拾い直す。 */
+  function missItems() {
+    const miss = loadStore().miss || {};
+    const out = [];
+    for (const [type, list] of [['castle', D.castles], ['tesuji', D.tesuji],
+                                ['senpou', D.senpou], ['knowledge', D.knowledge],
+                                ['sasu', D.tsume]]) {
+      for (const item of list) {
+        if (miss[type + ':' + (item.name || item.q)]) out.push({ type: type, item: item });
+      }
+    }
+    return out;
   }
 
   /* ============================================================
@@ -374,6 +455,35 @@
       b.addEventListener('click', () => start(m.id));
       list.appendChild(b);
     }
+    // 指してみよう (盤をタップして1手詰を解く)
+    const sa = el('button', 'mode-btn is-sasu');
+    sa.type = 'button';
+    sa.dataset.mode = 'sasu';
+    sa.appendChild(el('span', 'medal', '指'));
+    const sb = el('span', 'body');
+    sb.appendChild(el('span', 'name', '指してみよう'));
+    sb.appendChild(el('span', 'desc', '盤をおして1手で詰まそう（全' + D.tsume.length + '問から出題）'));
+    sa.appendChild(sb);
+    const sbest = store.best.sasu;
+    if (sbest) sa.appendChild(el('span', 'best', '最高 ' + sbest.score + '/' + sbest.total));
+    sa.addEventListener('click', () => start('sasu'));
+    list.appendChild(sa);
+
+    // にがて特訓。まちがえた問題が残っているときだけ出す
+    const miss = missItems();
+    if (miss.length) {
+      const n = el('button', 'mode-btn is-nigate');
+      n.type = 'button';
+      n.dataset.mode = 'nigate';
+      n.appendChild(el('span', 'medal', '苦'));
+      const nb = el('span', 'body');
+      nb.appendChild(el('span', 'name', 'にがて特訓'));
+      nb.appendChild(el('span', 'desc', 'まちがえた ' + miss.length + ' 問だけ出す。正解したら消えるよ'));
+      n.appendChild(nb);
+      n.addEventListener('click', () => start('nigate'));
+      list.appendChild(n);
+    }
+
     const z = el('button', 'mode-btn is-zukan');
     z.type = 'button';
     z.appendChild(el('span', 'medal', '図'));
@@ -399,7 +509,7 @@
     list.appendChild(y);
 
     // メニューに出しているモードの問題数だけを数える
-    const total = MODES.reduce((n, m) => n + m.count(), 0);
+    const total = MODES.reduce((n, m) => n + m.count(), 0) + D.tsume.length;
     $('total-note').textContent = '全 ' + total + ' 問 ／ 出題のたびに順番も選択肢も変わるよ';
   }
 
@@ -409,9 +519,23 @@
 
   const state = { mode: 'castle', round: [], idx: 0, score: 0, wrong: [], player: null, answered: false };
 
+  /** 「指してみよう」は選択肢を作らない。盤に指した手をエンジンが判定する */
+  function sasuQuestion(item) { return { type: 'sasu', item: item, choices: [] }; }
+
+  function buildRound(mode) {
+    if (mode === 'sasu') {
+      return C.shuffle(D.tsume.slice(), Math.random).slice(0, 8).map(sasuQuestion);
+    }
+    if (mode === 'nigate') {
+      return C.shuffle(missItems(), Math.random).slice(0, 10).map((m) =>
+        m.type === 'sasu' ? sasuQuestion(m.item) : C.questionOf(m.type, m.item, D, Math.random));
+    }
+    return C.buildRound(D, mode, Math.random);
+  }
+
   function start(mode) {
     state.mode = mode;
-    state.round = C.buildRound(D, mode, Math.random);
+    state.round = buildRound(mode);
     state.idx = 0;
     state.score = 0;
     state.wrong = [];
@@ -498,6 +622,8 @@
     $('player').hidden = true;
     $('kifu-strip').innerHTML = '';
     $('hands').hidden = true;
+    $('hands').classList.remove('is-tappable');
+    $('nari').hidden = true;
     $('judge').hidden = true;
 
     const stars = (lv) => '★'.repeat(lv) + '☆'.repeat(3 - lv);
@@ -527,6 +653,11 @@
       const board = createBoard(crop.files, crop.ranks);
       buildPlayerUI(board, seq.frames, seq.moves, true);
       if (isT && q.item.hand) showHands(startBoard);
+    } else if (q.type === 'sasu') {
+      $('q-label').textContent = stars(q.item.lv);
+      $('q-text').innerHTML = '<b>1手</b>で詰まそう<small>駒か持ち駒をおして、行きたいマスをおしてね</small>';
+      buildSasu(q);
+      return;                       // 選択肢は作らない (盤で指すため)
     } else if (q.type === 'tsume') {
       $('q-label').textContent = stars(q.item.lv);
       $('q-text').innerHTML = '<b>1手</b>で詰ますのはどれ？<small>先手（下）の手番だよ</small>';
@@ -575,10 +706,94 @@
     choicesEl.querySelectorAll('button').forEach((b) => b.addEventListener('click', onAnswer));
   }
 
-  function showHands(board) {
+  /**
+   * 盤をタップして 1 手指す。指した手が詰みかどうかはエンジンが決める。
+   * 「どの手で詰ましてもマル」。詰む手が 1 つだけであることは data.test.js が確かめている。
+   */
+  function buildSasu(q) {
+    const b = C.parseBoard(q.item.board, q.item.hand);
+    const crop = C.cropFor(b, [], 5);
+    const view = createBoard(crop.files, crop.ranks);
+    $('stage').hidden = false;
+    $('stage').appendChild(view.el);
+    view.set(C.listPieces(b));
+
+    const legal = C.legalMoves(b, C.SENTE);
+    let from = null;        // [f, r] 盤の駒を持ち上げている
+    let drop = null;        // '金' など、持ち駒を持ち上げている
+    const taps = view.taps(onTap);
+
+    const canGo = () => legal.filter((m) => (drop ? (m.drop && m.k === drop)
+      : (from && !m.drop && m.from[0] === from[0] && m.from[1] === from[1])));
+
+    function reset() {
+      from = null; drop = null;
+      taps.mark([], null);
+      $('hands').querySelectorAll('.hk').forEach((e) => e.classList.remove('is-sel'));
+    }
+
+    function onTap(f, r) {
+      if (state.answered) return;
+      const go = canGo().filter((m) => m.to[0] === f && m.to[1] === r);
+      if (go.length) return sasu(go);
+      const p = C.at(b, f, r);
+      if (p && p.s === C.SENTE) {                 // 自分の駒を持ち上げる
+        reset();
+        from = [f, r];
+        taps.mark(canGo().map((m) => m.to), from);
+      } else if (drop || from) {
+        taps.flash(f, r);                         // そこへは行けない
+      } else {
+        reset();
+      }
+    }
+
+    showHands(b, (k, hk) => {
+      if (state.answered) return;
+      reset();
+      drop = k;
+      hk.classList.add('is-sel');
+      // 打てる場所はほぼ盤ぜんぶになるので、印は出さない (丸だらけで見づらく、
+      // ヒントにもならない)。押せないマスを押したときだけ光らせて知らせる
+      taps.mark([], null);
+    });
+
+    /** 成れる手は「成る/成らない」を聞いてから指す。 */
+    function sasu(moves) {
+      if (moves.length === 1) return play(moves[0]);
+      const nari = $('nari');
+      nari.hidden = false;
+      nari.querySelector('[data-nari="1"]').onclick = () => {
+        nari.hidden = true; play(moves.find((m) => m.promote));
+      };
+      nari.querySelector('[data-nari="0"]').onclick = () => {
+        nari.hidden = true; play(moves.find((m) => !m.promote));
+      };
+    }
+
+    function play(move) {
+      reset();
+      taps.off();
+      const after = C.applyMove(b, move);
+      const ok = C.isMate(after, C.GOTE);
+      q.sashite = C.moveText(move, null);
+      view.move(move.drop ? null : move.from, move.to,
+        { k: move.k, side: C.SENTE, promote: move.promote });
+      showHands(after);
+      answered(q, ok);
+    }
+  }
+
+  function showHands(board, onPick) {
     const h = $('hands');
     h.innerHTML = handsEl(board).innerHTML;
     h.hidden = false;
+    h.classList.toggle('is-tappable', !!onPick);
+    if (!onPick) return;
+    // 先手 (自分) の持ち駒だけ押せる
+    h.querySelectorAll('.hk[data-side="' + C.SENTE + '"]').forEach((hk) => {
+      hk.addEventListener('click', () => onPick(hk.dataset.k, hk));
+    });
   }
 
   const OK_WORDS = ['せいかい！', 'おみごと！', 'するどい！', 'よく見てる！'];
@@ -589,27 +804,32 @@
     state.answered = true;
     const q = state.round[state.idx];
     const picked = q.choices[Number(e.currentTarget.dataset.i)];
-    const ok = !!picked.ok;
-    q.result = ok;
-    if (state.player) state.player.pause();
-
     document.querySelectorAll('#choices button').forEach((b, i) => {
       b.disabled = true;
       b.classList.add(q.choices[i].ok ? 'ok' : 'ng');
     });
+    answered(q, !!picked.ok);
+  }
+
+  /** マル・バツが決まったあとの共通のしまつ (選択肢からでも、盤で指してからでも通る) */
+  function answered(q, ok) {
+    state.answered = true;
+    q.result = ok;
+    if (state.player) state.player.pause();
     if (ok) {
       state.score++;
       $('hud-score').textContent = String(state.score);
     } else {
       state.wrong.push(q);
     }
+    saveMiss(q, ok);
     renderProgress();
     setTimeout(() => openJudge(q, ok), 420);
   }
 
   function answerLabel(q) {
     if (q.type === 'knowledge') return { main: q.item.choices[0], kana: '' };
-    if (q.type === 'tsume') return { main: '▲' + q.item.answer, kana: q.item.name };
+    if (q.type === 'tsume' || q.type === 'sasu') return { main: '▲' + q.item.answer, kana: q.item.name };
     return { main: q.item.name, kana: q.item.kana };
   }
 
@@ -1108,6 +1328,9 @@
       start: start,
       showScreen: showScreen,
       showZukan: showZukan,
+      missItems: missItems,
+      render: renderQuestion,
+      home: () => { showScreen('screen-title'); renderTitle(); },
       showNenpyo: showNenpyo,
       answer: (i) => {
         const btn = document.querySelector('#choices button[data-i="' + i + '"]');
