@@ -633,9 +633,10 @@ body {
   font-size: .78rem; font-weight: 700; line-height: 1.12;
   word-break: break-all; letter-spacing: 0;
 }
-/* 5文字の名前 (加藤一二三・斎藤慎太郎) は、そのままだと 3 行になって
-   その年だけ背が高くなる。少し小さくして 3 文字 + 2 文字の 2 行におさめる */
-.n-nm.is-long { width: 3.2em; font-size: .62rem; }
+/* 5文字の名前 (加藤一二三・斎藤慎太郎) は、姓と名で行を分ける。
+   幅まかせだと「加藤一 / 二三」と切れてしまう */
+.n-nm.is-long { width: auto; font-size: .7rem; }
+.n-nm.is-long span { display: block; }
 .n-cell.is-pick { outline: 2px solid var(--sumi); outline-offset: -2px; }
 .n-pick {
   margin: 10px 0 0; padding: 9px 12px; border-radius: 10px;
@@ -650,9 +651,12 @@ body {
 .n-legend li:last-child { border-bottom: 0; }
 .n-legend .n-name { font-size: .9rem; flex: 1; }
 .n-chip { width: 20px; height: 20px; border-radius: 6px; border: 2px solid var(--sen-2); flex: none; }
-.n-legend2 .n-name { font-size: .82rem; }
-.n-legend2 li { padding: 5px 12px; }
-.n-shiro { margin: 10px 0 0; font-size: .74rem; color: var(--usu); text-align: center; }
+.n-shiro {
+  margin: 12px 0 0; padding: 9px 12px; border-radius: 10px;
+  font-size: .76rem; line-height: 1.8; color: var(--sumi-2); text-align: center;
+  background: var(--kami-2); border: 1px solid var(--sen);
+}
+.n-chip-in { display: inline-block; vertical-align: -4px; margin-right: 6px; }
 
 .n-tally { list-style: none; margin: 0; padding: 0; }
 .n-tally li {

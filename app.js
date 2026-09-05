@@ -834,14 +834,24 @@
   /* いまある八大タイトル。表に横に並べる順番 */
   /* いまある八大タイトル。表に横に並べる順番 (もらった表と同じ) */
   const GRID = ['ryuou', 'meijin', 'eiou', 'oui', 'ouza', 'kiou', 'oushou', 'kisei'];
-  /* 2回以上タイトルを取った人に色を付ける。1回だけの人は白のまま
-     (色が多すぎると、かえって時代のかたまりが見えなくなるため)。
-     色は 2 段。
-       KOI … 何十回も取って時代を作った人。地に色、字にも同じ系統の濃い色
-       USU … 2〜9回の人。うすい地に墨の字
+  /** 表のマスに置く名前。5文字以上は姓と名で行を分ける
+      (幅まかせだと「加藤一 / 二三」と切れてしまうため)。 */
+  function nameSpan(name) {
+    if (name.length < 5) return el('span', 'n-nm', name);
+    const nm = el('span', 'n-nm is-long');
+    nm.appendChild(el('span', null, name.slice(0, 2)));
+    nm.appendChild(el('span', null, name.slice(2)));
+    return nm;
+  }
+
+  /* 色は 3 段。多すぎると、かえって時代のかたまりが見えなくなる。
+       KOI  … 何十回も取って時代を作った人。1人ずつちがう色で、字にも色を付ける
+       MAMORU … 同じタイトルを 2 年つづけて守った (防衛した) ことがある人。
+                だれも同じうすい色。個人を見分けるためではなく「一度きりではない」
+                ことを示すため
+       白    … 一度取っただけで、守れなかった人
      伊藤匠だけは 4 回だが、藤井聡太の八冠をくずした人なので KOI に入れている。
-     この 2 つに書いてある人が「2回以上の人」と過不足なく合っているかは、
-     ブラウザのテストが数えて確かめる */
+     だれが防衛したかは下の per (年度→名前) から数えるので、書き足す手間はない */
   const KOI = {
     羽生善治: ['#f8c9c5', '#a52b20'],   // 紅
     大山康晴: ['#f2dcac', '#7a5510'],   // 黄土
@@ -854,16 +864,7 @@
     米長邦雄: ['#dee3b8', '#5a6215'],   // 抹茶
     森内俊之: ['#c6e3dc', '#1d5f55']    // 青緑
   };
-  const USU = {
-    木村義雄: '#ebd2c9', 久保利明: '#c9ebdb', 南芳一: '#e5c9eb',
-    豊島将之: '#e6ebc9', 郷田真隆: '#c9ddeb', 加藤一二三: '#ebc9d3',
-    升田幸三: '#c9ebc9', 永瀬拓矢: '#d3c9eb', 内藤國雄: '#ebddc9',
-    高橋道雄: '#c9ebe7', 丸山忠久: '#ebc9e5', 二上達也: '#dbebc9',
-    佐藤天彦: '#c9d2eb', 深浦康市: '#ebcbc9', 藤井猛: '#c9ebd5',
-    中村修: '#dec9eb', 塚田正夫: '#ebe8c9', 屋敷伸之: '#c9e4eb',
-    広瀬章人: '#ebc9da', 桐山清澄: '#d0ebc9'
-  };
-
+  const MAMORU = '#ebe3d2';             // 防衛したことがある人の、共通のうすい色
 
   /** 棋戦ごとに「年度 → 名前」を作る。棋聖戦の前期・後期は後期のほうを使う。 */
   function gridRows() {
@@ -888,9 +889,13 @@
     list.innerHTML = '';
     const { per, years } = gridRows();
 
-    // 何回取ったかを数える (凡例と、押したときの表示に使う)
+    // 何回取ったか / 同じタイトルを守ったことがあるかを数える
     const count = {};
-    for (const key of GRID) for (const name of per[key].values()) count[name] = (count[name] || 0) + 1;
+    const mamotta = {};
+    for (const key of GRID) {
+      for (const name of per[key].values()) count[name] = (count[name] || 0) + 1;
+      for (const [year, name] of per[key]) if (per[key].get(year + 1) === name) mamotta[name] = true;
+    }
     const rank = Object.keys(count).sort((a, b) => count[b] - count[a] || a.localeCompare(b));
 
     $('nenpyo-note').textContent =
@@ -922,7 +927,7 @@
         }
         const td = el('td', 'n-cell');
         if (KOI[name]) { td.style.background = KOI[name][0]; td.style.color = KOI[name][1]; }
-        else if (USU[name]) td.style.background = USU[name];
+        else if (mamotta[name]) td.style.background = MAMORU;
         // 何年つづけて持っているか (押したときに「N連覇」と出すため)
         let from = year;
         while (per[key].get(from - 1) === name) from--;
@@ -932,7 +937,7 @@
         td.dataset.from = from;
         td.dataset.to = to;
         td.dataset.kisen = T.TITLES.find((t) => t.key === key).name;
-        td.appendChild(el('span', 'n-nm' + (name.length >= 5 ? ' is-long' : ''), name));
+        td.appendChild(nameSpan(name));
         tr.appendChild(td);
       }
       body.appendChild(tr);
@@ -942,7 +947,7 @@
     wrap.appendChild(table);
     list.appendChild(wrap);
 
-    // 色を付けた人の一覧。濃い色の人を上に、うすい色の人をその下に
+    // 色を付けた人の一覧
     list.appendChild(el('div', 'zukan-fam', '時代を作った人'));
     const legend = el('ul', 'n-legend');
     for (const name of rank) {
@@ -958,20 +963,16 @@
     }
     list.appendChild(legend);
 
-    list.appendChild(el('div', 'zukan-fam', 'うすい色の人'));
-    const legend2 = el('ul', 'n-legend n-legend2');
-    for (const name of rank) {
-      if (!USU[name]) continue;
-      const li = el('li');
-      const chip = el('span', 'n-chip');
-      chip.style.background = USU[name];
-      li.appendChild(chip);
-      li.appendChild(el('span', 'n-name', name));
-      li.appendChild(el('span', 'n-ki', count[name] + '回'));
-      legend2.appendChild(li);
-    }
-    list.appendChild(legend2);
-    list.appendChild(el('p', 'n-shiro', '1回だけ取った人は、白いままにしてあるよ'));
+    const mamoruNin = rank.filter((n) => !KOI[n] && mamotta[n]).length;
+    const shiroNin = rank.filter((n) => !KOI[n] && !mamotta[n]).length;
+    const p2 = el('p', 'n-shiro');
+    const chip2 = el('span', 'n-chip n-chip-in');
+    chip2.style.background = MAMORU;
+    p2.appendChild(chip2);
+    p2.appendChild(document.createTextNode(
+      'このうすい色は、同じタイトルを2年つづけて守ったことがある ' + mamoruNin + '人。'
+      + '一度取っただけの ' + shiroNin + '人は白のままだよ'));
+    list.appendChild(p2);
 
     table.addEventListener('click', (e) => {
       const td = e.target.closest('.n-cell');

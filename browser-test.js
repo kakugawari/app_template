@@ -354,27 +354,51 @@ async function run() {
     });
     ok(mada.ue > 0 && mada.shita === 0 && mada.nashi > 0,
       `これから指す年は「まだ」、棋戦が無かった年とは別に出る (いちばん上の年に ${mada.ue} 件)`);
-    // 2回以上取った人は全員色つき、1回だけの人は白。手で書いた色の表が、
-    // 中身とずれていないかを数えて確かめる
+    // 色は 3 段。時代を作った人 = 1人ずつちがう濃い色、同じタイトルを守った
+    // ことがある人 = 共通のうすい色、一度きりの人 = 白。手で書いた色の表と、
+    // 中身から数えた「防衛したか」がずれていないかを確かめる
     const iro = await phone.evaluate(() => {
-      const kaisuu = {}, shiro = {}, iro = {};
+      const iro = {}, mamotta = {};
+      // 年度→名前を棋戦ごとに組みなおして、2年つづいた人を数える
+      for (const t of window.Titles.TITLES) {
+        if (!['ryuou', 'meijin', 'eiou', 'oui', 'ouza', 'kiou', 'oushou', 'kisei'].includes(t.key)) continue;
+        const m = new Map();
+        for (const h of t.holders) m.set(h.year, h.name);
+        for (const [y, n] of m) if (m.get(y + 1) === n) mamotta[n] = true;
+      }
       for (const td of document.querySelectorAll('.n-cell')) {
         const n = td.dataset.name;
-        kaisuu[n] = (kaisuu[n] || 0) + 1;
-        // 白 = 色を付けていない (インラインの background が空)
-        if (td.style.background) iro[n] = true; else shiro[n] = true;
+        const bg = td.style.background;
+        const fg = td.style.color;
+        const dan = !bg ? 'shiro' : (fg ? 'koi' : 'usu');
+        (iro[n] = iro[n] || {})[dan] = true;
       }
       const machigai = [];
-      for (const n of Object.keys(kaisuu)) {
-        const nikai = kaisuu[n] >= 2;
-        if (nikai !== !!iro[n]) machigai.push(n + '(' + kaisuu[n] + '回)');
-        if (iro[n] && shiro[n]) machigai.push(n + '(同じ人で色がまちまち)');
+      let koi = 0, usu = 0, shiro = 0;
+      for (const n of Object.keys(iro)) {
+        const dan = Object.keys(iro[n]);
+        if (dan.length > 1) { machigai.push(n + '(色がまちまち)'); continue; }
+        if (dan[0] === 'koi') koi++;
+        else if (dan[0] === 'usu') { usu++; if (!mamotta[n]) machigai.push(n + '(守っていないのにうすい色)'); }
+        else { shiro++; if (mamotta[n]) machigai.push(n + '(守ったのに白)'); }
       }
-      return { machigai: machigai, iro: Object.keys(iro).length, shiro: Object.keys(shiro).length };
+      return { machigai: machigai, koi: koi, usu: usu, shiro: shiro };
     });
     ok(iro.machigai.length === 0,
-      `2回以上の人は色つき・1回だけの人は白 (色 ${iro.iro}人 / 白 ${iro.shiro}人)`
+      `色は3段。時代を作った人 ${iro.koi}人 / 守ったことがある人 ${iro.usu}人 / 白 ${iro.shiro}人`
       + (iro.machigai.length ? ' ちがうもの: ' + iro.machigai.join(' ') : ''));
+    // 5文字の名前は、姓と名で行が分かれる
+    const wake = await phone.evaluate(() => {
+      const out = [];
+      for (const nm of document.querySelectorAll('.n-nm.is-long')) {
+        const spans = [...nm.querySelectorAll('span')].map((s) => s.textContent);
+        if (spans.length !== 2 || spans[0].length !== 2) out.push(nm.textContent);
+      }
+      return { warui: out, kazu: document.querySelectorAll('.n-nm.is-long').length };
+    });
+    ok(wake.warui.length === 0 && wake.kazu > 0,
+      `5文字の名前は姓と名で行が分かれる (${wake.kazu} マス)`
+      + (wake.warui.length ? ' ちがうもの: ' + wake.warui.join(' ') : ''));
     ok(grid.over <= 1, `一覧が画面の幅におさまる (はみ出し ${grid.over}px)`);
     ok(Number(grid.first) > Number(grid.last),
       `新しい年が上にくる (${grid.first} → ${grid.last})`);
