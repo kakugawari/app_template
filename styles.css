@@ -559,7 +559,11 @@ body {
   background: linear-gradient(180deg, var(--sen-2), var(--shu) 12%, var(--shu) 88%, var(--sen-2));
   opacity: .5;
 }
-.n-row { display: flex; align-items: flex-start; gap: 20px; padding: 0 0 14px; position: relative; }
+.n-row { display: flex; align-items: flex-start; gap: 20px; padding: 0 0 8px; position: relative; }
+/* 連覇は、札の左に朱の帯を引いてひとつづきに見せる */
+.n-row.is-run .n-body { border-left: 4px solid var(--shu); border-radius: 4px 11px 11px 4px; }
+.n-row.is-run { padding-bottom: 3px; }
+.n-row.is-run-end { padding-bottom: 8px; }
 .n-row::before {                       /* たて線の上に置く節 */
   content: ""; position: absolute; left: 58px; top: 7px; width: 10px; height: 10px;
   border-radius: 50%; background: var(--kami); border: 2px solid var(--shu); z-index: 1;
@@ -576,7 +580,7 @@ body {
 .n-body {
   flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 9px;
   background: var(--kami-2); border: 1px solid var(--sen); border-radius: 11px;
-  box-shadow: var(--shadow); padding: 9px 12px 10px;
+  box-shadow: var(--shadow); padding: 7px 12px 8px;
 }
 .n-name {
   font-family: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif;

@@ -300,7 +300,20 @@ async function run() {
                range: document.getElementById('nenpyo-range').textContent };
     });
     ok(nenpyo.first === nenpyo.want, `いちばん古い期の人が先頭に出る (${nenpyo.first})`);
-    ok(nenpyo.rows < nenpyo.ki, `連覇はひとまとめになる (${nenpyo.ki} 年 → ${nenpyo.rows} 行)`);
+    ok(nenpyo.rows === nenpyo.ki, `1年に1行ずつ出る (${nenpyo.ki} 件 → ${nenpyo.rows} 行)`);
+    // 連覇は帯でつなぎ、はじまりの年にだけ「N連覇」を出す
+    const renpa = await phone.evaluate(() => {
+      const rows = [...document.querySelectorAll('#nenpyo-list .n-row')];
+      const badge = rows.filter((r) => r.querySelector('.n-renpa'));
+      const obi = rows.filter((r) => r.classList.contains('is-run'));
+      // 帯の付いた行のうち、印が付くのは「連覇のはじまり」だけ
+      const start = rows.filter((r) => r.classList.contains('is-run-start'));
+      const zure = start.filter((r) => !r.querySelector('.n-renpa')).length
+        + badge.filter((r) => !r.classList.contains('is-run-start')).length;
+      return { badge: badge.length, obi: obi.length, start: start.length, zure: zure };
+    });
+    ok(renpa.zure === 0 && renpa.badge === renpa.start && renpa.obi > renpa.start,
+      `連覇は帯でつなぎ、はじまりの年に印が出る (帯 ${renpa.obi} 行 / 印 ${renpa.badge} 個)`);
     ok(/\d{4}年度 〜 \d{4}年度/.test(nenpyo.range), `収録の年度が出ている (${nenpyo.range.slice(0, 22)}…)`);
     // 名人戦には、行われなかった年度が 5 つある。その札が出るか
     await phone.evaluate(() => window.__app.showNenpyo('meijin'));

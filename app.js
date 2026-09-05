@@ -1021,19 +1021,22 @@
       }
       prevYear = last.year;
 
-      const li = el('li', 'n-row');
-      const years = el('span', 'n-year');
-      years.appendChild(el('b', null, String(first.year) + first.term));
-      if (first.year + first.term !== last.year + last.term) {
-        years.appendChild(el('span', 'n-dash', '〜'));
-        years.appendChild(el('b', null, String(last.year) + last.term));
-      }
-      li.appendChild(years);
-      const body = el('span', 'n-body');
-      body.appendChild(el('span', 'n-name', run.name));
-      if (run.rows.length > 1) body.appendChild(el('span', 'n-renpa', run.rows.length + '連覇'));
-      li.appendChild(body);
-      line.appendChild(li);
+      // 1 年に 1 行ずつ出す。まとめてしまうと、取った回数より少なく見えるため。
+      // 連覇はひとつづきに見えるよう、札の左に帯を引き、はじまりの年に印を付ける
+      const renpa = run.rows.length > 1;
+      run.rows.forEach((h, i) => {
+        const li = el('li', 'n-row' + (renpa ? ' is-run' : '')
+          + (renpa && i === 0 ? ' is-run-start' : '')
+          + (renpa && i === run.rows.length - 1 ? ' is-run-end' : ''));
+        const years = el('span', 'n-year');
+        years.appendChild(el('b', null, String(h.year) + h.term));
+        li.appendChild(years);
+        const body = el('span', 'n-body');
+        body.appendChild(el('span', 'n-name', run.name));
+        if (renpa && i === 0) body.appendChild(el('span', 'n-renpa', run.rows.length + '連覇'));
+        li.appendChild(body);
+        line.appendChild(li);
+      });
     }
     list.appendChild(line);
 
