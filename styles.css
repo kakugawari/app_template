@@ -650,6 +650,9 @@ body {
 .n-legend li:last-child { border-bottom: 0; }
 .n-legend .n-name { font-size: .9rem; flex: 1; }
 .n-chip { width: 20px; height: 20px; border-radius: 6px; border: 2px solid var(--sen-2); flex: none; }
+.n-legend2 .n-name { font-size: .82rem; }
+.n-legend2 li { padding: 5px 12px; }
+.n-shiro { margin: 10px 0 0; font-size: .74rem; color: var(--usu); text-align: center; }
 
 .n-tally { list-style: none; margin: 0; padding: 0; }
 .n-tally li {

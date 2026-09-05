@@ -354,6 +354,27 @@ async function run() {
     });
     ok(mada.ue > 0 && mada.shita === 0 && mada.nashi > 0,
       `これから指す年は「まだ」、棋戦が無かった年とは別に出る (いちばん上の年に ${mada.ue} 件)`);
+    // 2回以上取った人は全員色つき、1回だけの人は白。手で書いた色の表が、
+    // 中身とずれていないかを数えて確かめる
+    const iro = await phone.evaluate(() => {
+      const kaisuu = {}, shiro = {}, iro = {};
+      for (const td of document.querySelectorAll('.n-cell')) {
+        const n = td.dataset.name;
+        kaisuu[n] = (kaisuu[n] || 0) + 1;
+        // 白 = 色を付けていない (インラインの background が空)
+        if (td.style.background) iro[n] = true; else shiro[n] = true;
+      }
+      const machigai = [];
+      for (const n of Object.keys(kaisuu)) {
+        const nikai = kaisuu[n] >= 2;
+        if (nikai !== !!iro[n]) machigai.push(n + '(' + kaisuu[n] + '回)');
+        if (iro[n] && shiro[n]) machigai.push(n + '(同じ人で色がまちまち)');
+      }
+      return { machigai: machigai, iro: Object.keys(iro).length, shiro: Object.keys(shiro).length };
+    });
+    ok(iro.machigai.length === 0,
+      `2回以上の人は色つき・1回だけの人は白 (色 ${iro.iro}人 / 白 ${iro.shiro}人)`
+      + (iro.machigai.length ? ' ちがうもの: ' + iro.machigai.join(' ') : ''));
     ok(grid.over <= 1, `一覧が画面の幅におさまる (はみ出し ${grid.over}px)`);
     ok(Number(grid.first) > Number(grid.last),
       `新しい年が上にくる (${grid.first} → ${grid.last})`);

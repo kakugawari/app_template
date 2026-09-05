@@ -834,20 +834,36 @@
   /* いまある八大タイトル。表に横に並べる順番 */
   /* いまある八大タイトル。表に横に並べる順番 (もらった表と同じ) */
   const GRID = ['ryuou', 'meijin', 'eiou', 'oui', 'ouza', 'kiou', 'oushou', 'kisei'];
-  /* 通算の多い 10 人に配る色。地と字を対にして、和紙の上でも読めるようにする。
-     11 人目からは白いまま (時代を作った人だけが色でおえる) */
-  const IRO = [
-    { ji: '#b0342a', ji2: '#fbdcdc' },   // 紅
-    { ji: '#2f5182', ji2: '#dde6f5' },   // 藍
-    { ji: '#5f4383', ji2: '#e6def0' },   // 藤
-    { ji: '#7a6410', ji2: '#fdf1b5' },   // 黄
-    { ji: '#3d7040', ji2: '#ddeed9' },   // 若草
-    { ji: '#24666f', ji2: '#d6ecef' },   // 浅葱
-    { ji: '#96417a', ji2: '#f7dcec' },   // 桃
-    { ji: '#85582a', ji2: '#f0e0cd' },   // 茶
-    { ji: '#5f6a24', ji2: '#e9edcb' },   // 鶯
-    { ji: '#5c5750', ji2: '#e5e2da' }    // 鼠
-  ];
+  /* 2回以上タイトルを取った人に色を付ける。1回だけの人は白のまま
+     (色が多すぎると、かえって時代のかたまりが見えなくなるため)。
+     色は 2 段。
+       KOI … 何十回も取って時代を作った人。地に色、字にも同じ系統の濃い色
+       USU … 2〜9回の人。うすい地に墨の字
+     伊藤匠だけは 4 回だが、藤井聡太の八冠をくずした人なので KOI に入れている。
+     この 2 つに書いてある人が「2回以上の人」と過不足なく合っているかは、
+     ブラウザのテストが数えて確かめる */
+  const KOI = {
+    羽生善治: ['#f8c9c5', '#a52b20'],   // 紅
+    大山康晴: ['#f2dcac', '#7a5510'],   // 黄土
+    中原誠:   ['#dcd0ef', '#4e3880'],   // 藤
+    藤井聡太: ['#fbeca0', '#6d5900'],   // 黄
+    渡辺明:   ['#cde5c9', '#2d6a32'],   // 若草
+    谷川浩司: ['#c6e5ea', '#14606b'],   // 浅葱
+    伊藤匠:   ['#c6d8f2', '#1b4a8d'],   // 青
+    佐藤康光: ['#f2cee3', '#8c3470'],   // 桃紫
+    米長邦雄: ['#dee3b8', '#5a6215'],   // 抹茶
+    森内俊之: ['#c6e3dc', '#1d5f55']    // 青緑
+  };
+  const USU = {
+    木村義雄: '#ebd2c9', 久保利明: '#c9ebdb', 南芳一: '#e5c9eb',
+    豊島将之: '#e6ebc9', 郷田真隆: '#c9ddeb', 加藤一二三: '#ebc9d3',
+    升田幸三: '#c9ebc9', 永瀬拓矢: '#d3c9eb', 内藤國雄: '#ebddc9',
+    高橋道雄: '#c9ebe7', 丸山忠久: '#ebc9e5', 二上達也: '#dbebc9',
+    佐藤天彦: '#c9d2eb', 深浦康市: '#ebcbc9', 藤井猛: '#c9ebd5',
+    中村修: '#dec9eb', 塚田正夫: '#ebe8c9', 屋敷伸之: '#c9e4eb',
+    広瀬章人: '#ebc9da', 桐山清澄: '#d0ebc9'
+  };
+
 
   /** 棋戦ごとに「年度 → 名前」を作る。棋聖戦の前期・後期は後期のほうを使う。 */
   function gridRows() {
@@ -872,12 +888,10 @@
     list.innerHTML = '';
     const { per, years } = gridRows();
 
-    // 通算の多い順に色を決める
+    // 何回取ったかを数える (凡例と、押したときの表示に使う)
     const count = {};
     for (const key of GRID) for (const name of per[key].values()) count[name] = (count[name] || 0) + 1;
     const rank = Object.keys(count).sort((a, b) => count[b] - count[a] || a.localeCompare(b));
-    const iro = {};
-    rank.slice(0, IRO.length).forEach((name, i) => { iro[name] = IRO[i]; });
 
     $('nenpyo-note').textContent =
       'いま行われている8つのタイトルを、横にならべた年表。新しい年が上だよ。'
@@ -907,8 +921,8 @@
           continue;
         }
         const td = el('td', 'n-cell');
-        const c = iro[name];
-        if (c) { td.style.background = c.ji2; td.style.color = c.ji; }
+        if (KOI[name]) { td.style.background = KOI[name][0]; td.style.color = KOI[name][1]; }
+        else if (USU[name]) td.style.background = USU[name];
         // 何年つづけて持っているか (押したときに「N連覇」と出すため)
         let from = year;
         while (per[key].get(from - 1) === name) from--;
@@ -928,20 +942,36 @@
     wrap.appendChild(table);
     list.appendChild(wrap);
 
-    // 色を付けた人の一覧
-    list.appendChild(el('div', 'zukan-fam', '色を付けた人'));
+    // 色を付けた人の一覧。濃い色の人を上に、うすい色の人をその下に
+    list.appendChild(el('div', 'zukan-fam', '時代を作った人'));
     const legend = el('ul', 'n-legend');
-    for (const name of rank.slice(0, IRO.length)) {
+    for (const name of rank) {
+      if (!KOI[name]) continue;
       const li = el('li');
       const chip = el('span', 'n-chip');
-      chip.style.background = iro[name].ji2;
-      chip.style.borderColor = iro[name].ji;
+      chip.style.background = KOI[name][0];
+      chip.style.borderColor = KOI[name][1];
       li.appendChild(chip);
       li.appendChild(el('span', 'n-name', name));
       li.appendChild(el('span', 'n-ki', count[name] + '回'));
       legend.appendChild(li);
     }
     list.appendChild(legend);
+
+    list.appendChild(el('div', 'zukan-fam', 'うすい色の人'));
+    const legend2 = el('ul', 'n-legend n-legend2');
+    for (const name of rank) {
+      if (!USU[name]) continue;
+      const li = el('li');
+      const chip = el('span', 'n-chip');
+      chip.style.background = USU[name];
+      li.appendChild(chip);
+      li.appendChild(el('span', 'n-name', name));
+      li.appendChild(el('span', 'n-ki', count[name] + '回'));
+      legend2.appendChild(li);
+    }
+    list.appendChild(legend2);
+    list.appendChild(el('p', 'n-shiro', '1回だけ取った人は、白いままにしてあるよ'));
 
     table.addEventListener('click', (e) => {
       const td = e.target.closest('.n-cell');
