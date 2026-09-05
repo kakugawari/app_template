@@ -1000,10 +1000,11 @@
     const to = title.holders[title.holders.length - 1].year;
     $('nenpyo-count').textContent = title.holders.length + '回ぶん';
     $('nenpyo-range').textContent =
-      from + '年度 〜 ' + to + '年度、' + title.holders.length + '回ぶん。'
+      to + '年度 〜 ' + from + '年度、' + title.holders.length + '回ぶん。新しい年が上だよ。'
       + 'タイトル戦になる前（一般棋戦だったころ）は入れていないよ';
 
     const line = el('ol', 'nenpyo');
+    const items = [];              // まず古い順に作って、最後にひっくり返す
     let prevYear = null;
     for (const run of runsOf(title.holders)) {
       const first = run.rows[0];
@@ -1016,28 +1017,32 @@
           const gap = el('li', 'n-gap');
           gap.appendChild(el('b', null, String(y)));
           gap.appendChild(document.createTextNode(why || 'この年度は行われていない'));
-          line.appendChild(gap);
+          items.push(gap);
         }
       }
       prevYear = last.year;
 
       // 1 年に 1 行ずつ出す。まとめてしまうと、取った回数より少なく見えるため。
-      // 連覇はひとつづきに見えるよう、札の左に帯を引き、はじまりの年に印を付ける
+      // 連覇はひとつづきに見えるよう、札の左に帯を引く。印は、上から読んで
+      // さいしょに目に入るところ = その連覇のいちばん新しい年に付ける
       const renpa = run.rows.length > 1;
       run.rows.forEach((h, i) => {
+        const ue = i === run.rows.length - 1;     // ひっくり返すと、ここが上にくる
         const li = el('li', 'n-row' + (renpa ? ' is-run' : '')
-          + (renpa && i === 0 ? ' is-run-start' : '')
-          + (renpa && i === run.rows.length - 1 ? ' is-run-end' : ''));
+          + (renpa && ue ? ' is-run-top' : '')
+          + (renpa && i === 0 ? ' is-run-bottom' : ''));
         const years = el('span', 'n-year');
         years.appendChild(el('b', null, String(h.year) + h.term));
         li.appendChild(years);
         const body = el('span', 'n-body');
         body.appendChild(el('span', 'n-name', run.name));
-        if (renpa && i === 0) body.appendChild(el('span', 'n-renpa', run.rows.length + '連覇'));
+        if (renpa && ue) body.appendChild(el('span', 'n-renpa', run.rows.length + '連覇'));
         li.appendChild(body);
-        line.appendChild(li);
+        items.push(li);
       });
     }
+    // 新しい年が上。「ぜんぶ」の表と向きをそろえる
+    for (let i = items.length - 1; i >= 0; i--) line.appendChild(items[i]);
     list.appendChild(line);
 
     // 通算獲得数は holders から数える (書き足したら勝手に合う)

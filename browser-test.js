@@ -293,13 +293,15 @@ async function run() {
       const t = window.Titles.TITLES.find((x) => x.key === 'ryuou');
       const rows = [...document.querySelectorAll('#nenpyo-list .n-row')];
       const first = rows[0].querySelector('.n-name').textContent;
+      const toshi = rows.map((r) => Number(r.querySelector('.n-year b').textContent.slice(0, 4)));
       // 連覇でまとめているので、行数は期の数以下になる
       return { first: first, rows: rows.length, ki: t.holders.length,
-               want: t.holders[0].name,
+               want: t.holders[t.holders.length - 1].name,
                gaps: document.querySelectorAll('#nenpyo-list .n-gap').length,
+               kudari: toshi.every((y, i) => i === 0 || y <= toshi[i - 1]),
                range: document.getElementById('nenpyo-range').textContent };
     });
-    ok(nenpyo.first === nenpyo.want, `いちばん古い期の人が先頭に出る (${nenpyo.first})`);
+    ok(nenpyo.first === nenpyo.want, `いちばん新しい年度の人が先頭に出る (${nenpyo.first})`);
     ok(nenpyo.rows === nenpyo.ki, `1年に1行ずつ出る (${nenpyo.ki} 件 → ${nenpyo.rows} 行)`);
     // 連覇は帯でつなぎ、はじまりの年にだけ「N連覇」を出す
     const renpa = await phone.evaluate(() => {
@@ -307,14 +309,15 @@ async function run() {
       const badge = rows.filter((r) => r.querySelector('.n-renpa'));
       const obi = rows.filter((r) => r.classList.contains('is-run'));
       // 帯の付いた行のうち、印が付くのは「連覇のはじまり」だけ
-      const start = rows.filter((r) => r.classList.contains('is-run-start'));
+      const start = rows.filter((r) => r.classList.contains('is-run-top'));
       const zure = start.filter((r) => !r.querySelector('.n-renpa')).length
-        + badge.filter((r) => !r.classList.contains('is-run-start')).length;
+        + badge.filter((r) => !r.classList.contains('is-run-top')).length;
       return { badge: badge.length, obi: obi.length, start: start.length, zure: zure };
     });
     ok(renpa.zure === 0 && renpa.badge === renpa.start && renpa.obi > renpa.start,
       `連覇は帯でつなぎ、はじまりの年に印が出る (帯 ${renpa.obi} 行 / 印 ${renpa.badge} 個)`);
     ok(/\d{4}年度 〜 \d{4}年度/.test(nenpyo.range), `収録の年度が出ている (${nenpyo.range.slice(0, 22)}…)`);
+    ok(nenpyo.kudari, '棋戦ごとの年表も、新しい年が上にならぶ');
     // 名人戦には、行われなかった年度が 5 つある。その札が出るか
     await phone.evaluate(() => window.__app.showNenpyo('meijin'));
     await phone.waitForTimeout(300);
@@ -428,8 +431,12 @@ async function run() {
     // 棋聖戦は1994年度まで年2回。前期/後期が年に付くか
     await phone.evaluate(() => window.__app.showNenpyo('kisei'));
     await phone.waitForTimeout(300);
-    const kiseiYear = await phone.evaluate(() =>
-      document.querySelector('#nenpyo-list .n-row .n-year b').textContent);
+    // 新しい年が上なので、前期・後期があるのは下のほう (1994年度まで)。
+    // いちばん下 = いちばん古い年を見る
+    const kiseiYear = await phone.evaluate(() => {
+      const b = document.querySelectorAll('#nenpyo-list .n-row .n-year b');
+      return b[b.length - 1].textContent;
+    });
     ok(/^\d{4}(前|後)$/.test(kiseiYear), `棋聖戦は前期・後期が付く (${kiseiYear})`);
     await phone.locator('#nenpyo-tabs .tab').nth(1).tap();
     await phone.waitForTimeout(300);
