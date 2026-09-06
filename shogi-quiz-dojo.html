@@ -1302,6 +1302,19 @@ button:focus-visible, .tab:focus-visible { outline: 3px solid var(--shu); outlin
 
   /* ================= クイズの組み立て ================= */
 
+  /**
+   * 1手詰の問題を見せるときの、盤の切り取り。
+   * 駒のあるところだけで切ると、玉から離して打つ手 (▲9一飛打 など) の
+   * マスが盤の外に出てしまい、**答えの手が指せなくなる**。
+   * だから詰む手の行き先も入れて切る。
+   */
+  function cropForMate(b, minSize) {
+    const mates = legalMoves(b, SENTE)
+      .filter(function (m) { return isMate(applyMove(b, m), GOTE); })
+      .map(function (m) { return { to: m.to }; });
+    return cropFor(b, mates, minSize || 5);
+  }
+
   function distractors(all, answer, sameKey, count, rng) {
     const same = shuffle(all.filter(function (x) {
       return x !== answer && sameKey && x[sameKey] === answer[sameKey];
@@ -1398,7 +1411,8 @@ button:focus-visible, .tab:focus-visible { outline: 3px solid var(--shu); outlin
     at: at, put: put, idx: idx, listPieces: listPieces, findKing: findKing,
     movesFrom: movesFrom, legalMoves: legalMoves, applyMove: applyMove,
     inCheck: inCheck, isMate: isMate,
-    parseMove: parseMove, moveText: moveText, playKifu: playKifu, cropFor: cropFor,
+    parseMove: parseMove, moveText: moveText, playKifu: playKifu,
+    cropFor: cropFor, cropForMate: cropForMate,
     buildRound: buildRound, questionOf: questionOf, rankOf: rankOf,
     baseKind: baseKind, isKing: isKing
   };
@@ -3098,7 +3112,7 @@ button:focus-visible, .tab:focus-visible { outline: 3px solid var(--shu); outlin
       $('q-label').textContent = stars(q.item.lv);
       $('q-text').innerHTML = '<b>1手</b>で詰ますのはどれ？<small>先手（下）の手番だよ</small>';
       const b = C.parseBoard(q.item.board, q.item.hand);
-      const crop = C.cropFor(b, [], 5);
+      const crop = C.cropForMate(b, 5);
       const board = createBoard(crop.files, crop.ranks);
       $('stage').hidden = false;
       $('stage').appendChild(board.el);
@@ -3148,7 +3162,7 @@ button:focus-visible, .tab:focus-visible { outline: 3px solid var(--shu); outlin
    */
   function buildSasu(q) {
     const b = C.parseBoard(q.item.board, q.item.hand);
-    const crop = C.cropFor(b, [], 5);
+    const crop = C.cropForMate(b, 5);      // 詰む手のマスも盤に出す (でないと指せない)
     const view = createBoard(crop.files, crop.ranks);
     $('stage').hidden = false;
     $('stage').appendChild(view.el);

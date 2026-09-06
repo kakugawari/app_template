@@ -244,3 +244,16 @@ test('戦法の手順に、相手にタダで大駒や金銀を取られる手�
     });
   }
 });
+
+test('1手詰は、詰む手のマスが盤に出ている (でないと指せない)', () => {
+  // 駒のあるところだけで切ると、玉から離して打つ手 (▲9一飛打 など) が
+  // 盤の外に出て、盤で解くモードで指せなくなる
+  for (const t of D.tsume) {
+    const b = C.parseBoard(t.board, t.hand);
+    const crop = C.cropForMate(b, 5);
+    const ans = C.parseMove(b, t.answer, C.SENTE, null);
+    assert.ok(crop.files.includes(ans.to[0]) && crop.ranks.includes(ans.to[1]),
+      t.name + ': こたえの ' + t.answer + ' のマスが盤に出ていない (筋 '
+      + crop.files.join(',') + ' / 段 ' + crop.ranks.join(',') + ')');
+  }
+});

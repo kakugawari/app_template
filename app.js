@@ -662,7 +662,7 @@
       $('q-label').textContent = stars(q.item.lv);
       $('q-text').innerHTML = '<b>1手</b>で詰ますのはどれ？<small>先手（下）の手番だよ</small>';
       const b = C.parseBoard(q.item.board, q.item.hand);
-      const crop = C.cropFor(b, [], 5);
+      const crop = C.cropForMate(b, 5);
       const board = createBoard(crop.files, crop.ranks);
       $('stage').hidden = false;
       $('stage').appendChild(board.el);
@@ -712,7 +712,7 @@
    */
   function buildSasu(q) {
     const b = C.parseBoard(q.item.board, q.item.hand);
-    const crop = C.cropFor(b, [], 5);
+    const crop = C.cropForMate(b, 5);      // 詰む手のマスも盤に出す (でないと指せない)
     const view = createBoard(crop.files, crop.ranks);
     $('stage').hidden = false;
     $('stage').appendChild(view.el);

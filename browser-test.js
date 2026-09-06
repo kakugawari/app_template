@@ -293,6 +293,33 @@ async function run() {
     ok(sasu.taps > 0 && sasu.choices === 0,
       `盤が押せるようになり、選択肢は出ない (${sasu.taps} マス)`);
 
+    // 全22問を実際に出して、こたえのマスが盤に出ているか (押せるか) を見る。
+    // 「▲9一飛打」のように玉から離して打つ手は、駒のある所だけで切ると
+    // 盤の外に出てしまい、指しようがなくなる
+    const todokanai = await phone.evaluate(async () => {
+      const C = window.Core, D = window.Data, kanji = ['一','二','三','四','五','六','七','八','九'];
+      const warui = [];
+      for (const item of D.tsume) {
+        const st = window.__app.state();
+        st.round = [{ type: 'sasu', item: item, choices: [] }];
+        st.idx = 0;
+        window.__app.render();
+        await new Promise((r) => setTimeout(r, 30));
+        const b = C.parseBoard(item.board, item.hand);
+        const m = C.parseMove(b, item.answer, C.SENTE, null);
+        const label = String(m.to[0]) + kanji[m.to[1] - 1];
+        const cell = [...document.querySelectorAll('.tap')]
+          .find((x) => x.getAttribute('aria-label') === label);
+        if (!cell) warui.push(item.name + '(' + item.answer + ')');
+      }
+      return warui;
+    });
+    ok(todokanai.length === 0,
+      `全${(await phone.evaluate(() => window.Data.tsume.length))}問で、こたえのマスが押せる`
+      + (todokanai.length ? ' 押せないもの: ' + todokanai.join(' ') : ''));
+    await phone.evaluate(() => window.__app.start('sasu'));
+    await phone.waitForTimeout(300);
+
     /** いまの問題の、正しい詰みの手のマスを押す。ちがう手を押すこともできる */
     const tapAnswer = async (atari) => await phone.evaluate((atari) => {
       const C = window.Core, q = window.__app.state().round[window.__app.state().idx];

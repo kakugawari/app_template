@@ -432,6 +432,19 @@
 
   /* ================= クイズの組み立て ================= */
 
+  /**
+   * 1手詰の問題を見せるときの、盤の切り取り。
+   * 駒のあるところだけで切ると、玉から離して打つ手 (▲9一飛打 など) の
+   * マスが盤の外に出てしまい、**答えの手が指せなくなる**。
+   * だから詰む手の行き先も入れて切る。
+   */
+  function cropForMate(b, minSize) {
+    const mates = legalMoves(b, SENTE)
+      .filter(function (m) { return isMate(applyMove(b, m), GOTE); })
+      .map(function (m) { return { to: m.to }; });
+    return cropFor(b, mates, minSize || 5);
+  }
+
   function distractors(all, answer, sameKey, count, rng) {
     const same = shuffle(all.filter(function (x) {
       return x !== answer && sameKey && x[sameKey] === answer[sameKey];
@@ -528,7 +541,8 @@
     at: at, put: put, idx: idx, listPieces: listPieces, findKing: findKing,
     movesFrom: movesFrom, legalMoves: legalMoves, applyMove: applyMove,
     inCheck: inCheck, isMate: isMate,
-    parseMove: parseMove, moveText: moveText, playKifu: playKifu, cropFor: cropFor,
+    parseMove: parseMove, moveText: moveText, playKifu: playKifu,
+    cropFor: cropFor, cropForMate: cropForMate,
     buildRound: buildRound, questionOf: questionOf, rankOf: rankOf,
     baseKind: baseKind, isKing: isKing
   };
