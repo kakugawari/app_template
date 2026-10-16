@@ -43,6 +43,16 @@
   // 横向きに寝て左右で体の向きそのものが変わる種目は、sideNames で
   // 「左向きに寝て…」のように片側ごとに文面を変えられる。
   //
+  // mergeSides: true を付けると、左右を別ステップに分けず 1 ステップにまとめる。
+  // 体を寝返らせて反対側をやる種目 (sideKnee など) 向け。スイング系
+  // (扇風機の首振りのように体を動かさず手足だけ振る) はもともと 1 ステップ
+  // なので関係ない。まとめたステップは:
+  //   - 「できた」は 1 回 (右左あわせて)。バッジは出さない (side: null)
+  //   - コマは左側ぶん → 右側ぶんの順にすべて並べ、コマごとに
+  //     どちらの側かを持たせる (フェーズが変わるとき自動でミラーが切り替わる)
+  //   - 名前には (左→右) のように順番を書いておく。2 つの文を
+  //     1 つにまとめると長くなるので、もとの文はそのまま流用する
+  //
   // art はイラストの名前。`<art>-<コマ名>` の symbol を引く。
   // 並び順で引くと (ex0, ex1, …)、種目を足したり並べ替えたりするたびに
   // 全部のイラストがずれるので、名前で結びつけている。
@@ -55,49 +65,34 @@
     {
       // 「腰を左にひねる」だと、どちらの足を動かすのか読む人によって割れる。
       // 動かす足そのものを書くほうが迷わない。
-      name: '仰向けに寝て、片足を反対の足の上に持っていく',
+      name: '仰向けに寝て、片足を反対の足の上に持っていく (左→右)',
       art: 'hipTwist',
       reps: 20,
       sides: ['left', 'right'],
-      sideNoun: '足',
-      sideNames: {
-        left: '仰向けに寝て、左足を右足の上に持っていく',
-        right: '仰向けに寝て、右足を左足の上に持っていく'
-      }
+      mergeSides: true
     },
     {
-      name: '横向きに寝て、膝を曲げて開く・閉じる',
+      name: '横向きに寝て、膝を曲げて開く・閉じる (左→右)',
       art: 'sideKnee',
       reps: 20,
       sides: ['left', 'right'],
-      sideNoun: '足',
-      sideNames: {
-        left: '左向きに寝て、左膝を曲げて開く・閉じる',
-        right: '右向きに寝て、右膝を曲げて開く・閉じる'
-      }
+      mergeSides: true
     },
     {
-      name: '横向きに寝て、手を伸ばして開く・閉じる',
+      name: '横向きに寝て、手を伸ばして開く・閉じる (左→右)',
       art: 'sideArm',
       reps: 20,
       sides: ['left', 'right'],
-      sideNoun: '手',
-      sideNames: {
-        left: '左向きに寝て、左手を伸ばして開く・閉じる',
-        right: '右向きに寝て、右手を伸ばして開く・閉じる'
-      }
+      mergeSides: true
     },
     {
-      // 動かすのは上になっている側の手。どちらの手かを名前に書いておく
-      // (「上半身をひねる」だけだと、どちらの手を動かすのか分からない)。
-      name: '横向きに寝て膝を曲げ、上の手を反対側へ開く',
+      // 動かすのは上になっている側の手。どちらの手かは before/after の
+      // 絵そのものが見せるので、名前では「上の手」とだけ書けば迷わない。
+      name: '横向きに寝て膝を曲げ、上の手を反対側へ開く (左→右)',
       art: 'sideOpen',
       reps: 20,
       sides: ['left', 'right'],
-      sideNames: {
-        left: '左向きに寝て膝を曲げ、右手を反対側へ開く',
-        right: '右向きに寝て膝を曲げ、左手を反対側へ開く'
-      }
+      mergeSides: true
     },
     // --- 四つん這い ---
     {
@@ -109,15 +104,11 @@
     },
     // --- 立つ ---
     {
-      name: '壁に手をついて、片足を広げて股関節を伸ばす',
+      name: '壁に手をついて、片足を広げて股関節を伸ばす (左→右)',
       art: 'wallHip',
       reps: 20,
       sides: ['left', 'right'],
-      sideNoun: '足',
-      sideNames: {
-        left: '壁に手をついて、左足を広げて股関節を伸ばす',
-        right: '壁に手をついて、右足を広げて股関節を伸ばす'
-      }
+      mergeSides: true
     },
     // --- 座る ---
     {
@@ -135,13 +126,43 @@
       frames: SWING_FRAMES
     },
     { name: '椅子に浅く座り、バランスボールを持って上げ下げする', art: 'chairLift', reps: 20, sides: null },
-    { name: '椅子に浅く座り、トゲトゲボールを足で踏んで転がす', art: 'footRoll', reps: 20, sides: ['left', 'right'], sideNoun: '足' }
+    {
+      name: '椅子に浅く座り、トゲトゲボールを足で転がす (左→右)',
+      art: 'footRoll',
+      reps: 20,
+      sides: ['left', 'right'],
+      mergeSides: true
+    }
   ];
 
   /** 種目リストを「1 ステップ = 1 回のできたボタン」の並びに崩す。 */
   function buildSteps(exercises) {
     const steps = [];
     exercises.forEach(function (exercise, exerciseIndex) {
+      const baseFrames = exercise.frames || DEFAULT_FRAMES;
+
+      if (exercise.mergeSides) {
+        // 左側ぶんのコマ → 右側ぶんのコマの順に、すべて並べて 1 ステップにする。
+        // コマごとに「どちらの側か」を持たせておき、描くときにそのコマだけ
+        // ミラーするかどうかを判断する (ステップ全体で一括ミラーできないため)。
+        const frames = [];
+        exercise.sides.forEach(function (side) {
+          baseFrames.forEach(function (name) {
+            frames.push({ name: name, side: side });
+          });
+        });
+        steps.push({
+          exerciseIndex: exerciseIndex,
+          art: exercise.art,
+          name: exercise.name,
+          reps: exercise.reps,
+          side: null,
+          sideNoun: '',
+          frames: frames
+        });
+        return;
+      }
+
       const sides = exercise.sides && exercise.sides.length ? exercise.sides : [null];
       sides.forEach(function (side) {
         const name = (exercise.sideNames && side && exercise.sideNames[side]) || exercise.name;
@@ -152,7 +173,7 @@
           reps: exercise.reps,
           side: side,
           sideNoun: exercise.sideNoun || '',
-          frames: exercise.frames || DEFAULT_FRAMES
+          frames: baseFrames
         });
       });
     });
@@ -168,10 +189,23 @@
   /**
    * コマ割りから、重複を取り除いて出てきた順に並べたもの。
    * 動きを止めて横に並べるときに使う (真ん中を 2 回並べても意味がないため)。
+   *
+   * コマは文字列 ('before' など) か、{ name, side } のどちらかで来る
+   * (mergeSides の種目は後者)。後者は毎回新しいオブジェクトで作られるため
+   * 中身が同じでも参照は別物になる — indexOf だけで見ると「重複なし」に
+   * 誤判定するので、中身を文字列化してから比べる。
    */
+  function frameKey(frame) {
+    return typeof frame === 'string' ? frame : frame.name + ':' + frame.side;
+  }
+
   function uniqueFrames(frames) {
-    return frames.filter(function (frame, i) {
-      return frames.indexOf(frame) === i;
+    const seen = [];
+    return frames.filter(function (frame) {
+      const key = frameKey(frame);
+      if (seen.indexOf(key) >= 0) return false;
+      seen.push(key);
+      return true;
     });
   }
 
@@ -377,6 +411,7 @@
     sideLabel: sideLabel,
     DEFAULT_FRAMES: DEFAULT_FRAMES,
     SWING_FRAMES: SWING_FRAMES,
-    uniqueFrames: uniqueFrames
+    uniqueFrames: uniqueFrames,
+    frameKey: frameKey
   };
 });

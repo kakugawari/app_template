@@ -2,10 +2,10 @@ const test = require('node:test');
 const assert = require('node:assert');
 const Core = require('./core.js');
 
-test('既定の種目は 11 種目、左右ぶんも合わせて 17 ステップになる', () => {
+test('既定の種目は 11 種目、左右まとめたぶんも含めて 11 ステップになる', () => {
   const steps = Core.buildSteps(Core.DEFAULT_EXERCISES);
   assert.strictEqual(Core.DEFAULT_EXERCISES.length, 11);
-  assert.strictEqual(steps.length, 17);
+  assert.strictEqual(steps.length, 11);
 });
 
 test('すべての種目に art (イラストの名前) がついていて、重複していない', () => {
@@ -135,7 +135,7 @@ test('sessionProgress は current が total を超えない', () => {
 
 test('sessionProgress は 1 始まりで、途中経過を正しく返す', () => {
   const session = Core.createSession(Core.DEFAULT_EXERCISES);
-  assert.deepStrictEqual(Core.sessionProgress(session), { current: 1, total: 17 });
+  assert.deepStrictEqual(Core.sessionProgress(session), { current: 1, total: 11 });
 });
 
 test('sessionRatio は最初のステップでは 0 (まだ何も終わっていない)', () => {
@@ -177,9 +177,47 @@ test('左右に振る種目は 真ん中 → 左 → 真ん中 → 右 の 4 コ
   assert.deepStrictEqual(steps[0].frames, ['center', 'left', 'center', 'right']);
 });
 
-test('4 コマなのは 猫のポーズ・ひねる・倒す の 3 種目', () => {
+test('mergeSides: 体を寝返らせる種目は、左右を分けず 1 ステップにまとめる', () => {
+  const steps = Core.buildSteps([
+    { name: 'A', reps: 10, sides: ['left', 'right'], mergeSides: true, art: 'x' }
+  ]);
+  assert.strictEqual(steps.length, 1, '2 ステップに分かれていないこと');
+  assert.strictEqual(steps[0].side, null, 'バッジは出さない');
+});
+
+test('mergeSides: コマは左側ぶん → 右側ぶんの順に並び、コマごとに側を持つ', () => {
+  const steps = Core.buildSteps([
+    { name: 'A', reps: 10, sides: ['left', 'right'], mergeSides: true, art: 'x' }
+  ]);
+  assert.deepStrictEqual(steps[0].frames, [
+    { name: 'before', side: 'left' },
+    { name: 'after', side: 'left' },
+    { name: 'before', side: 'right' },
+    { name: 'after', side: 'right' }
+  ]);
+});
+
+test('mergeSides: before/after 以外のコマ割り (frames 指定) も、側ごとに展開する', () => {
+  const steps = Core.buildSteps([
+    { name: 'A', reps: 10, sides: ['left', 'right'], mergeSides: true, art: 'x', frames: ['a', 'b', 'c'] }
+  ]);
+  assert.strictEqual(steps[0].frames.length, 6);
+  assert.deepStrictEqual(steps[0].frames.map((f) => f.side), ['left', 'left', 'left', 'right', 'right', 'right']);
+});
+
+test('既定の種目のうち、体を寝返らせる 6 種目が mergeSides で 4 コマにまとまっている', () => {
   const steps = Core.buildSteps(Core.DEFAULT_EXERCISES);
-  const swing = steps.filter((s) => s.frames.length === 4);
+  const merged = steps.filter((s) => s.frames.length === 4 && typeof s.frames[0] === 'object');
+  assert.deepStrictEqual(
+    merged.map((s) => s.art).sort(),
+    ['footRoll', 'hipTwist', 'sideArm', 'sideKnee', 'sideOpen', 'wallHip'].sort()
+  );
+  merged.forEach((s) => assert.strictEqual(s.side, null, s.art + ' はバッジを出さない'));
+});
+
+test('スイング系 (体は動かさず手足だけ振る) は、今まで通り文字列のコマのまま', () => {
+  const steps = Core.buildSteps(Core.DEFAULT_EXERCISES);
+  const swing = steps.filter((s) => s.frames.length === 4 && typeof s.frames[0] === 'string');
   assert.deepStrictEqual(swing.map((s) => s.art), ['catPose', 'chairTwist', 'chairLean']);
 });
 
@@ -198,6 +236,29 @@ test('4 コマの往復は、真ん中を挟んで左右がそろっている', 
 test('uniqueFrames は出てきた順のまま重複だけ取り除く', () => {
   assert.deepStrictEqual(Core.uniqueFrames(Core.SWING_FRAMES), ['center', 'left', 'right']);
   assert.deepStrictEqual(Core.uniqueFrames(['before', 'after']), ['before', 'after']);
+});
+
+test('uniqueFrames は { name, side } のコマでも、中身が同じなら重複と見なす', () => {
+  // mergeSides のコマは毎回新しいオブジェクトで作られるため、参照の比較だけでは
+  // 「中身は同じでも別物」に見えて重複を見逃す。中身で比べられているか確認する
+  const frames = [
+    { name: 'before', side: 'left' },
+    { name: 'after', side: 'left' },
+    { name: 'before', side: 'left' } // 1 つめと中身は同じ、参照は別
+  ];
+  assert.deepStrictEqual(Core.uniqueFrames(frames), [
+    { name: 'before', side: 'left' },
+    { name: 'after', side: 'left' }
+  ]);
+});
+
+test('frameKey は文字列のコマと { name, side } のコマを区別できる形にする', () => {
+  assert.strictEqual(Core.frameKey('before'), 'before');
+  assert.strictEqual(Core.frameKey({ name: 'before', side: 'left' }), 'before:left');
+  assert.notStrictEqual(
+    Core.frameKey({ name: 'before', side: 'left' }),
+    Core.frameKey({ name: 'before', side: 'right' })
+  );
 });
 
 // ------------------------------------------------------------ スタンプカード
@@ -284,7 +345,7 @@ test('createProgress は今の位置とステップ数を持つ', () => {
   let session = Core.createSession(Core.DEFAULT_EXERCISES);
   session = Core.advanceSession(session);
   session = Core.advanceSession(session);
-  assert.deepStrictEqual(Core.createProgress(session), { index: 2, total: 17 });
+  assert.deepStrictEqual(Core.createProgress(session), { index: 2, total: 11 });
 });
 
 test('途中まで進んだ位置は、続きとして取り出せる', () => {

@@ -159,6 +159,24 @@
   }
 
   /**
+   * コマの名前と、ミラーするかどうかを取り出す。
+   *
+   * コマは文字列 ('before' など、今まで通り) か、{ name, side } のどちらか。
+   * 後者は mergeSides の種目 (体を寝返らせて反対側をやる種目) が使う —
+   * 1 ステップの中に左右どちらのコマも混ざるので、ステップ全体を一括で
+   * ミラーする (今まで通りの `step.side`) のではなく、コマ 1 つずつが
+   * 自分の側を持つ。
+   */
+  function frameName(frame) {
+    return typeof frame === 'string' ? frame : frame.name;
+  }
+
+  function frameMirror(step, frame) {
+    const side = typeof frame === 'string' ? step.side : frame.side;
+    return side === 'right';
+  }
+
+  /**
    * ステップのコマ割りぶんだけイラストを並べ直す。
    *
    * 切り替えるときは全コマを同じマスに重ね (並べる位置は CSS が受け持つ)、
@@ -167,15 +185,15 @@
   function buildIllustration(step) {
     const calm = prefersReducedMotion();
     const frames = calm ? C.uniqueFrames(step.frames) : step.frames;
-    const mirror = step.side === 'right' ? ' mirror' : '';
 
     els.illustrationRow.textContent = '';
     frames.forEach(function (frame, i) {
       if (calm && i > 0) {
         els.illustrationRow.appendChild(svgUse('illustrationArrow', '#iconArrow'));
       }
+      const mirror = frameMirror(step, frame) ? ' mirror' : '';
       els.illustrationRow.appendChild(
-        svgUse('illustration' + mirror, '#' + step.art + '-' + frame));
+        svgUse('illustration' + mirror, '#' + step.art + '-' + frameName(frame)));
     });
   }
 

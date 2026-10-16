@@ -447,35 +447,39 @@ async function run() {
     const resumed = await phone.evaluate(() => document.getElementById('progress').textContent);
     ok(/^1 \/ \d+$/.test(resumed), `準備画面から再開すると同じ最初のステップに戻る (${resumed})`);
 
-    section('横向きに寝る種目は、膝も手も左右にあわせて寝る向きが変わる');
+    section('左右まとめた種目は、1 ステップ・1 回の「できた」で両側とも終わる');
     const stepText = () => phone.evaluate(() => ({
       name: document.getElementById('exerciseName').textContent,
-      side: document.getElementById('side').textContent
+      side: document.getElementById('side').textContent,
+      sideVisibility: getComputedStyle(document.getElementById('side')).visibility
     }));
 
     ok(await goToArt(phone, 'sideKnee'), '「横向きに寝て膝」のステップまで進める');
     await phone.waitForTimeout(60);
-    const leftKneeStep = await stepText();
-    ok(leftKneeStep.name.startsWith('左向きに寝て'), `左膝のときは「左向きに寝て」から始まる (${leftKneeStep.name})`);
-    ok(leftKneeStep.side === '左足', `側バッジは「左足」(${leftKneeStep.side})`);
+    const kneeStep = await stepText();
+    ok(kneeStep.name.endsWith('(左→右)'), `左右まとめた種目名は「(左→右)」で終わる (${kneeStep.name})`);
+    ok(kneeStep.sideVisibility === 'hidden', `左右まとめた種目では側バッジが隠れる (${kneeStep.sideVisibility})`);
 
+    // コマは 左before → 左after → 右before(mirror) → 右after(mirror) の 4 コマで
+    // 1 本に続いている (「できた」を押さなくても自動で右側へ切り替わる)
+    const kneeFrames = await readFrames();
+    ok(kneeFrames.length === 4, `4 コマで左右ぶん続いている (${kneeFrames.length} コマ)`);
+    const kneeFlipMs = await phone.evaluate(() => window.__app.flipMs);
+    const kneeSeen = [];
+    for (let i = 0; i < 4; i++) {
+      const frames = await readFrames();
+      const shown = frames.find((f) => f.opacity > 0.9);
+      kneeSeen.push(shown && shown.frame);
+      await phone.waitForTimeout(kneeFlipMs);
+    }
+    ok(kneeSeen.join(' ') === '#sideKnee-before #sideKnee-after #sideKnee-before #sideKnee-after',
+      `見えるコマ自体は before → after → before → after の繰り返し (${kneeSeen.join(' → ')})`);
+
+    // 1 回「できた」を押すだけで次の種目 (sideArm) まで進む (2 回押す必要が無い)
     await phone.locator('#btnDone').tap();
     await phone.waitForTimeout(60);
-    const rightKneeStep = await stepText();
-    ok(rightKneeStep.name.startsWith('右向きに寝て'), `右膝のときは「右向きに寝て」から始まる (${rightKneeStep.name})`);
-    ok(rightKneeStep.side === '右足', `側バッジは「右足」(${rightKneeStep.side})`);
-
-    ok(await goToArt(phone, 'sideArm'), '「横向きに寝て手」のステップまで進める');
-    await phone.waitForTimeout(60);
-    const leftHandStep = await stepText();
-    ok(leftHandStep.name.startsWith('左向きに寝て'), `左手のときは「左向きに寝て」から始まる (${leftHandStep.name})`);
-    ok(leftHandStep.side === '左手', `側バッジは「左手」(${leftHandStep.side})`);
-
-    await phone.locator('#btnDone').tap();
-    await phone.waitForTimeout(60);
-    const rightHandStep = await stepText();
-    ok(rightHandStep.name.startsWith('右向きに寝て'), `右手のときは「右向きに寝て」から始まる (${rightHandStep.name})`);
-    ok(rightHandStep.side === '右手', `側バッジは「右手」(${rightHandStep.side})`);
+    const afterKnee = await phone.evaluate(() => window.__app.state().session.steps[window.__app.state().session.index].art);
+    ok(afterKnee !== 'sideKnee', `「できた」1 回で sideKnee を抜ける (次は ${afterKnee})`);
 
     section('左右のない種目 (猫のポーズ) では側の表示が隠れる');
     ok(await goToArt(phone, 'catPose'), '「猫のポーズ」のステップまで進める');
@@ -610,8 +614,10 @@ async function run() {
         if (i < stepCount - 1) await page.locator('#btnDone').tap();
       }
 
-      // 側バッジは中身が「左足」でも空でも同じ高さでなければならない。
-      // ここが変わるとカードが伸び縮みし、下にある回数が動く
+      // 側バッジは中身があっても空でも同じ高さでなければならない
+      // (今は全種目が左右まとめ済みで常に空だが、今後片側だけの種目が
+      // 増えても高さが変わらないことを見張る)。ここが変わるとカードが
+      // 伸び縮みし、下にある回数が動く
       // (iOS ではそのずれが古い描画の残りとして「20 が二重」に見えた)。
       const sideHeights = [...new Set(seen.map((s) => s.side))];
       const cardHeights = [...new Set(seen.map((s) => s.card))];
@@ -710,7 +716,7 @@ async function run() {
       }));
       ok(reopened.screen === 'warmup' && reopened.shown,
         '開き直すと準備画面に「つづきから」が出る');
-      ok(reopened.note.startsWith('9 / 17 まで進んでいます'),
+      ok(reopened.note.startsWith('9 / 11 まで進んでいます'),
         `どこまでやったかが読める (${reopened.note})`);
       ok(!reopened.startIsPrimary, '続きがあるときは「つづきから」が主なボタンになる');
       ok(reopened.rowH <= 56, `ボタンが 1 段に収まっている (${reopened.rowH}px)`);
@@ -721,7 +727,7 @@ async function run() {
         index: window.__app.state().session.index,
         progress: document.getElementById('progress').textContent.trim()
       }));
-      ok(resumed.index === 8 && resumed.progress === '9 / 17',
+      ok(resumed.index === 8 && resumed.progress === '9 / 11',
         `閉じたところから再開する (${resumed.progress})`);
 
       // はじめから を選べば 1 ステップめに戻り、続きは消える
