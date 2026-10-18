@@ -63,7 +63,7 @@ test('sideLabel は sideNoun が無ければ左右だけを返す', () => {
   assert.strictEqual(Core.sideLabel({ side: 'left', sideNoun: '' }), '左');
 });
 
-test('sideLabel は side が無ければ null を返す', () => {
+test('sideLabel は side も順番も無ければ null を返す', () => {
   assert.strictEqual(Core.sideLabel({ side: null, sideNoun: '' }), null);
 });
 
@@ -182,7 +182,38 @@ test('mergeSides: 体を寝返らせる種目は、左右を分けず 1 ステ�
     { name: 'A', reps: 10, sides: ['left', 'right'], mergeSides: true, art: 'x' }
   ]);
   assert.strictEqual(steps.length, 1, '2 ステップに分かれていないこと');
-  assert.strictEqual(steps[0].side, null, 'バッジは出さない');
+  assert.strictEqual(steps[0].side, null, '片側だけのステップではない');
+  assert.deepStrictEqual(steps[0].sideOrder, ['left', 'right'], 'やる順番を持っている');
+});
+
+test('mergeSides: 側バッジには、やる順番を「左 → 右」と出す', () => {
+  const [step] = Core.buildSteps([
+    { name: 'A', reps: 10, sides: ['left', 'right'], mergeSides: true, art: 'x' }
+  ]);
+  assert.strictEqual(Core.sideLabel(step), '左 → 右');
+});
+
+test('種目名には「(左→右)」を書かない (順番は側バッジが受け持つ)', () => {
+  Core.DEFAULT_EXERCISES.forEach((e) => {
+    assert.ok(!/[()（）]/.test(e.name), `括弧が入っていない: ${e.name}`);
+  });
+});
+
+test('namePhrases は読点の後ろで区切り、読点は前の句に残す', () => {
+  assert.deepStrictEqual(Core.namePhrases('仰向けで両膝を立て、左右に倒す'), ['仰向けで両膝を立て、', '左右に倒す']);
+  assert.deepStrictEqual(Core.namePhrases('読点なし'), ['読点なし']);
+  assert.deepStrictEqual(Core.namePhrases('A、B、C'), ['A、', 'B、', 'C']);
+  assert.strictEqual(Core.namePhrases('A、B、C').join(''), 'A、B、C', 'つなげ直すと元に戻る');
+});
+
+test('既定の種目名は、どの句も 12 字以内 (幅 375 の画面で 2 行に収まる目安)', () => {
+  // 本当に収まるかはブラウザテストが実際に描いて確かめる。ここは
+  // 種目を足したときにすぐ気づくための、安い目安
+  Core.DEFAULT_EXERCISES.forEach((e) => {
+    const phrases = Core.namePhrases(e.name);
+    assert.ok(phrases.length <= 2, `2 句まで: ${e.name}`);
+    phrases.forEach((p) => assert.ok([...p].length <= 12, `「${p}」は ${[...p].length} 字 (${e.name})`));
+  });
 });
 
 test('mergeSides: コマは左側ぶん → 右側ぶんの順に並び、コマごとに側を持つ', () => {

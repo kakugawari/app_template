@@ -47,11 +47,16 @@
   // 体を寝返らせて反対側をやる種目 (sideKnee など) 向け。スイング系
   // (扇風機の首振りのように体を動かさず手足だけ振る) はもともと 1 ステップ
   // なので関係ない。まとめたステップは:
-  //   - 「できた」は 1 回 (右左あわせて)。バッジは出さない (side: null)
+  //   - 「できた」は 1 回 (右左あわせて)
   //   - コマは左側ぶん → 右側ぶんの順にすべて並べ、コマごとに
   //     どちらの側かを持たせる (フェーズが変わるとき自動でミラーが切り替わる)
-  //   - 名前には (左→右) のように順番を書いておく。2 つの文を
-  //     1 つにまとめると長くなるので、もとの文はそのまま流用する
+  //   - やる順番 (左 → 右) は名前に書かず、側バッジに出す。名前の後ろに
+  //     「(左→右)」を足すと文が長くなり、括弧の途中で行が折れて読みにくい
+  //
+  // 名前は「姿勢、動き」の形で書き、読点 (、) の前後をそれぞれ 12 字以内に
+  // おさめる。画面では読点の後ろでしか折り返さない (namePhrases) ので、
+  // どちらかが長いと 3 行になってカードの高さが変わる。幅 375 / 390 の
+  // 画面で 2 行に収まることをブラウザテストが見張っている。
   //
   // art はイラストの名前。`<art>-<コマ名>` の symbol を引く。
   // 並び順で引くと (ex0, ex1, …)、種目を足したり並べ替えたりするたびに
@@ -61,34 +66,34 @@
   // 途中で体勢を変える回数をなるべく少なくしている。
   const DEFAULT_EXERCISES = [
     // --- 寝る ---
-    { name: '仰向けに寝て、両膝を立てて左右に倒す', art: 'kneeFall', reps: 20, sides: null },
+    { name: '仰向けで両膝を立て、左右に倒す', art: 'kneeFall', reps: 20, sides: null },
     {
-      // 「腰を左にひねる」だと、どちらの足を動かすのか読む人によって割れる。
+      // 「腰をひねる」だと、どちらの足を動かすのか読む人によって割れる。
       // 動かす足そのものを書くほうが迷わない。
-      name: '仰向けに寝て、片足を反対の足の上に持っていく (左→右)',
+      name: '仰向けで、片足を反対の足にのせる',
       art: 'hipTwist',
       reps: 20,
       sides: ['left', 'right'],
       mergeSides: true
     },
     {
-      name: '横向きに寝て、膝を曲げて開く・閉じる (左→右)',
+      name: '横向きに寝て、曲げた膝を開いて閉じる',
       art: 'sideKnee',
       reps: 20,
       sides: ['left', 'right'],
       mergeSides: true
     },
     {
-      name: '横向きに寝て、手を伸ばして開く・閉じる (左→右)',
+      name: '横向きに寝て、伸ばした腕を開いて閉じる',
       art: 'sideArm',
       reps: 20,
       sides: ['left', 'right'],
       mergeSides: true
     },
     {
-      // 動かすのは上になっている側の手。どちらの手かは before/after の
-      // 絵そのものが見せるので、名前では「上の手」とだけ書けば迷わない。
-      name: '横向きに寝て膝を曲げ、上の手を反対側へ開く (左→右)',
+      // 動かすのは上になっている側の腕。どちらの腕かは before/after の
+      // 絵そのものが見せるので、名前では「上の腕」とだけ書けば迷わない。
+      name: '横向きに寝て膝を曲げ、上の腕を反対側へ開く',
       art: 'sideOpen',
       reps: 20,
       sides: ['left', 'right'],
@@ -96,7 +101,7 @@
     },
     // --- 四つん這い ---
     {
-      name: '猫のポーズで、背中を丸める・反る',
+      name: '猫のポーズで、背中を丸めて反らす',
       art: 'catPose',
       reps: 20,
       sides: null,
@@ -104,30 +109,34 @@
     },
     // --- 立つ ---
     {
-      name: '壁に手をついて、片足を広げて股関節を伸ばす (左→右)',
+      name: '壁に手をつき、足を広げて股関節を伸ばす',
       art: 'wallHip',
       reps: 20,
       sides: ['left', 'right'],
       mergeSides: true
     },
     // --- 座る ---
+    // ボールは「ボール」とだけ書く。どのボールかは絵が見せている
+    // (「バランスボール」と書くと後ろの句が 12 字を超えて 3 行になる)。
     {
-      name: '椅子に浅く座り、バランスボールを抱えて体をひねる',
+      name: '椅子に浅く座り、ボールを抱えて体をひねる',
       art: 'chairTwist',
       reps: 20,
       sides: null,
       frames: SWING_FRAMES
     },
     {
-      name: '椅子に浅く座り、バランスボールを抱えて体を倒す',
+      name: '椅子に浅く座り、ボールを抱えて体を傾ける',
       art: 'chairLean',
       reps: 20,
       sides: null,
       frames: SWING_FRAMES
     },
-    { name: '椅子に浅く座り、バランスボールを持って上げ下げする', art: 'chairLift', reps: 20, sides: null },
+    { name: '椅子に浅く座り、ボールを上げ下げする', art: 'chairLift', reps: 20, sides: null },
     {
-      name: '椅子に浅く座り、トゲトゲボールを足で転がす (左→右)',
+      // 座ったまま続けてやる種目なので、姿勢は前の種目にまかせて書かない
+      // (「椅子に浅く座り、」を付けると後ろの句が長くなり 3 行になる)
+      name: 'トゲトゲボールを踏んで、前後に転がす',
       art: 'footRoll',
       reps: 20,
       sides: ['left', 'right'],
@@ -158,6 +167,7 @@
           reps: exercise.reps,
           side: null,
           sideNoun: '',
+          sideOrder: exercise.sides.slice(),
           frames: frames
         });
         return;
@@ -180,10 +190,30 @@
     return steps;
   }
 
-  /** 表示用の左右ラベル。sideNoun があれば「左足」のように部位つきで返す。 */
+  /**
+   * 表示用の左右ラベル。sideNoun があれば「左足」のように部位つきで返す。
+   * 左右をまとめたステップは、やる順番を「左 → 右」のように返す。
+   */
   function sideLabel(step) {
+    if (step.sideOrder) {
+      return step.sideOrder.map(function (side) { return SIDE_LABELS[side]; }).join(' → ');
+    }
     if (!step.side) return null;
     return SIDE_LABELS[step.side] + (step.sideNoun || '');
+  }
+
+  /**
+   * 種目名を、画面で折り返してよい単位に区切る。読点 (、) の後ろだけで
+   * 区切り、読点は前の句に残す。
+   *
+   * 日本語はどの字の間でも折り返せるので、ふつうに流すと
+   * 「体を倒 / す」のように語の途中で行が変わって読みにくい。
+   * 句ごとにまとめて置けば、行が変わるのは読点のところだけになる。
+   */
+  function namePhrases(name) {
+    return name.split('、').map(function (part, i, all) {
+      return i < all.length - 1 ? part + '、' : part;
+    }).filter(function (part) { return part !== ''; });
   }
 
   /**
@@ -409,6 +439,7 @@
     sessionProgress: sessionProgress,
     sessionRatio: sessionRatio,
     sideLabel: sideLabel,
+    namePhrases: namePhrases,
     DEFAULT_FRAMES: DEFAULT_FRAMES,
     SWING_FRAMES: SWING_FRAMES,
     uniqueFrames: uniqueFrames,

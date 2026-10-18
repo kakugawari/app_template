@@ -457,8 +457,9 @@ async function run() {
     ok(await goToArt(phone, 'sideKnee'), '「横向きに寝て膝」のステップまで進める');
     await phone.waitForTimeout(60);
     const kneeStep = await stepText();
-    ok(kneeStep.name.endsWith('(左→右)'), `左右まとめた種目名は「(左→右)」で終わる (${kneeStep.name})`);
-    ok(kneeStep.sideVisibility === 'hidden', `左右まとめた種目では側バッジが隠れる (${kneeStep.sideVisibility})`);
+    ok(!kneeStep.name.includes('左→右'), `種目名に「(左→右)」を付けない (${kneeStep.name})`);
+    ok(kneeStep.sideVisibility === 'visible' && kneeStep.side === '左 → 右',
+      `やる順番は側バッジに出す (${kneeStep.side} / ${kneeStep.sideVisibility})`);
 
     // コマは 左before → 左after → 右before(mirror) → 右after(mirror) の 4 コマで
     // 1 本に続いている (「できた」を押さなくても自動で右側へ切り替わる)
@@ -626,6 +627,47 @@ async function run() {
       ok(cardHeights.length === 1, `カードの高さが全ステップで同じ (${cardHeights.join(' / ')}px)`);
       ok(repsTops.length === 1, `回数の縦位置が全ステップで同じ (${repsTops.join(' / ')}px)`);
       await walk.close();
+    }
+
+    // ------------------------------------------------ 種目名の折り返し
+    // 日本語はどの字の間でも折り返せるので、放っておくと「体を倒 / す」
+    // 「(左→ / 右)」のように語の途中で行が変わる。句 (読点まで) ごとに
+    // まとめて置き、行が変わるのは読点のところだけにしている。
+    // 句が長すぎると句の中で折れ、3 行になってカードの高さも変わる。
+    section('種目名は 2 行に収まり、句の途中で行が変わらない');
+    for (const size of [{ label: '幅 390', w: 390, h: 844 }, { label: '幅 375', w: 375, h: 667 }]) {
+      const ctx = await browser.newContext({
+        viewport: { width: size.w, height: size.h }, isMobile: true, hasTouch: true, deviceScaleFactor: 2
+      });
+      const page = await ctx.newPage();
+      page.on('pageerror', (e) => errors.push('names: ' + e.message));
+      await page.goto(URL);
+      await page.waitForFunction(() => window.__app);
+      await page.evaluate(() => window.__app.start());
+      const bad = [];
+      let checked = 0;
+      const stepCount = await page.evaluate(() => window.__app.state().session.steps.length);
+      for (let i = 0; i < stepCount; i++) {
+        const r = await page.evaluate(() => {
+          const el = document.getElementById('exerciseName');
+          const lh = parseFloat(getComputedStyle(el).lineHeight);
+          const phrases = [...el.querySelectorAll('.phrase')];
+          return {
+            name: el.textContent,
+            lines: Math.round(el.scrollHeight / lh),
+            phrases: phrases.length,
+            split: phrases.filter((p) => p.getBoundingClientRect().height > lh * 1.5).map((p) => p.textContent)
+          };
+        });
+        checked++;
+        if (r.lines > 2 || r.phrases === 0 || r.split.length) {
+          bad.push(`${r.name} (${r.lines} 行${r.split.length ? ' / 句の中で折れ: ' + r.split.join(',') : ''})`);
+        }
+        if (i < stepCount - 1) await page.evaluate(() => window.__app.complete());
+      }
+      ok(checked === stepCount && bad.length === 0,
+        `${size.label}: ${checked} ステップとも 2 行以内・句の途中で折れない${bad.length ? ' → ' + bad.join(' | ') : ''}`);
+      await ctx.close();
     }
 
     // ------------------------------------------------ 横向き

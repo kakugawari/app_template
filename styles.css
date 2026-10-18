@@ -277,6 +277,12 @@ body {
   min-height: 3.2em;
 }
 
+/* 句 (読点まで) をひとかたまりにして、句の途中では折り返さない。
+   句が 1 行より長いときだけ、中で折り返す (はみ出しはしない)。 */
+.exerciseName .phrase {
+  display: inline-block;
+}
+
 .side {
   margin: 0;
   display: inline-block;

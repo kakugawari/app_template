@@ -167,6 +167,17 @@
    * ミラーする (今まで通りの `step.side`) のではなく、コマ 1 つずつが
    * 自分の側を持つ。
    */
+  /** 種目名を句ごとの span に分けて置く。行が変わるのは句の切れ目だけになる */
+  function renderName(name) {
+    els.exerciseName.textContent = '';
+    C.namePhrases(name).forEach(function (phrase) {
+      const span = document.createElement('span');
+      span.className = 'phrase';
+      span.textContent = phrase;
+      els.exerciseName.appendChild(span);
+    });
+  }
+
   function frameName(frame) {
     return typeof frame === 'string' ? frame : frame.name;
   }
@@ -440,10 +451,11 @@
       els.progressBarFill.style.width = (C.sessionRatio(state.session) * 100) + '%';
       buildIllustration(step);
       startFlip();
-      els.exerciseName.textContent = step.name;
+      renderName(step.name);
       els.reps.textContent = String(step.reps);
-      els.side.classList.toggle('is-empty', !step.side);
-      els.side.textContent = step.side ? C.sideLabel(step) : ' ';
+      const label = C.sideLabel(step);
+      els.side.classList.toggle('is-empty', !label);
+      els.side.textContent = label || '\u00a0';
     }
   }
 
