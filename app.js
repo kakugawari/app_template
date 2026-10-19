@@ -31,6 +31,7 @@
     exerciseName: document.getElementById('exerciseName'),
     side: document.getElementById('side'),
     reps: document.getElementById('reps'),
+    repsUnit: document.getElementById('repsUnit'),
     btnStart: document.getElementById('btnStart'),
     btnBack: document.getElementById('btnBack'),
     btnDone: document.getElementById('btnDone'),
@@ -453,6 +454,7 @@
       startFlip();
       renderName(step.name);
       els.reps.textContent = String(step.reps);
+      els.repsUnit.textContent = step.unit;
       const label = C.sideLabel(step);
       els.side.classList.toggle('is-empty', !label);
       els.side.textContent = label || '\u00a0';

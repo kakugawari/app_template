@@ -35,6 +35,12 @@
 
   const CAT_FRAMES = ['center', 'round', 'center', 'arch'];
 
+  /** 左右交互の万歳。下ろす → 左手 → 下ろす → 右手 (どれも左から始める) */
+  const ALT_FRAMES = ['down', 'left', 'down', 'right'];
+
+  /** 足を前後に振る。真ん中を通って前へ、また真ん中を通って後ろへ */
+  const LEG_SWING_FRAMES = ['center', 'front', 'center', 'back'];
+
   /** 左右をまとめた種目で、反対側へ移る前に片側をくり返す回数 */
   const SIDE_REPEAT = 3;
 
@@ -70,7 +76,7 @@
   // 並びは姿勢ごと。寝る → 四つん這い → 立つ → 座る の順にして、
   // 途中で体勢を変える回数をなるべく少なくしている。
   const DEFAULT_EXERCISES = [
-    // --- 寝る ---
+    // --- 寝る (仰向け) ---
     { name: '仰向けで両膝を立て、左右に倒す', art: 'kneeFall', reps: 20, sides: null },
     {
       // 「腰をひねる」だと、どちらの足を動かすのか読む人によって割れる。
@@ -81,6 +87,18 @@
       sides: ['left', 'right'],
       mergeSides: true
     },
+    { name: '仰向けで膝を立て、両手で万歳する', art: 'armRaise', reps: 20, sides: null },
+    {
+      // 左右交互の万歳は、体の向きは変わらないので左右をまとめる種目ではない。
+      // 首振りの種目と同じく 1 ステップで、下ろす → 左 → 下ろす → 右 と回す
+      name: '仰向けで膝を立て、左右交互に万歳する',
+      art: 'armAlt',
+      reps: 20,
+      sides: null,
+      frames: ALT_FRAMES
+    },
+    { name: '仰向けで膝を立て、広げた両手を胸で合わせる', art: 'armHug', reps: 20, sides: null },
+    // --- 寝る (横向き) ---
     {
       name: '横向きに寝て、曲げた膝を開いて閉じる',
       art: 'sideKnee',
@@ -104,6 +122,14 @@
       sides: ['left', 'right'],
       mergeSides: true
     },
+    {
+      // sideOpen と近いが、腕ごと回すのではなく肩だけを後ろへ動かす別の種目
+      name: '横向きで膝をくの字にし、上の肩だけ後ろに動かす',
+      art: 'shoulderBack',
+      reps: 20,
+      sides: ['left', 'right'],
+      mergeSides: true
+    },
     // --- 四つん這い ---
     {
       name: '猫のポーズで、背中を丸めて反らす',
@@ -111,6 +137,13 @@
       reps: 20,
       sides: null,
       frames: CAT_FRAMES
+    },
+    {
+      name: '四つん這いで、片手と反対の足を伸ばす',
+      art: 'birdDog',
+      secs: 10,
+      sides: ['left', 'right'],
+      mergeSides: true
     },
     // --- 立つ ---
     {
@@ -120,6 +153,27 @@
       sides: ['left', 'right'],
       mergeSides: true
     },
+    {
+      // 体が横に開かないよう、まっすぐ保つ (名前に入りきらないので、ここに残す)
+      name: '階段2段目に片足をのせ、後ろ足のももを伸ばす',
+      art: 'stairQuad',
+      secs: 30,
+      sides: ['left', 'right'],
+      mergeSides: true
+    },
+    {
+      // 段に横向きに立ち、段から外に出した足を前後同じくらいに振る
+      name: '階段に片足で立ち、浮いた足を前後に振る',
+      art: 'stairSwing',
+      secs: 30,
+      sides: ['left', 'right'],
+      mergeSides: true,
+      frames: LEG_SWING_FRAMES
+    },
+    { name: '肩幅に立ち、浅くスクワットする', art: 'shallowSquat', secs: 30, sides: null },
+    { name: '何かにつかまり、股割りでスクワットする', art: 'sumoSquat', reps: 20, sides: null },
+    // 無理をしない深さまで (名前に入りきらないので、ここに残す)
+    { name: '何かにつかまり、お尻を後ろに引いて下げる', art: 'hipBackSquat', reps: 20, sides: null },
     // --- 座る ---
     // ボールは「ボール」とだけ書く。どのボールかは絵が見せている
     // (「バランスボール」と書くと後ろの句が 12 字を超えて 3 行になる)。
@@ -139,6 +193,16 @@
     },
     { name: '椅子に浅く座り、ボールを上げ下げする', art: 'chairLift', reps: 20, sides: null },
     {
+      // つま先立ちしながらお腹をへこませて骨盤を後ろへ倒し、足を下ろしながら起こす
+      name: '座ってつま先立ちし、骨盤を倒して起こす',
+      art: 'pelvisTilt',
+      reps: 20,
+      sides: null
+    },
+    // 次の 2 つは肘の位置だけが違う。肩甲骨を意識しながら後ろに開く
+    { name: '座って腕を斜めに開き、外へ回して後ろへ開く', art: 'armOpen', reps: 20, sides: null },
+    { name: '座って肘を脇につけ、腕を外へ回して開く', art: 'armRotate', reps: 20, sides: null },
+    {
       // 座ったまま続けてやる種目なので、姿勢は前の種目にまかせて書かない
       // (「椅子に浅く座り、」を付けると後ろの句が長くなり 3 行になる)
       name: 'トゲトゲボールを踏んで、前後に転がす',
@@ -148,6 +212,14 @@
       mergeSides: true
     }
   ];
+
+  /**
+   * 何回 (reps) か何秒 (secs) かを、表示する数と単位にする。
+   * アプリは数えも計りもしない。「20 回」「30 秒」と見せるだけ。
+   */
+  function amountOf(exercise) {
+    return exercise.secs ? { reps: exercise.secs, unit: '秒' } : { reps: exercise.reps, unit: '回' };
+  }
 
   /** 種目リストを「1 ステップ = 1 回のできたボタン」の並びに崩す。 */
   function buildSteps(exercises) {
@@ -172,7 +244,8 @@
           exerciseIndex: exerciseIndex,
           art: exercise.art,
           name: exercise.name,
-          reps: exercise.reps,
+          reps: amountOf(exercise).reps,
+          unit: amountOf(exercise).unit,
           side: null,
           sideNoun: '',
           sideOrder: exercise.sides.slice(),
@@ -188,7 +261,8 @@
           exerciseIndex: exerciseIndex,
           art: exercise.art,
           name: name,
-          reps: exercise.reps,
+          reps: amountOf(exercise).reps,
+          unit: amountOf(exercise).unit,
           side: side,
           sideNoun: exercise.sideNoun || '',
           frames: baseFrames
@@ -462,6 +536,9 @@
     namePhrases: namePhrases,
     DEFAULT_FRAMES: DEFAULT_FRAMES,
     SWING_FRAMES: SWING_FRAMES,
+    ALT_FRAMES: ALT_FRAMES,
+    LEG_SWING_FRAMES: LEG_SWING_FRAMES,
+    amountOf: amountOf,
     SIDE_REPEAT: SIDE_REPEAT,
     uniqueFrames: uniqueFrames,
     stillFrames: stillFrames,

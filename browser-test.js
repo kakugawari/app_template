@@ -564,6 +564,50 @@ async function run() {
     })));
     ok(!noSideStep.sideShown, `左右のない種目では側バッジが出ない (${noSideStep.name})`);
 
+    section('どの種目の、どのコマにも絵があり、絵が枠からはみ出していない');
+    const artCheck = await phone.evaluate(() => {
+      const steps = window.Core.buildSteps(window.Core.DEFAULT_EXERCISES);
+      const missing = [];
+      const ids = new Set();
+      steps.forEach((s) => s.frames.forEach((f) => {
+        const id = s.art + '-' + (typeof f === 'string' ? f : f.name);
+        ids.add(id);
+        if (!document.getElementById(id)) missing.push(id);
+      }));
+      // 実際に描かせて、絵の外枠 (線の太さぶんを除く) が 120 四方に収まるか見る。
+      // 線の太さは外枠に入らないので、太い線の端がはみ出すぶんとして 3 の余裕を見る
+      const ns = 'http://www.w3.org/2000/svg';
+      const out = [];
+      ids.forEach((id) => {
+        if (!document.getElementById(id)) return;
+        const svg = document.createElementNS(ns, 'svg');
+        svg.setAttribute('viewBox', '0 0 120 120');
+        svg.style.cssText = 'position:absolute;left:0;top:0;width:120px;height:120px';
+        const use = document.createElementNS(ns, 'use');
+        use.setAttribute('href', '#' + id);
+        svg.appendChild(use);
+        document.body.appendChild(svg);
+        const b = use.getBBox();
+        if (b.x < 3 || b.y < 3 || b.x + b.width > 117 || b.y + b.height > 117) {
+          out.push(`${id} (${Math.round(b.x)},${Math.round(b.y)})-(${Math.round(b.x + b.width)},${Math.round(b.y + b.height)})`);
+        }
+        svg.remove();
+      });
+      return { count: ids.size, missing, out };
+    });
+    ok(artCheck.missing.length === 0, `${artCheck.count} コマとも絵がある${artCheck.missing.length ? ' → 無い: ' + artCheck.missing.join(', ') : ''}`);
+    ok(artCheck.out.length === 0, `絵が枠 (120 四方) からはみ出していない${artCheck.out.length ? ' → ' + artCheck.out.join(' | ') : ''}`);
+
+    section('秒数で数える種目は「秒」と表示する');
+    ok(await goToArt(phone, 'birdDog'), '「四つん這いで対角に伸ばす」のステップまで進める');
+    await phone.waitForTimeout(60);
+    const secsShown = await phone.evaluate(() => document.querySelector('.reps').textContent.replace(/\s/g, ''));
+    ok(secsShown === '10秒', `10 秒と表示する (${secsShown})`);
+    ok(await goToArt(phone, 'wallHip'), '次の回数の種目まで進める');
+    await phone.waitForTimeout(60);
+    const repsShown = await phone.evaluate(() => document.querySelector('.reps').textContent.replace(/\s/g, ''));
+    ok(repsShown === '20回', `回数の種目に戻ると「回」に戻る (${repsShown})`);
+
     section('最後まで進めると完了画面になる');
     // 途中まで進んでいるので、残りぶんだけ押す
     const remaining = await phone.evaluate(() => {
@@ -861,7 +905,7 @@ async function run() {
       }));
       ok(reopened.screen === 'warmup' && reopened.shown,
         '開き直すと準備画面に「つづきから」が出る');
-      ok(reopened.note.startsWith('9 / 11 まで進んでいます'),
+      ok(reopened.note.startsWith('9 / 24 まで進んでいます'),
         `どこまでやったかが読める (${reopened.note})`);
       ok(!reopened.startIsPrimary, '続きがあるときは「つづきから」が主なボタンになる');
       ok(reopened.rowH <= 56, `ボタンが 1 段に収まっている (${reopened.rowH}px)`);
@@ -872,7 +916,7 @@ async function run() {
         index: window.__app.state().session.index,
         progress: document.getElementById('progress').textContent.trim()
       }));
-      ok(resumed.index === 8 && resumed.progress === '9 / 11',
+      ok(resumed.index === 8 && resumed.progress === '9 / 24',
         `閉じたところから再開する (${resumed.progress})`);
 
       // はじめから を選べば 1 ステップめに戻り、続きは消える
