@@ -639,18 +639,27 @@ async function run() {
     ok(jump < 12, `「できた」を押した直後に種目名が飛ばない (最大ずれ ${jump}px)`);
 
     // ------------------------------------------------ 明るい画面・暗い画面
-    section('明るい画面と暗い画面');
+    // ダークモードでも暗い画面にはしない (クリーム系の紙のまま) と決めている
+    section('スマホがダークモードでも、クリーム系の紙の背景のまま');
     for (const scheme of ['light', 'dark']) {
       const themed = await browser.newContext({ ...devices['iPhone 13'], colorScheme: scheme });
       const page = await themed.newPage();
       page.on('pageerror', (e) => errors.push(scheme + ': ' + e.message));
       await page.goto(URL);
       await page.waitForFunction(() => window.__app);
-      const colors = await page.evaluate(() => ({
-        bg: getComputedStyle(document.body).backgroundColor,
-        fg: getComputedStyle(document.body).color
-      }));
+      const colors = await page.evaluate(() => {
+        const rgb = (c) => (c.match(/\d+/g) || []).slice(0, 3).map(Number);
+        const bg = rgb(getComputedStyle(document.body).backgroundColor);
+        return {
+          bg: getComputedStyle(document.body).backgroundColor,
+          fg: getComputedStyle(document.body).color,
+          bright: Math.min(...bg) >= 190,
+          meta: document.querySelector('meta[name="theme-color"]').getAttribute('content')
+        };
+      });
+      ok(colors.bright, `${scheme}: 背景が明るいクリーム系 (${colors.bg})`);
       ok(colors.bg !== colors.fg, `${scheme}: 文字と背景の色が違う (${colors.bg} / ${colors.fg})`);
+      ok(colors.meta === '#efe1c1', `${scheme}: ブラウザの上の帯も紙の色 (${colors.meta})`);
       await themed.close();
     }
 
@@ -682,6 +691,7 @@ async function run() {
         // 色の一覧は core.js から取る (色を足したとき、ここを直し忘れても見張りが外れない)
         const allSkins = await page.evaluate(() => window.Core.availableSkins({ stamps: 9999, skin: 'classic', gear: [] }));
         ok(allSkins.length === 7, `${scheme}: 7 色ぜんぶを確かめる (${allSkins.join(', ')})`);
+        const bgs = new Set();
         for (const skin of allSkins) {
           const r = await page.evaluate(({ formula, skin }) => {
             // eslint-disable-next-line no-eval
@@ -694,18 +704,33 @@ async function run() {
             const rgb = (color) => { probe.style.color = color; return parse(getComputedStyle(probe).color); };
             const accent = rgb(v('--accent'));
             const ink = rgb(v('--accent-ink'));
+            const bg = rgb(v('--bg'));
             const bg2 = rgb(v('--bg-2'));
+            const text = rgb(v('--text'));
+            const muted = rgb(v('--muted'));
+            const art = rgb(v('--accent-2'));
             probe.remove();
+            const r2 = (n) => Math.round(n * 100) / 100;
             return {
               // 「できた」ボタンなど、accent を地に ink を文字にする場所
-              button: Math.round(ratio(accent, ink) * 100) / 100,
+              button: r2(ratio(accent, ink)),
               // 見出し・回数の数字など、bg-2 の上に accent を文字として使う場所
-              heading: Math.round(ratio(accent, bg2) * 100) / 100
+              heading: r2(ratio(accent, bg2)),
+              // 本文 (紙の上) と、薄い文字 (紙の上・カードの上の両方)
+              body: r2(ratio(text, bg)),
+              muted: r2(Math.min(ratio(muted, bg), ratio(muted, bg2))),
+              // 絵・人の色 (カードの上)。文字ではないので基準は 3
+              art: r2(ratio(art, bg2)),
+              bg: v('--bg')
             };
           }, { formula: contrastFormula, skin });
           ok(r.button >= 4.5, `${scheme}/${skin}: できたボタンの文字が読める (比 ${r.button})`);
           ok(r.heading >= 4.5, `${scheme}/${skin}: 見出し・回数の文字が読める (比 ${r.heading})`);
+          ok(r.body >= 4.5 && r.muted >= 4.5, `${scheme}/${skin}: 本文・薄い文字が読める (比 ${r.body} / ${r.muted})`);
+          ok(r.art >= 3, `${scheme}/${skin}: 絵がカードの上で見える (比 ${r.art})`);
+          bgs.add(r.bg);
         }
+        ok(bgs.size === allSkins.length, `${scheme}: 色ごとに紙の色味が違う (${bgs.size} 種類)`);
         await ctx.close();
       }
     }
@@ -1088,7 +1113,9 @@ async function run() {
           own: sw.map((el) => accentOf(el)),
           labels: sw.map((el) => el.getAttribute('aria-label')),
           startBg: getComputedStyle(document.getElementById('btnStart')).backgroundColor,
-          size: sw.length ? Math.round(sw[0].getBoundingClientRect().width) : 0
+          size: sw.length ? Math.round(sw[0].getBoundingClientRect().width) : 0,
+          paper: getComputedStyle(document.body).backgroundColor,
+          meta: document.querySelector('meta[name="theme-color"]').getAttribute('content')
         };
       });
       const first = await read();
@@ -1105,6 +1132,8 @@ async function run() {
       ok(picked.root === 'teal' && picked.pressed.join() === 'teal', `押すと色が替わり、押した丸が選ばれる (${picked.root})`);
       ok(picked.startBg !== first.startBg, `ボタンの色が本当に変わる (${first.startBg} → ${picked.startBg})`);
       ok(picked.own[0] === first.own[0], `ほかの色にしても、クラシックの丸はクラシックの色のまま (${picked.own[0]})`);
+      ok(picked.paper !== first.paper && picked.meta === '#dfe6d8',
+        `紙の色味とブラウザの上の帯も、選んだ色に替わる (${first.paper} → ${picked.paper} / ${picked.meta})`);
 
       await page.reload();
       await page.waitForFunction(() => window.__app);

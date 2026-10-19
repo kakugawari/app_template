@@ -360,6 +360,9 @@
 
   function applySkin() {
     document.documentElement.dataset.skin = state.record.skin;
+    // ブラウザの上の帯の色も、選んだ色の紙に合わせる
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', getComputedStyle(document.documentElement).getPropertyValue('--bg').trim());
   }
 
   function pickSkin(id) {

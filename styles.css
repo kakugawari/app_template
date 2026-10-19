@@ -1,34 +1,22 @@
 /* 見た目。アメリカンヴィンテージ(クリーム紙 + ラスト + マスタード + ネイビー)。
-   色は :root にまとめ、明るい画面と暗い画面の両方を用意する。 */
+   色は :root にまとめる。
+
+   スマホがダークモードでも暗い画面にはしない (クリーム系の紙のまま)。
+   そのかわり、選んだ色ごとに紙の色味が少し変わる (下の [data-skin])。
+   :root の値はクラシックの色で、data-skin が無いときの土台。 */
 
 :root {
   --bg: #efe1c1;
   --bg-2: #f8efd9;
   --line: #8a6a3f;
   --text: #3a2a18;
-  --muted: #7a6142;
+  /* 薄い文字。以前の #7a6142 は紙 (--bg) との比が 4.48 で、基準 (4.5) を
+     わずかに割っていたので少し濃くした (どの紙の色でも 5.1 以上) */
+  --muted: #6e5638;
   --accent: #b0402c;
   --accent-ink: #f8efd9;
   --accent-2: #22415a;
   color-scheme: light;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #221a12;
-    --bg-2: #2b2118;
-    --line: #5c4630;
-    --text: #f1e3c2;
-    --muted: #b9a377;
-    /* accent は「できた」の地にも、見出しや回数の文字にも使う。
-       前者は accent-ink (=ページの地の色) との差、後者は bg-2 との差が
-       それぞれ基準 (4.5) を満たす必要がある。実測でボタン 3.76・見出し
-       3.45 だったので、色味はそのままに明るくした (→ 5.01 / 4.60)。 */
-    --accent: #d46e4a;
-    --accent-ink: #221a12;
-    --accent-2: #d3a039;
-    color-scheme: dark;
-  }
 }
 
 * { box-sizing: border-box; }
@@ -454,10 +442,13 @@ body {
 }
 
 /* ---------------------------------------------------------- 色
-   地の色はそのままに、差し色だけ入れ替える。明るい画面と暗い画面の
-   どちらでも文字が読めるよう、accent-ink も色ごとに決めておく。
-   色を足すときは、ボタン文字 (accent-ink / accent)・見出し (accent / bg-2)
-   が 4.5、絵 (accent-2 / bg-2) が 3 を超えるか測ってから決める。
+   選んだ色で、差し色と紙の色味をまとめて入れ替える。
+     --bg   ページの地 (紙)           --bg-2      カードの地
+     --accent 見出し・ボタンの地       --accent-ink ボタンの文字 (= カードの地)
+     --accent-2 絵・枠の色
+   色を足す・変えるときは次を測ってから決める (ブラウザテストが全色を見張る):
+     ボタン文字 (accent-ink / accent)・見出し (accent / bg-2)・
+     本文 (text / bg)・薄い文字 (muted / bg と bg-2) が 4.5、絵 (accent-2 / bg-2) が 3
 
    セレクタは :root に限らず [data-skin] にしてある。タイトル画面の色の丸
    (.swatch) にも同じ data-skin を付け、その色の accent をそのまま塗るため
@@ -467,28 +458,15 @@ body {
    はじめから選べる色: classic / teal / plum / mustard
    ごほうびでもらえる色: midnight / forest / sunset */
 
-[data-skin="classic"]  { --accent: #b0402c; --accent-2: #22415a; --accent-ink: #f8efd9; }
-[data-skin="teal"]     { --accent: #2a6966; --accent-2: #a8482a; --accent-ink: #f8efd9; }
-[data-skin="plum"]     { --accent: #7b3456; --accent-2: #3d5a4a; --accent-ink: #fbf2e0; }
-[data-skin="mustard"]  { --accent: #7d5a12; --accent-2: #22415a; --accent-ink: #fbf2e0; }
-[data-skin="midnight"] { --accent: #2f5d80; --accent-2: #c69749; --accent-ink: #f4ecd8; }
-[data-skin="forest"]   { --accent: #4a6741; --accent-2: #a8541f; --accent-ink: #f4ecd8; }
-/* sunset は明るい画面でのボタン文字 4.18・見出し文字 (title/reps) 4.51 と、
-   どちらも基準 (4.5) ぎりぎりか未満だったので、色味はそのままに
-   accent を暗くした (→ 4.81 / 4.67) */
-[data-skin="sunset"]   { --accent: #b24b1c; --accent-2: #6b3f6b; --accent-ink: #fbf2e0; }
-
-/* 暗い画面。上の明るい色より後ろに書くこと (同じ強さのセレクタなので、
-   後ろに書いたほうが勝つ) */
-@media (prefers-color-scheme: dark) {
-  [data-skin="classic"]:not([data-theme="light"])  { --accent: #d46e4a; --accent-2: #d3a039; --accent-ink: #221a12; }
-  [data-skin="teal"]:not([data-theme="light"])     { --accent: #5ea8a2; --accent-2: #e0a35a; --accent-ink: #14211f; }
-  [data-skin="plum"]:not([data-theme="light"])     { --accent: #c9809f; --accent-2: #d3a039; --accent-ink: #241520; }
-  [data-skin="mustard"]:not([data-theme="light"])  { --accent: #d9a43c; --accent-2: #7fb0c4; --accent-ink: #221a12; }
-  [data-skin="midnight"]:not([data-theme="light"]) { --accent: #5b90bb; --accent-2: #e0b566; --accent-ink: #1a2430; }
-  [data-skin="forest"]:not([data-theme="light"])   { --accent: #7d9e6f; --accent-2: #d98b4a; --accent-ink: #1c2419; }
-  [data-skin="sunset"]:not([data-theme="light"])   { --accent: #e07a45; --accent-2: #b98ab9; --accent-ink: #2a1a12; }
-}
+[data-skin="classic"]  { --bg: #efe1c1; --bg-2: #f8efd9; --accent: #b0402c; --accent-2: #22415a; --accent-ink: #f8efd9; }
+[data-skin="teal"]     { --bg: #dfe6d8; --bg-2: #f2f4ea; --accent: #2a6966; --accent-2: #a8482a; --accent-ink: #f2f4ea; }
+[data-skin="plum"]     { --bg: #ecdcd8; --bg-2: #f8eeea; --accent: #7b3456; --accent-2: #3d5a4a; --accent-ink: #f8eeea; }
+[data-skin="mustard"]  { --bg: #f0e1b4; --bg-2: #faf2d8; --accent: #7d5a12; --accent-2: #22415a; --accent-ink: #faf2d8; }
+/* midnight の絵の色 (accent-2) は以前 #c69749 で、カードの地との比が 2.31 と
+   見えにくかったので濃くした (→ 4.76) */
+[data-skin="midnight"] { --bg: #dde2e2; --bg-2: #f1f2ee; --accent: #2f5d80; --accent-2: #8a6420; --accent-ink: #f1f2ee; }
+[data-skin="forest"]   { --bg: #e2e5cf; --bg-2: #f3f4e6; --accent: #4a6741; --accent-2: #a8541f; --accent-ink: #f3f4e6; }
+[data-skin="sunset"]   { --bg: #f2dcc6; --bg-2: #fbefe2; --accent: #a8461a; --accent-2: #6b3f6b; --accent-ink: #fbefe2; }
 
 /* ---------------------------------------------------------- タイトル画面の色の丸
    1 段に並べ、数が増えても折り返さずに小さくなる (折り返すと縦に伸びて
