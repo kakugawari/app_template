@@ -679,7 +679,10 @@ async function run() {
         await page.goto(URL);
         await page.waitForFunction(() => window.__app);
 
-        for (const skin of ['classic', 'midnight', 'forest', 'sunset']) {
+        // 色の一覧は core.js から取る (色を足したとき、ここを直し忘れても見張りが外れない)
+        const allSkins = await page.evaluate(() => window.Core.availableSkins({ stamps: 9999, skin: 'classic', gear: [] }));
+        ok(allSkins.length === 7, `${scheme}: 7 色ぜんぶを確かめる (${allSkins.join(', ')})`);
+        for (const skin of allSkins) {
           const r = await page.evaluate(({ formula, skin }) => {
             // eslint-disable-next-line no-eval
             eval(formula);
@@ -1067,6 +1070,75 @@ async function run() {
       await ctx.close();
     }
 
+    section('タイトル画面の色の丸で、はじめから色を選べる');
+    {
+      const ctx = await browser.newContext({ ...devices['iPhone 13'] });
+      const page = await ctx.newPage();
+      page.on('pageerror', (e) => errors.push('swatch: ' + e.message));
+      await page.goto(URL);
+      await page.waitForFunction(() => window.__app);
+      const read = () => page.evaluate(() => {
+        const accentOf = (el) => getComputedStyle(el).getPropertyValue('--accent').trim();
+        const sw = [...document.querySelectorAll('#swatches .swatch')];
+        return {
+          root: document.documentElement.dataset.skin,
+          ids: sw.map((el) => el.dataset.skin),
+          pressed: sw.filter((el) => el.getAttribute('aria-pressed') === 'true').map((el) => el.dataset.skin),
+          // 丸は自分の色で塗られているか (外側の色を引き継いでいないか)
+          own: sw.map((el) => accentOf(el)),
+          labels: sw.map((el) => el.getAttribute('aria-label')),
+          startBg: getComputedStyle(document.getElementById('btnStart')).backgroundColor,
+          size: sw.length ? Math.round(sw[0].getBoundingClientRect().width) : 0
+        };
+      });
+      const first = await read();
+      ok(first.ids.join(' ') === 'classic teal plum mustard',
+        `はじめから 4 色が並び、まだもらっていない色は出ない (${first.ids.join(' ')})`);
+      ok(first.pressed.join() === 'classic', `今の色 (クラシック) が選ばれている (${first.pressed.join()})`);
+      ok(new Set(first.own).size === first.own.length, `丸はそれぞれ自分の色で塗られている (${first.own.join(' ')})`);
+      ok(first.labels.every((l) => l && !/^[a-z]+$/.test(l)), `丸に読み上げ用の色の名前がある (${first.labels.join('・')})`);
+      ok(first.size >= 32, `丸は指で押せる大きさ (${first.size}px)`);
+
+      await page.locator('#swatches .swatch[data-skin="teal"]').tap();
+      await page.waitForTimeout(60);
+      const picked = await read();
+      ok(picked.root === 'teal' && picked.pressed.join() === 'teal', `押すと色が替わり、押した丸が選ばれる (${picked.root})`);
+      ok(picked.startBg !== first.startBg, `ボタンの色が本当に変わる (${first.startBg} → ${picked.startBg})`);
+      ok(picked.own[0] === first.own[0], `ほかの色にしても、クラシックの丸はクラシックの色のまま (${picked.own[0]})`);
+
+      await page.reload();
+      await page.waitForFunction(() => window.__app);
+      const reopened = await read();
+      ok(reopened.root === 'teal' && reopened.pressed.join() === 'teal', `開き直しても選んだ色が残る (${reopened.root})`);
+      await ctx.close();
+
+      // ごほうびの色を全部もらうと 7 色。小さい画面でも 1 段のまま縮んで並び、
+      // 「はじめる」を画面の外へ押し出さない
+      for (const size of [{ label: '小 320x568', w: 320, h: 568 }, { label: '横 844x390', w: 844, h: 390 }]) {
+        const c2 = await browser.newContext({ viewport: { width: size.w, height: size.h }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
+        const p2 = await c2.newPage();
+        await p2.goto(URL);
+        await p2.waitForFunction(() => window.__app);
+        await p2.evaluate(() => window.__app.setStamps(60));
+        await p2.waitForTimeout(60);
+        const r = await p2.evaluate(() => {
+          const sw = [...document.querySelectorAll('#swatches .swatch')].map((el) => el.getBoundingClientRect());
+          const card = document.getElementById('screenWarmup').getBoundingClientRect();
+          return {
+            n: sw.length,
+            oneRow: sw.every((b) => Math.abs(b.top - sw[0].top) < 1),
+            inside: sw.every((b) => b.left >= card.left && b.right <= card.right),
+            min: Math.round(Math.min(...sw.map((b) => b.width))),
+            startBottom: Math.round(document.getElementById('btnStart').getBoundingClientRect().bottom),
+            vh: window.innerHeight
+          };
+        });
+        ok(r.n === 7 && r.oneRow && r.inside, `${size.label}: 7 色が 1 段に並び、カードからはみ出さない (${r.n} 色 / 最小 ${r.min}px)`);
+        ok(r.startBottom <= r.vh, `${size.label}: 7 色並べても「はじめる」が画面に収まる (下端 ${r.startBottom} / 画面 ${r.vh})`);
+        await c2.close();
+      }
+    }
+
     section('10 個たまるとごほうびがもらえて、きせかえができる');
     {
       const ctx = await browser.newContext({ ...devices['iPhone 13'] });
@@ -1088,16 +1160,21 @@ async function run() {
       ok(at10.filled === 10, `10 個目でカードが満杯になる (${at10.filled} マス)`);
       ok(at10.customShown, 'きせかえボタンが出る');
 
-      // 色を変えると、本当に画面の色が変わる
+      // もらった色 (ミッドナイト) に変えると、本当に画面の色が変わる
       await page.locator('#btnCustom').tap();
       await page.waitForTimeout(80);
       const accentBefore = await page.evaluate(() =>
         getComputedStyle(document.documentElement).getPropertyValue('--accent').trim());
-      await page.locator('#skinChips .chip:not(:disabled)').nth(1).tap();
+      await page.locator('#skinChips .chip', { hasText: 'ミッドナイト' }).tap();
       await page.waitForTimeout(80);
-      const accentAfter = await page.evaluate(() =>
-        getComputedStyle(document.documentElement).getPropertyValue('--accent').trim());
-      ok(accentBefore !== accentAfter, `色が本当に変わる (${accentBefore} → ${accentAfter})`);
+      const accentAfter = await page.evaluate(() => ({
+        accent: getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(),
+        skin: document.documentElement.dataset.skin,
+        swatchShown: !!document.querySelector('#swatches .swatch[data-skin="midnight"]')
+      }));
+      ok(accentAfter.skin === 'midnight' && accentBefore !== accentAfter.accent,
+        `もらった色に変えると、色が本当に変わる (${accentBefore} → ${accentAfter.accent})`);
+      ok(accentAfter.swatchShown, 'もらった色は、タイトル画面の色の丸にも増える');
 
       // まだもらっていないごほうびは選べない (10 個の時点で飾りは 1 つも無い)
       const locked = await page.evaluate(() =>

@@ -377,8 +377,26 @@ test('ごほうびを配り終えても、スタンプは増え続けて落ち�
   assert.strictEqual(Core.rewardAt(record), null, '配り終えたあとは新しいごほうびは無い');
 });
 
-test('既定の色はスタンプ 0 個でも使える', () => {
-  assert.deepStrictEqual(Core.availableSkins(Core.createRecord()), [Core.DEFAULT_SKIN]);
+test('はじめから選べる 4 色は、スタンプ 0 個でも使える', () => {
+  assert.deepStrictEqual(Core.availableSkins(Core.createRecord()), ['classic', 'teal', 'plum', 'mustard']);
+  assert.strictEqual(Core.availableSkins(Core.createRecord())[0], Core.DEFAULT_SKIN);
+});
+
+test('ごほうびの色は、もらうまで使えない (はじめからの色の後ろに増える)', () => {
+  assert.ok(Core.availableSkins({ stamps: 9, skin: 'classic', gear: [] }).indexOf('midnight') < 0);
+  assert.deepStrictEqual(Core.availableSkins({ stamps: 50, skin: 'classic', gear: [] }),
+    ['classic', 'teal', 'plum', 'mustard', 'midnight', 'forest', 'sunset']);
+});
+
+test('はじめからの色は保存しておけば残り、もらっていない色は既定に戻る', () => {
+  assert.strictEqual(Core.normalizeRecord({ stamps: 0, skin: 'plum', gear: [] }).skin, 'plum');
+  assert.strictEqual(Core.normalizeRecord({ stamps: 0, skin: 'sunset', gear: [] }).skin, 'classic');
+});
+
+test('どの色にも名前がある', () => {
+  Core.availableSkins({ stamps: 999, skin: 'classic', gear: [] }).forEach((id) => {
+    assert.notStrictEqual(Core.skinName(id), id, id);
+  });
 });
 
 test('normalizeRecord: 壊れた記録でも必ず使える形にする', () => {

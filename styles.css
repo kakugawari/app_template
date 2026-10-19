@@ -453,22 +453,75 @@ body {
   height: clamp(56px, 14vh, 108px);
 }
 
-/* ---------------------------------------------------------- もらえる色
+/* ---------------------------------------------------------- 色
    地の色はそのままに、差し色だけ入れ替える。明るい画面と暗い画面の
-   どちらでも文字が読めるよう、accent-ink も色ごとに決めておく。 */
+   どちらでも文字が読めるよう、accent-ink も色ごとに決めておく。
+   色を足すときは、ボタン文字 (accent-ink / accent)・見出し (accent / bg-2)
+   が 4.5、絵 (accent-2 / bg-2) が 3 を超えるか測ってから決める。
 
-:root[data-skin="midnight"] { --accent: #2f5d80; --accent-2: #c69749; --accent-ink: #f4ecd8; }
-:root[data-skin="forest"]   { --accent: #4a6741; --accent-2: #a8541f; --accent-ink: #f4ecd8; }
+   セレクタは :root に限らず [data-skin] にしてある。タイトル画面の色の丸
+   (.swatch) にも同じ data-skin を付け、その色の accent をそのまま塗るため
+   (色の値を 2 か所に書かずに済む)。そのぶん classic も明示しておく
+   (丸の外側の色を引き継がないように)。
+
+   はじめから選べる色: classic / teal / plum / mustard
+   ごほうびでもらえる色: midnight / forest / sunset */
+
+[data-skin="classic"]  { --accent: #b0402c; --accent-2: #22415a; --accent-ink: #f8efd9; }
+[data-skin="teal"]     { --accent: #2a6966; --accent-2: #a8482a; --accent-ink: #f8efd9; }
+[data-skin="plum"]     { --accent: #7b3456; --accent-2: #3d5a4a; --accent-ink: #fbf2e0; }
+[data-skin="mustard"]  { --accent: #7d5a12; --accent-2: #22415a; --accent-ink: #fbf2e0; }
+[data-skin="midnight"] { --accent: #2f5d80; --accent-2: #c69749; --accent-ink: #f4ecd8; }
+[data-skin="forest"]   { --accent: #4a6741; --accent-2: #a8541f; --accent-ink: #f4ecd8; }
 /* sunset は明るい画面でのボタン文字 4.18・見出し文字 (title/reps) 4.51 と、
    どちらも基準 (4.5) ぎりぎりか未満だったので、色味はそのままに
    accent を暗くした (→ 4.81 / 4.67) */
-:root[data-skin="sunset"]   { --accent: #b24b1c; --accent-2: #6b3f6b; --accent-ink: #fbf2e0; }
+[data-skin="sunset"]   { --accent: #b24b1c; --accent-2: #6b3f6b; --accent-ink: #fbf2e0; }
 
+/* 暗い画面。上の明るい色より後ろに書くこと (同じ強さのセレクタなので、
+   後ろに書いたほうが勝つ) */
 @media (prefers-color-scheme: dark) {
-  :root[data-skin="midnight"]:not([data-theme="light"]) { --accent: #5b90bb; --accent-2: #e0b566; --accent-ink: #1a2430; }
-  :root[data-skin="forest"]:not([data-theme="light"])   { --accent: #7d9e6f; --accent-2: #d98b4a; --accent-ink: #1c2419; }
-  :root[data-skin="sunset"]:not([data-theme="light"])   { --accent: #e07a45; --accent-2: #b98ab9; --accent-ink: #2a1a12; }
+  [data-skin="classic"]:not([data-theme="light"])  { --accent: #d46e4a; --accent-2: #d3a039; --accent-ink: #221a12; }
+  [data-skin="teal"]:not([data-theme="light"])     { --accent: #5ea8a2; --accent-2: #e0a35a; --accent-ink: #14211f; }
+  [data-skin="plum"]:not([data-theme="light"])     { --accent: #c9809f; --accent-2: #d3a039; --accent-ink: #241520; }
+  [data-skin="mustard"]:not([data-theme="light"])  { --accent: #d9a43c; --accent-2: #7fb0c4; --accent-ink: #221a12; }
+  [data-skin="midnight"]:not([data-theme="light"]) { --accent: #5b90bb; --accent-2: #e0b566; --accent-ink: #1a2430; }
+  [data-skin="forest"]:not([data-theme="light"])   { --accent: #7d9e6f; --accent-2: #d98b4a; --accent-ink: #1c2419; }
+  [data-skin="sunset"]:not([data-theme="light"])   { --accent: #e07a45; --accent-2: #b98ab9; --accent-ink: #2a1a12; }
 }
+
+/* ---------------------------------------------------------- タイトル画面の色の丸
+   1 段に並べ、数が増えても折り返さずに小さくなる (折り返すと縦に伸びて
+   「はじめる」が画面の外へ押し出される)。丸は差し色と 2 番めの色を
+   斜めに半分ずつ塗り、その色に替えたときの雰囲気が分かるようにする。 */
+.swatches {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.swatch {
+  flex: 0 1 40px;
+  min-width: 0;
+  aspect-ratio: 1;
+  max-height: 40px;
+  padding: 0;
+  border: 2px solid var(--line);
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent) 0 55%, var(--accent-2) 55% 100%);
+  cursor: pointer;
+}
+
+/* 選んでいる色には、地の色のすきまを挟んだ輪をかける */
+.swatch[aria-pressed="true"] {
+  border-color: var(--bg-2);
+  box-shadow: 0 0 0 2px var(--text);
+}
+
+.swatch:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
 
 /* 横向きなど、縦が短いとき。1 コマを大きくしたぶん、そのままだと
    「できた」が画面の下に隠れてしまう。詰めて必ず収める。 */
@@ -486,6 +539,7 @@ body {
   }
 
   .stepInfo { gap: 10px; }
+  .swatch { flex-basis: 32px; max-height: 32px; }
   .exerciseName { font-size: 18px; }
   #reps { font-size: 34px; }
 

@@ -20,6 +20,7 @@
     stampNote: document.getElementById('stampNote'),
     cardCount: document.getElementById('cardCount'),
     skinChips: document.getElementById('skinChips'),
+    swatches: document.getElementById('swatches'),
     gearChips: document.getElementById('gearChips'),
     btnResume: document.getElementById('btnResume'),
     btnCustom: document.getElementById('btnCustom'),
@@ -357,11 +358,37 @@
 
   // ---------------------------------------------------------------- きせかえ
 
-  const SKIN_NAMES = { classic: 'クラシック' };
-  C.REWARDS.forEach(function (r) { if (r.kind === 'skin') SKIN_NAMES[r.id] = r.name; });
-
   function applySkin() {
     document.documentElement.dataset.skin = state.record.skin;
+  }
+
+  function pickSkin(id) {
+    state.record = Object.assign({}, state.record, { skin: id });
+    saveRecord(state.record);
+    applySkin();
+  }
+
+  /**
+   * タイトル画面の色の丸。使える色だけを並べる (まだもらっていない色は
+   * 出さない。並びが増えるのは、もらったときだけ)。
+   * 丸には data-skin を付け、styles.css の同じ色定義でそのまま塗る。
+   */
+  function renderSwatches() {
+    els.swatches.textContent = '';
+    C.availableSkins(state.record).forEach(function (id) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'swatch';
+      b.dataset.skin = id;
+      b.setAttribute('aria-label', C.skinName(id));
+      b.title = C.skinName(id);
+      b.setAttribute('aria-pressed', String(state.record.skin === id));
+      b.addEventListener('click', function () {
+        pickSkin(id);
+        renderSwatches();
+      });
+      els.swatches.appendChild(b);
+    });
   }
 
   function chip(label, pressed, locked, onPick) {
@@ -380,16 +407,15 @@
     drawMascot(els.mascotPreview, record.gear);
 
     els.skinChips.textContent = '';
-    [C.DEFAULT_SKIN].concat(C.REWARDS.filter(function (r) { return r.kind === 'skin'; })
-      .map(function (r) { return r.id; })).forEach(function (id) {
-      const locked = id !== C.DEFAULT_SKIN && !C.isUnlocked(record, id);
-      els.skinChips.appendChild(chip(SKIN_NAMES[id], record.skin === id, locked, function () {
-        state.record = Object.assign({}, state.record, { skin: id });
-        saveRecord(state.record);
-        applySkin();
-        renderCustom();
-      }));
-    });
+    C.FREE_SKINS.map(function (s) { return s.id; })
+      .concat(C.REWARDS.filter(function (r) { return r.kind === 'skin'; }).map(function (r) { return r.id; }))
+      .forEach(function (id) {
+        const locked = C.availableSkins(record).indexOf(id) < 0;
+        els.skinChips.appendChild(chip(C.skinName(id), record.skin === id, locked, function () {
+          pickSkin(id);
+          renderCustom();
+        }));
+      });
 
     els.gearChips.textContent = '';
     C.REWARDS.filter(function (r) { return r.kind === 'gear'; }).forEach(function (r) {
@@ -427,6 +453,7 @@
     if (state.screen === 'warmup') {
       els.warmupText.textContent = C.WARMUP_NOTE;
       drawMascot(els.mascot, state.record.gear);
+      renderSwatches();
       // 押したてのスタンプは 1 度だけ動かす。描き直すたびに動くと、
       // きせかえから戻ってくるだけで何度も押されているように見える
       const pressNewest = state.freshStamp;

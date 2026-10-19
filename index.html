@@ -644,7 +644,9 @@
       <!-- アプリの人。飾りがつくので <use> ではなく app.js が直に組み立てる
            (<use> の中身は影の木に入り、外から一部だけ出し入れできない) -->
       <svg class="illustration mascot" id="mascot" viewBox="0 0 120 120" aria-hidden="true"></svg>
-      <p class="badge">WARM UP</p>
+      <!-- 色の丸。WARM UP の札があった場所に置く (縦の短い画面で
+           「はじめる」を押し出さないよう、1 段ぶんの場所を入れ替えた) -->
+      <div class="swatches" id="swatches" role="group" aria-label="いろ"></div>
       <p class="lead" id="warmupText">—</p>
 
       <!-- スタンプカード。1 周やりきるごとに 1 個たまる -->

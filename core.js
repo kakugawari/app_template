@@ -401,6 +401,17 @@
 
   const DEFAULT_SKIN = 'classic';
 
+  /**
+   * はじめから選べる色。ごほうびの色 (REWARDS の skin) とは別に持つ。
+   * 色そのものは styles.css の [data-skin="…"] にある。
+   */
+  const FREE_SKINS = [
+    { id: 'classic', name: 'クラシック' },
+    { id: 'teal', name: 'ティール' },
+    { id: 'plum', name: 'プラム' },
+    { id: 'mustard', name: 'マスタード' }
+  ];
+
   function createRecord() {
     return { stamps: 0, skin: DEFAULT_SKIN, gear: [] };
   }
@@ -445,12 +456,19 @@
     return REWARDS[completedCards(record) - 1] || null;
   }
 
-  /** 使える色の一覧 (既定はいつでも使える) */
+  /** 使える色の一覧。はじめから選べる色 → もらった色の順 */
   function availableSkins(record) {
-    return [DEFAULT_SKIN].concat(
+    return FREE_SKINS.map(function (s) { return s.id; }).concat(
       unlockedRewards(record)
         .filter(function (r) { return r.kind === 'skin'; })
         .map(function (r) { return r.id; }));
+  }
+
+  /** 色の名前 (はじめからの色も、ごほうびの色も) */
+  function skinName(id) {
+    const all = FREE_SKINS.concat(REWARDS.filter(function (r) { return r.kind === 'skin'; }));
+    const hit = all.filter(function (s) { return s.id === id; })[0];
+    return hit ? hit.name : id;
   }
 
   /**
@@ -513,6 +531,8 @@
     CARD_SIZE: CARD_SIZE,
     REWARDS: REWARDS,
     DEFAULT_SKIN: DEFAULT_SKIN,
+    FREE_SKINS: FREE_SKINS,
+    skinName: skinName,
     createRecord: createRecord,
     addStamp: addStamp,
     completedCards: completedCards,
