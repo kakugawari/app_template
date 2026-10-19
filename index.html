@@ -171,45 +171,24 @@
       <rect x="32" y="68" width="42" height="16" rx="8" fill="currentColor"/>
     </symbol>
 
-    <!-- 3: 椅子に浅く座り、ボールを抱えて体をひねる。
-         真上から見た構図。扇風機の首振りのように、肩の線ごと左右に回る。
-         頭と椅子は動かさず、肩から下だけを回す。
-
-         頭は上に離して置く。真上から見れば頭は背骨の真上 (= 肩の線の中央) に
-         あるはずだが、そこに重ねて描くと頭と肩がひと塊になって人に見えない。
-         そのかわり、回した肩の端が頭に届かない寸法にしてある:
-           肩の長さ 40 (端の丸の中心は中央から 13)、回す角 30 度、頭は cy=24 r=10
-           → 端の丸の中心は (48.7, 44.5)、頭の中心から 23.4 離れる。
-             頭 10 + 端の丸 7 = 17 なので 6 ほど空く。
-         肩を長くする・角を大きくする・頭を下げると、この余りが尽きて
-         頭が肩に食われる。動かすときは上の計算をやり直すこと。 -->
-    <g id="chairTopBase" stroke="currentColor" stroke-width="4" opacity=".45"
-       fill="none" stroke-linecap="round">
-      <rect x="24" y="42" width="72" height="66" rx="10"/>
-    </g>
-    <!-- 回す中身。肩・腕・ボールをひとまとめにして 3 つの姿勢で使い回す -->
-    <g id="chairTwistBody">
-      <rect x="40" y="44" width="40" height="14" rx="7" fill="currentColor"/>
-      <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round">
-        <line x1="44" y1="58" x2="50" y2="74"/>
-        <line x1="76" y1="58" x2="70" y2="74"/>
-      </g>
-      <circle class="ball" cx="60" cy="80" r="15" stroke="currentColor" stroke-width="5"/>
-    </g>
+    <!-- 3: 椅子に浅く座り、ボールを抱えて体をひねる。正面から見た構図
+         (隣の「体を倒す」と同じ向き。以前は真上から見た絵で、並ぶと見え方が
+         そろっていなかった)。
+         脚・腰・椅子は正面を向いたまま動かさない (chairLeanLegs を共有)。
+         胸から上だけがひねられ、抱えたボールが横へ回る。回した側の肩が
+         奥へ入るので、胴は少し細く描く (24 → 20)。胴の前を横切る腕は
+         カードの地色のふちで浮かせる (胴と同じ色なので、そのままだと消える)。
+         頭は動かさず、symbol の直下に置く (頭の周りの見張りテストが探すため)。
+         left / right は、隣の「倒す」と同じく画面の左 / 右へ回る向き。
+         center = 正面でボールを抱えた姿勢 / left・right = 画面の左・右へひねった姿勢 -->
     <symbol id="chairTwist-center" viewBox="0 0 120 120">
-      <use href="#chairTopBase"/>
-      <circle cx="60" cy="24" r="10" fill="currentColor"/>
-      <use href="#chairTwistBody"/>
+      <use href="#chairFrontBase"/><use href="#chairLeanLegs"/><circle cx="60" cy="24" r="11" fill="currentColor"/><rect x="48" y="38" width="24" height="42" rx="12" fill="currentColor"/><path d="M50 46 L45 62" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M70 46 L75 62" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle class="ball" cx="60" cy="64" r="15" stroke="currentColor" stroke-width="5"/>
     </symbol>
     <symbol id="chairTwist-left" viewBox="0 0 120 120">
-      <use href="#chairTopBase"/>
-      <circle cx="60" cy="24" r="10" fill="currentColor"/>
-      <g transform="rotate(30 60 51)"><use href="#chairTwistBody"/></g>
+      <use href="#chairFrontBase"/><use href="#chairLeanLegs"/><circle cx="60" cy="24" r="11" fill="currentColor"/><rect x="50" y="38" width="20" height="42" rx="10" fill="currentColor"/><path d="M68 46 L66 56 L46 52" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M52 46 L58 58 L48 66" style="stroke: var(--bg-2)" stroke-width="11" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M52 46 L58 58 L48 66" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle class="ball" cx="38" cy="60" r="14" stroke="currentColor" stroke-width="5"/>
     </symbol>
     <symbol id="chairTwist-right" viewBox="0 0 120 120">
-      <use href="#chairTopBase"/>
-      <circle cx="60" cy="24" r="10" fill="currentColor"/>
-      <g transform="rotate(-30 60 51)"><use href="#chairTwistBody"/></g>
+      <use href="#chairFrontBase"/><use href="#chairLeanLegs"/><circle cx="60" cy="24" r="11" fill="currentColor"/><rect x="50" y="38" width="20" height="42" rx="10" fill="currentColor"/><path d="M52 46 L54 56 L74 52" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M68 46 L62 58 L72 66" style="stroke: var(--bg-2)" stroke-width="11" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M68 46 L62 58 L72 66" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle class="ball" cx="82" cy="60" r="14" stroke="currentColor" stroke-width="5"/>
     </symbol>
 
     <!-- 4: 椅子に浅く座り、ボールを抱えて体を倒す。

@@ -417,6 +417,16 @@ async function run() {
     ok(Object.values(headRoom).every((r) => r.hits === 0),
       `ひねる 3 コマとも、頭の周りに体が入り込んでいない (${headHits.join(' ')})`);
 
+    // 「ひねる」は以前、真上から見た絵で、隣の「倒す」(正面) と見え方が
+    // そろっていなかった。どちらも同じ正面の椅子と脚を使っていることを見張る
+    const sameView = await phone.evaluate(() => {
+      const uses = (id) => [...document.getElementById(id).querySelectorAll('use')].map((u) => u.getAttribute('href'));
+      return ['chairTwist-center', 'chairTwist-left', 'chairTwist-right', 'chairLean-center', 'chairLean-left', 'chairLean-right']
+        .map((id) => id + ':' + (uses(id).includes('#chairFrontBase') && uses(id).includes('#chairLeanLegs') ? 'ok' : uses(id).join('+')));
+    });
+    ok(sameView.every((s) => s.endsWith(':ok')),
+      `「ひねる」も「倒す」と同じ正面の椅子と脚で描いている (${sameView.filter((s) => !s.endsWith(':ok')).join(' ') || '6 コマとも'})`);
+
     await phone.locator('#btnRestart').tap();
     await phone.locator('#btnStart').tap();
     await phone.waitForTimeout(80);
