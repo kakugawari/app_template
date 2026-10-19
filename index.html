@@ -442,30 +442,40 @@
       <circle cx="98" cy="42" r="12" fill="currentColor"/>
     </symbol>
 
-    <!-- 壁に手をついて、片足を広げて股関節を伸ばす。正面から見た構図。
-         上体は壁と反対へ傾け、腰だけを壁へ寄せる。
-         before = まっすぐ立った姿勢 / after = 腰を壁へ寄せた姿勢 -->
+    <!-- 壁に手をついて、アキレス腱を伸ばすときと同じ形で股関節を伸ばす。横から見た構図。
+         足は前後に開いたまま 2 コマとも動かさない。前の膝を曲げて腰を前へ出し、
+         後ろ脚はまっすぐ・かかとは床につけたまま。壁へ寄っていくのではない。
+         かかとが床についていることを見せるため、この種目だけ足先を描く。
+         座標は脚・腕の長さを 2 コマでそろえて計算したもの (腰の位置は、
+         まっすぐな後ろ脚の長さから決まる)。動かすときは長さを崩さないこと。
+         before = 足を前後に開いて立った姿勢 / after = 前の膝を曲げて体を前へ倒した姿勢 -->
     <symbol id="wallHip-before" viewBox="0 0 120 120">
       <use href="#wallBase"/>
-      <g stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round">
-        <line x1="48" y1="78" x2="46" y2="110"/>
-        <line x1="56" y1="78" x2="60" y2="110"/>
+      <g stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M49 65.9 L26 108"/>
+        <path d="M49 65.9 L60.5 86.9 L72 108"/>
+        <line x1="24" y1="108" x2="31" y2="108"/>
+        <line x1="70" y1="108" x2="77" y2="108"/>
       </g>
-      <circle cx="52" cy="26" r="11" fill="currentColor"/>
-      <rect x="42" y="40" width="20" height="42" rx="10" fill="currentColor"/>
-      <line x1="62" y1="46" x2="102" y2="42" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>
+      <line x1="49" y1="65.9" x2="50.8" y2="39.9"
+        stroke="currentColor" stroke-width="20" stroke-linecap="round"/>
+      <circle cx="51.9" cy="24" r="11" fill="currentColor"/>
+      <path d="M51.1 35.9 L74.5 40 L98 44"
+        stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
     <symbol id="wallHip-after" viewBox="0 0 120 120">
       <use href="#wallBase"/>
-      <g stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round">
-        <line x1="72" y1="80" x2="78" y2="110"/>
-        <line x1="68" y1="80" x2="32" y2="110"/>
+      <g stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M62 76.3 L26 108"/>
+        <path d="M62 76.3 L83.5 86.9 L72 108"/>
+        <line x1="24" y1="108" x2="31" y2="108"/>
+        <line x1="70" y1="108" x2="77" y2="108"/>
       </g>
-      <g transform="rotate(-22 70 80)">
-        <circle cx="70" cy="26" r="11" fill="currentColor"/>
-        <rect x="60" y="40" width="20" height="42" rx="10" fill="currentColor"/>
-      </g>
-      <line x1="56" y1="45" x2="102" y2="42" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>
+      <line x1="62" y1="76.3" x2="72.6" y2="52.5"
+        stroke="currentColor" stroke-width="20" stroke-linecap="round"/>
+      <circle cx="79.1" cy="37.9" r="11" fill="currentColor"/>
+      <path d="M74.2 48.8 L90 65.6 L98 44"
+        stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
 
   </defs>

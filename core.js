@@ -109,7 +109,7 @@
     },
     // --- 立つ ---
     {
-      name: '壁に手をつき、足を広げて股関節を伸ばす',
+      name: '壁に手をつき、後ろ足の股関節を伸ばす',
       art: 'wallHip',
       reps: 20,
       sides: ['left', 'right'],
@@ -237,6 +237,18 @@
       seen.push(key);
       return true;
     });
+  }
+
+  /**
+   * 動きを止めて横に並べるときのコマ。重複を除き、左右をまとめたステップは
+   * 最初の側だけにする。反対側は同じ絵を裏返しただけで、やる順番は
+   * 側バッジが見せる。両側ぶん並べると 4 コマになり、カードからはみ出す。
+   */
+  function stillFrames(step) {
+    const first = step.sideOrder ? step.sideOrder[0] : null;
+    return uniqueFrames(step.frames.filter(function (frame) {
+      return typeof frame === 'string' || !first || frame.side === first;
+    }));
   }
 
   function createSession(exercises) {
@@ -443,6 +455,7 @@
     DEFAULT_FRAMES: DEFAULT_FRAMES,
     SWING_FRAMES: SWING_FRAMES,
     uniqueFrames: uniqueFrames,
+    stillFrames: stillFrames,
     frameKey: frameKey
   };
 });

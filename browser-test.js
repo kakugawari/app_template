@@ -482,6 +482,41 @@ async function run() {
     const afterKnee = await phone.evaluate(() => window.__app.state().session.steps[window.__app.state().session.index].art);
     ok(afterKnee !== 'sideKnee', `「できた」1 回で sideKnee を抜ける (次は ${afterKnee})`);
 
+    // 以前は「体ごと壁へ寄っていく」絵だった。実際はアキレス腱を伸ばすときの形で、
+    // 足は前後に開いたまま動かさず、前の膝を曲げて腰を前へ出す
+    section('壁の種目は、足を動かさず前の膝を曲げて体を前へ出す (アキレス腱を伸ばす形)');
+    const wall = await phone.evaluate(() => {
+      const pts = (d) => (d.match(/-?\d+(\.\d+)?/g) || []).map(Number)
+        .reduce((a, n, i, all) => (i % 2 ? a : a.concat([[n, all[i + 1]]])), []);
+      const len = (p) => p.slice(1).reduce((s, q, i) => s + Math.hypot(q[0] - p[i][0], q[1] - p[i][1]), 0);
+      const read = (id) => {
+        const legs = [...document.querySelectorAll(`#${id} g[stroke-width="7"] path`)].map((el) => pts(el.getAttribute('d')));
+        if (legs.length !== 2) return null;
+        const [back, front] = legs;
+        return {
+          hip: back[0], backFoot: back[back.length - 1], frontFoot: front[front.length - 1],
+          backLen: len(back), frontLen: len(front),
+          frontReach: Math.hypot(front[front.length - 1][0] - front[0][0], front[front.length - 1][1] - front[0][1])
+        };
+      };
+      return { before: read('wallHip-before'), after: read('wallHip-after') };
+    });
+    if (!wall.before || !wall.after) {
+      ok(false, '壁の種目の脚が 2 本 (後ろ脚・前脚) の path で描かれている');
+    } else {
+      const same = (a, b) => Math.abs(a[0] - b[0]) < 0.5 && Math.abs(a[1] - b[1]) < 0.5;
+      const r1 = (n) => Math.round(n * 10) / 10;
+      ok(same(wall.before.backFoot, wall.after.backFoot) && same(wall.before.frontFoot, wall.after.frontFoot),
+        `2 コマで足の位置が変わらない (後ろ ${wall.after.backFoot} / 前 ${wall.after.frontFoot})`);
+      ok(wall.before.backFoot[0] < wall.before.frontFoot[0], '足は前後に開いている (後ろ足が壁から遠い)');
+      ok(Math.abs(wall.before.backLen - wall.after.backLen) < 0.6 && Math.abs(wall.before.frontLen - wall.after.frontLen) < 0.6,
+        `脚の長さが 2 コマで同じ (後ろ ${r1(wall.before.backLen)}→${r1(wall.after.backLen)} / 前 ${r1(wall.before.frontLen)}→${r1(wall.after.frontLen)})`);
+      ok(wall.after.hip[0] - wall.before.hip[0] >= 8,
+        `腰が前 (壁側) へ出る (${r1(wall.before.hip[0])} → ${r1(wall.after.hip[0])})`);
+      ok(wall.after.frontLen - wall.after.frontReach > 5 && wall.before.frontLen - wall.before.frontReach < 1,
+        `前の膝は after で曲がる (before はまっすぐ)`);
+    }
+
     section('左右のない種目 (猫のポーズ) では側の表示が隠れる');
     ok(await goToArt(phone, 'catPose'), '「猫のポーズ」のステップまで進める');
     await phone.waitForTimeout(60);
@@ -724,6 +759,35 @@ async function run() {
       const calmSwing = await calmShots();
       ok(calmSwing.frames.join(' ') === '#chairTwist-center #chairTwist-left #chairTwist-right',
         `4 コマの種目は重複を除いた 3 枚で並ぶ (${calmSwing.frames.join(' ')})`);
+
+      // 左右をまとめた種目は、両側ぶん並べると 4 コマになってカードの両端から
+      // はみ出していた。全ステップを歩いて、どのコマもカードの中にあるか見る
+      await page.evaluate(() => { window.__app.restart(); window.__app.start(); });
+      const calmSteps = await page.evaluate(() => window.__app.state().session.steps.length);
+      const outside = [];
+      let wallFrames = null;
+      for (let i = 0; i < calmSteps; i++) {
+        await page.waitForTimeout(40);
+        const r = await page.evaluate(() => {
+          const card = document.getElementById('screenRun').getBoundingClientRect();
+          const els = [...document.querySelectorAll('#illustrationRow .illustration')];
+          const s = window.__app.state().session;
+          return {
+            art: s.steps[s.index].art,
+            frames: els.map((el) => el.querySelector('use').getAttribute('href') + (el.classList.contains('mirror') ? '(裏)' : '')),
+            out: els.some((el) => {
+              const b = el.getBoundingClientRect();
+              return b.left < card.left || b.right > card.right;
+            })
+          };
+        });
+        if (r.out) outside.push(`${r.art} (${r.frames.length} コマ)`);
+        if (r.art === 'wallHip') wallFrames = r.frames;
+        if (i < calmSteps - 1) await page.evaluate(() => window.__app.complete());
+      }
+      ok(outside.length === 0, `${calmSteps} ステップとも、並べたコマがカードからはみ出さない${outside.length ? ' → ' + outside.join(', ') : ''}`);
+      ok(wallFrames && wallFrames.join(' ') === '#wallHip-before #wallHip-after',
+        `左右まとめた種目は、最初の側の 2 コマだけ並べる (${wallFrames && wallFrames.join(' ')})`);
       await calm.close();
     }
 

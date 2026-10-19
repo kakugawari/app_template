@@ -195,7 +195,7 @@
    */
   function buildIllustration(step) {
     const calm = prefersReducedMotion();
-    const frames = calm ? C.uniqueFrames(step.frames) : step.frames;
+    const frames = calm ? C.stillFrames(step) : step.frames;
 
     els.illustrationRow.textContent = '';
     frames.forEach(function (frame, i) {

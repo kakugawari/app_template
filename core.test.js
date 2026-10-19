@@ -199,6 +199,21 @@ test('種目名には「(左→右)」を書かない (順番は側バッジが�
   });
 });
 
+test('stillFrames: 左右まとめたステップは、動きを止めると最初の側の 2 コマだけになる', () => {
+  const [step] = Core.buildSteps([
+    { name: 'A', reps: 10, sides: ['left', 'right'], mergeSides: true, art: 'x' }
+  ]);
+  assert.deepStrictEqual(Core.stillFrames(step), [
+    { name: 'before', side: 'left' },
+    { name: 'after', side: 'left' }
+  ]);
+});
+
+test('stillFrames: 左右のない種目は、重複を除いたコマのまま', () => {
+  const [swing] = Core.buildSteps([{ name: 'A', reps: 10, sides: null, frames: Core.SWING_FRAMES }]);
+  assert.deepStrictEqual(Core.stillFrames(swing), ['center', 'left', 'right']);
+});
+
 test('namePhrases は読点の後ろで区切り、読点は前の句に残す', () => {
   assert.deepStrictEqual(Core.namePhrases('仰向けで両膝を立て、左右に倒す'), ['仰向けで両膝を立て、', '左右に倒す']);
   assert.deepStrictEqual(Core.namePhrases('読点なし'), ['読点なし']);
