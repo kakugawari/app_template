@@ -35,6 +35,9 @@
 
   const CAT_FRAMES = ['center', 'round', 'center', 'arch'];
 
+  /** 左右をまとめた種目で、反対側へ移る前に片側をくり返す回数 */
+  const SIDE_REPEAT = 3;
+
   // 左右のある種目は sides に ['left', 'right'] (または指定された順) を、無いものは null を入れる。
   // sideNoun を付けると「左足」のように部位つきで表示する (省略すると「左」だけ)。
   // 扇風機の首振りや振り子のように、両足(両手)をくっつけたまま左右へ振り続け、
@@ -48,8 +51,10 @@
   // (扇風機の首振りのように体を動かさず手足だけ振る) はもともと 1 ステップ
   // なので関係ない。まとめたステップは:
   //   - 「できた」は 1 回 (右左あわせて)
-  //   - コマは左側ぶん → 右側ぶんの順にすべて並べ、コマごとに
-  //     どちらの側かを持たせる (フェーズが変わるとき自動でミラーが切り替わる)
+  //   - コマは左側ぶん → 右側ぶんの順に並べ、コマごとにどちらの側かを
+  //     持たせる (フェーズが変わるとき自動でミラーが切り替わる)。
+  //     片側の動きを SIDE_REPEAT 回くり返してから反対側へ移る。1 回ごとに
+  //     左右を入れ替えると、毎回寝返っているように見えて無理な動きになる
   //   - やる順番 (左 → 右) は名前に書かず、側バッジに出す。名前の後ろに
   //     「(左→右)」を足すと文が長くなり、括弧の途中で行が折れて読みにくい
   //
@@ -151,14 +156,17 @@
       const baseFrames = exercise.frames || DEFAULT_FRAMES;
 
       if (exercise.mergeSides) {
-        // 左側ぶんのコマ → 右側ぶんのコマの順に、すべて並べて 1 ステップにする。
-        // コマごとに「どちらの側か」を持たせておき、描くときにそのコマだけ
-        // ミラーするかどうかを判断する (ステップ全体で一括ミラーできないため)。
+        // 左側の動きを SIDE_REPEAT 回 → 右側の動きを SIDE_REPEAT 回、の順に
+        // 並べて 1 ステップにする。コマごとに「どちらの側か」を持たせておき、
+        // 描くときにそのコマだけミラーするかどうかを判断する
+        // (ステップ全体で一括ミラーできないため)。
         const frames = [];
         exercise.sides.forEach(function (side) {
-          baseFrames.forEach(function (name) {
-            frames.push({ name: name, side: side });
-          });
+          for (let r = 0; r < SIDE_REPEAT; r++) {
+            baseFrames.forEach(function (name) {
+              frames.push({ name: name, side: side });
+            });
+          }
         });
         steps.push({
           exerciseIndex: exerciseIndex,
@@ -454,6 +462,7 @@
     namePhrases: namePhrases,
     DEFAULT_FRAMES: DEFAULT_FRAMES,
     SWING_FRAMES: SWING_FRAMES,
+    SIDE_REPEAT: SIDE_REPEAT,
     uniqueFrames: uniqueFrames,
     stillFrames: stillFrames,
     frameKey: frameKey

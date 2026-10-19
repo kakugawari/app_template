@@ -231,29 +231,39 @@ test('既定の種目名は、どの句も 12 字以内 (幅 375 の画面で 2 
   });
 });
 
-test('mergeSides: コマは左側ぶん → 右側ぶんの順に並び、コマごとに側を持つ', () => {
+test('mergeSides: 片側の動きを 3 回くり返してから反対側へ移る (左左左 → 右右右)', () => {
+  // 1 回ごとに左右を入れ替えると、毎回寝返っているように見えて無理な動きになる
   const steps = Core.buildSteps([
     { name: 'A', reps: 10, sides: ['left', 'right'], mergeSides: true, art: 'x' }
   ]);
+  assert.strictEqual(Core.SIDE_REPEAT, 3);
+  const one = (side) => [{ name: 'before', side }, { name: 'after', side }];
   assert.deepStrictEqual(steps[0].frames, [
-    { name: 'before', side: 'left' },
-    { name: 'after', side: 'left' },
-    { name: 'before', side: 'right' },
-    { name: 'after', side: 'right' }
+    ...one('left'), ...one('left'), ...one('left'),
+    ...one('right'), ...one('right'), ...one('right')
   ]);
+});
+
+test('mergeSides: 左右が入れ替わるのは 1 周で 1 回だけ', () => {
+  Core.buildSteps(Core.DEFAULT_EXERCISES).filter((s) => s.sideOrder).forEach((s) => {
+    const switches = s.frames.filter((f, i) => i > 0 && f.side !== s.frames[i - 1].side).length;
+    assert.strictEqual(switches, 1, s.art);
+  });
 });
 
 test('mergeSides: before/after 以外のコマ割り (frames 指定) も、側ごとに展開する', () => {
   const steps = Core.buildSteps([
     { name: 'A', reps: 10, sides: ['left', 'right'], mergeSides: true, art: 'x', frames: ['a', 'b', 'c'] }
   ]);
-  assert.strictEqual(steps[0].frames.length, 6);
-  assert.deepStrictEqual(steps[0].frames.map((f) => f.side), ['left', 'left', 'left', 'right', 'right', 'right']);
+  assert.strictEqual(steps[0].frames.length, 3 * Core.SIDE_REPEAT * 2);
+  assert.deepStrictEqual(steps[0].frames.slice(0, 3).map((f) => f.name), ['a', 'b', 'c']);
+  assert.ok(steps[0].frames.slice(0, 9).every((f) => f.side === 'left'));
+  assert.ok(steps[0].frames.slice(9).every((f) => f.side === 'right'));
 });
 
-test('既定の種目のうち、体を寝返らせる 6 種目が mergeSides で 4 コマにまとまっている', () => {
+test('既定の種目のうち、体を寝返らせる 6 種目が mergeSides で 1 ステップにまとまっている', () => {
   const steps = Core.buildSteps(Core.DEFAULT_EXERCISES);
-  const merged = steps.filter((s) => s.frames.length === 4 && typeof s.frames[0] === 'object');
+  const merged = steps.filter((s) => typeof s.frames[0] === 'object');
   assert.deepStrictEqual(
     merged.map((s) => s.art).sort(),
     ['footRoll', 'hipTwist', 'sideArm', 'sideKnee', 'sideOpen', 'wallHip'].sort()

@@ -461,20 +461,31 @@ async function run() {
     ok(kneeStep.sideVisibility === 'visible' && kneeStep.side === '左 → 右',
       `やる順番は側バッジに出す (${kneeStep.side} / ${kneeStep.sideVisibility})`);
 
-    // コマは 左before → 左after → 右before(mirror) → 右after(mirror) の 4 コマで
-    // 1 本に続いている (「できた」を押さなくても自動で右側へ切り替わる)
-    const kneeFrames = await readFrames();
-    ok(kneeFrames.length === 4, `4 コマで左右ぶん続いている (${kneeFrames.length} コマ)`);
-    const kneeFlipMs = await phone.evaluate(() => window.__app.flipMs);
-    const kneeSeen = [];
-    for (let i = 0; i < 4; i++) {
-      const frames = await readFrames();
-      const shown = frames.find((f) => f.opacity > 0.9);
-      kneeSeen.push(shown && shown.frame);
-      await phone.waitForTimeout(kneeFlipMs);
-    }
-    ok(kneeSeen.join(' ') === '#sideKnee-before #sideKnee-after #sideKnee-before #sideKnee-after',
-      `見えるコマ自体は before → after → before → after の繰り返し (${kneeSeen.join(' → ')})`);
+    // 片側の動きを 3 回くり返してから反対側 (裏返し) へ移る。1 回ごとに左右を
+    // 入れ替えていたときは、毎回寝返っているように見えて無理な動きだった。
+    // アニメを止めて 1 コマずつ時刻を合わせ、実際に見えている絵と向きを読む
+    // (「できた」を押さなくても自動で右側へ切り替わる)
+    const kneeSeen = await phone.evaluate(async () => {
+      const ms = window.__app.flipMs;
+      const shots = [...document.querySelectorAll('#illustrationRow .illustration')];
+      const anims = document.getAnimations();
+      anims.forEach((a) => a.pause());
+      const seen = [];
+      for (let i = 0; i < shots.length; i++) {
+        anims.forEach((a) => { a.currentTime = (i + 0.5) * ms; });
+        await new Promise((r) => requestAnimationFrame(r));
+        const shown = shots.filter((el) => Number(getComputedStyle(el).opacity) > 0.9);
+        seen.push(shown.length === 1
+          ? shown[0].querySelector('use').getAttribute('href').replace('#sideKnee-', '') + (shown[0].classList.contains('mirror') ? '(裏)' : '')
+          : '見えるコマが ' + shown.length + ' 枚');
+      }
+      anims.forEach((a) => a.play());
+      return seen;
+    });
+    const kneeExpect = [];
+    for (const side of ['', '(裏)']) for (let r = 0; r < 3; r++) kneeExpect.push('before' + side, 'after' + side);
+    ok(kneeSeen.join(' ') === kneeExpect.join(' '),
+      `片側を 3 回くり返してから反対側へ移る (${kneeSeen.join(' → ')})`);
 
     // 1 回「できた」を押すだけで次の種目 (sideArm) まで進む (2 回押す必要が無い)
     await phone.locator('#btnDone').tap();
