@@ -121,16 +121,16 @@
       <rect x="49" y="34" width="22" height="36" rx="11" fill="currentColor"/>
     </symbol>
 
-    <!-- 1: 横向きに寝て、上の膝を曲げて開く・閉じる。
-         before = 上の足を下の足に沿えて閉じた姿勢
-         after  = 上の膝を曲げて持ち上げ、開いた姿勢 -->
+    <!-- 1: 横向きに寝て、曲げた膝を開いて閉じる (クラムシェル)。前から見た構図。
+         両膝を曲げて重ね、足先はそろえたまま、上の膝だけを天井へ開く。
+         下の脚と足先は 2 コマとも動かさない。足先まで離すと
+         「脚ごと持ち上げる」別の動きに見えるので、足先は必ずそろえる。
+         before = 曲げた両膝を重ねた姿勢 / after = 上の膝を開いた姿勢 -->
     <symbol id="sideKnee-before" viewBox="0 0 120 120">
       <use href="#bedBase"/>
       <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="74" y1="80" x2="94" y2="84"/>
-        <line x1="94" y1="84" x2="108" y2="86"/>
-        <line x1="74" y1="74" x2="96" y2="78"/>
-        <line x1="96" y1="78" x2="110" y2="82"/>
+        <path class="legLower" d="M72 82 L92 74 L108 84"/>
+        <path class="legUpper" d="M72 76 L92 66 L108 80"/>
         <line x1="38" y1="68" x2="16" y2="56"/>
       </g>
       <circle cx="20" cy="76" r="11" fill="currentColor"/>
@@ -139,10 +139,8 @@
     <symbol id="sideKnee-after" viewBox="0 0 120 120">
       <use href="#bedBase"/>
       <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="74" y1="80" x2="94" y2="84"/>
-        <line x1="94" y1="84" x2="108" y2="86"/>
-        <line x1="74" y1="70" x2="98" y2="50"/>
-        <line x1="98" y1="50" x2="106" y2="70"/>
+        <path class="legLower" d="M72 82 L92 74 L108 84"/>
+        <path class="legUpper" d="M72 75 L90 48 L108 80"/>
         <line x1="38" y1="68" x2="16" y2="56"/>
       </g>
       <circle cx="20" cy="76" r="11" fill="currentColor"/>

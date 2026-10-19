@@ -517,6 +517,34 @@ async function run() {
         `前の膝は after で曲がる (before はまっすぐ)`);
     }
 
+    // 以前は before で脚がまっすぐ (「曲げた膝」に見えない)、after で上の足先まで
+    // 持ち上がっていた (「脚ごと上げる」別の動きに見える)。クラムシェルの形を見張る
+    section('横向きの膝の種目は、膝を曲げたまま足先をそろえて、上の膝だけ開く');
+    const clam = await phone.evaluate(() => {
+      const pts = (el) => (el.getAttribute('d').match(/-?\d+(\.\d+)?/g) || []).map(Number)
+        .reduce((a, n, i, all) => (i % 2 ? a : a.concat([[n, all[i + 1]]])), []);
+      const read = (id) => {
+        const lo = document.querySelector(`#${id} .legLower`);
+        const up = document.querySelector(`#${id} .legUpper`);
+        return lo && up ? { lower: pts(lo), upper: pts(up) } : null;
+      };
+      return { before: read('sideKnee-before'), after: read('sideKnee-after') };
+    });
+    if (!clam.before || !clam.after) {
+      ok(false, '横向きの膝の種目の脚が、下の脚・上の脚の 2 本で描かれている');
+    } else {
+      // 膝 (まん中の点) が、腰と足先を結ぶ線からどれだけ離れているか = 曲がり具合
+      const bend = ([h, k, f]) => Math.abs((f[0] - h[0]) * (k[1] - h[1]) - (f[1] - h[1]) * (k[0] - h[0])) / Math.hypot(f[0] - h[0], f[1] - h[1]);
+      const footGap = (pose) => Math.hypot(pose.upper[2][0] - pose.lower[2][0], pose.upper[2][1] - pose.lower[2][1]);
+      ok(JSON.stringify(clam.before.lower) === JSON.stringify(clam.after.lower), '下の脚は 2 コマとも動かない');
+      ok(JSON.stringify(clam.before.upper[2]) === JSON.stringify(clam.after.upper[2]) && footGap(clam.after) <= 6,
+        `上の足先は動かず、下の足先とそろったまま (離れ ${footGap(clam.after).toFixed(1)})`);
+      ok(bend(clam.before.lower) > 4 && bend(clam.before.upper) > 4,
+        `before でも両膝が曲がっている (下 ${bend(clam.before.lower).toFixed(1)} / 上 ${bend(clam.before.upper).toFixed(1)})`);
+      ok(clam.before.upper[1][1] - clam.after.upper[1][1] >= 12,
+        `after で上の膝が開く (膝の高さ ${clam.before.upper[1][1]} → ${clam.after.upper[1][1]})`);
+    }
+
     section('左右のない種目 (猫のポーズ) では側の表示が隠れる');
     ok(await goToArt(phone, 'catPose'), '「猫のポーズ」のステップまで進める');
     await phone.waitForTimeout(60);
