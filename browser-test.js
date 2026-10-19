@@ -598,6 +598,30 @@ async function run() {
     ok(artCheck.missing.length === 0, `${artCheck.count} コマとも絵がある${artCheck.missing.length ? ' → 無い: ' + artCheck.missing.join(', ') : ''}`);
     ok(artCheck.out.length === 0, `絵が枠 (120 四方) からはみ出していない${artCheck.out.length ? ' → ' + artCheck.out.join(' | ') : ''}`);
 
+    // 片足を反対の足にのせる種目 (hipTwist) だけ、胴の下に腰の丸を別に描いていて、
+    // ほかの仰向けの種目に無い塊が目立っていた。仰向けの絵は同じ体でそろえる
+    section('仰向けの種目は、どれも同じ体 (胴は 1 つ、腰の塊なし) で描く');
+    const supine = await phone.evaluate(() => {
+      const ids = ['kneeFall', 'hipTwist', 'armRaise', 'armAlt', 'armHug']
+        .flatMap((art) => [...document.querySelectorAll(`symbol[id^="${art}-"]`)].map((el) => el.id));
+      // <use> で呼んでいる部品も中身まで数える (床のマットは除く)
+      const parts = (el) => [...el.children].flatMap((c) => {
+        if (c.tagName === 'use') {
+          const ref = document.querySelector(c.getAttribute('href'));
+          return ref && ref.id !== 'matTopBase' ? parts(ref) : [];
+        }
+        return [c, ...parts(c)];
+      });
+      return ids.map((id) => {
+        const rects = parts(document.getElementById(id))
+          .filter((e) => e.tagName === 'rect' && e.getAttribute('fill') === 'currentColor');
+        return { id, n: rects.length, size: rects.map((r) => r.getAttribute('width') + 'x' + r.getAttribute('height')).join(',') };
+      });
+    });
+    const oddBody = supine.filter((s) => s.n !== 1 || s.size !== '22x36');
+    ok(supine.length >= 10 && oddBody.length === 0,
+      `仰向けの ${supine.length} コマとも胴は 1 つで同じ大きさ${oddBody.length ? ' → ' + oddBody.map((s) => `${s.id} (${s.n} 個: ${s.size})`).join(', ') : ''}`);
+
     section('秒数で数える種目は「秒」と表示する');
     ok(await goToArt(phone, 'birdDog'), '「四つん這いで対角に伸ばす」のステップまで進める');
     await phone.waitForTimeout(60);

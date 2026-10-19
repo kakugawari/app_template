@@ -341,40 +341,39 @@
     </g>
 
     <!-- 仰向けに寝て、片足を反対の足の上へ持っていく (腰をひねる)。
-         真上から見た構図。肩は床につけたまま動かさず、骨盤と渡る足だけが動く。
+         真上から見た構図。肩は床につけたまま動かさず、渡る足だけが動く。
          「両脚をそろえたまま回す」のではなく、片足が反対の足を越えて渡るのが
          この種目の動き。動く前の足の位置を薄く残して、どこから来たかを見せる。
+         上半身は kneeFall と同じ (頭・胴・腕)。腰を別の丸で描くと、ほかの
+         仰向けの種目に無い塊がそこだけ目立つので描かない。脚は胴の下端から出す。
+         渡る足は、まっすぐの脚とほぼ同じ長さ (36 前後) にしてある。
          before = 両足そろえた姿勢 / after = 片足が反対側へ渡った姿勢 -->
     <g id="hipTwistUpper">
-      <circle cx="60" cy="20" r="11" fill="currentColor"/>
-      <rect x="48" y="32" width="24" height="34" rx="12" fill="currentColor"/>
       <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round">
-        <line x1="49" y1="40" x2="28" y2="50"/>
-        <line x1="71" y1="40" x2="92" y2="50"/>
+        <line x1="49" y1="42" x2="28" y2="52"/>
+        <line x1="71" y1="42" x2="92" y2="52"/>
       </g>
+      <circle cx="60" cy="20" r="11" fill="currentColor"/>
+      <rect x="49" y="34" width="22" height="36" rx="11" fill="currentColor"/>
     </g>
     <symbol id="hipTwist-before" viewBox="0 0 120 120">
       <use href="#matTopBase"/>
-      <rect x="47" y="62" width="26" height="16" rx="8" fill="currentColor"/>
-      <g stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round">
-        <line x1="53" y1="72" x2="50" y2="106"/>
-        <line x1="67" y1="72" x2="70" y2="106"/>
+      <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round">
+        <line x1="54" y1="70" x2="51" y2="106"/>
+        <line x1="66" y1="70" x2="69" y2="106"/>
       </g>
       <use href="#hipTwistUpper"/>
     </symbol>
     <symbol id="hipTwist-after" viewBox="0 0 120 120">
       <use href="#matTopBase"/>
       <!-- 動く前の足。ここから反対側へ渡る -->
-      <line x1="67" y1="72" x2="70" y2="106" stroke="currentColor" stroke-width="7"
+      <line x1="66" y1="70" x2="69" y2="106" stroke="currentColor" stroke-width="6"
         stroke-linecap="round" opacity=".25"/>
       <!-- 下になる足は動かさない -->
-      <line x1="53" y1="72" x2="50" y2="106" stroke="currentColor" stroke-width="7"
+      <line x1="54" y1="70" x2="51" y2="106" stroke="currentColor" stroke-width="6"
         stroke-linecap="round"/>
-      <g transform="rotate(18 60 70)">
-        <rect x="47" y="62" width="26" height="16" rx="8" fill="currentColor"/>
-      </g>
       <!-- 渡る足。下の足の上を越えるので、あとから描いて上に重ねる -->
-      <path d="M68 74 L44 82 L28 100" stroke="currentColor" stroke-width="7"
+      <path d="M66 70 L50 83 L38 96" stroke="currentColor" stroke-width="6"
         fill="none" stroke-linecap="round" stroke-linejoin="round"/>
       <use href="#hipTwistUpper"/>
     </symbol>
