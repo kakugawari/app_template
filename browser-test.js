@@ -978,11 +978,16 @@ async function run() {
     // 大きくすると縦の短い画面で「できた」が押し出されるので、全ステップ・
     // 画面の大きさ 4 つ・動きを減らす設定の有無で、収まることもあわせて見張る
     // (動きを減らす設定 + 横向きは、大きくする前から下端が 3px はみ出していた)
-    section('実行画面の絵と文字は、離れて見ても分かる大きさで、どの画面にも収まる');
+    // iPhone は上 (時計) と下 (ホームバー) にセーフエリアがあり、そのぶん #stage が狭い。
+    // 大きさをセーフエリア抜きで決めていたら、iPhone 15 ではカードが #stage より 29px 高く、
+    // #stage がスクロールできて、ステップによってカードの位置が上下にずれて見えた。
+    // Chromium では env(safe-area-inset-*) が 0 なので、#app の余白と --usable-h を
+    // 上書きして iPhone のセーフエリアを再現し、#stage がスクロールできないことも見る
+    section('実行画面の絵と文字は、離れて見ても分かる大きさで、どの画面にも収まる (セーフエリア込み)');
     {
-      const big = { '390x844': { art: 300, name: 26, reps: 70 }, '375x667': { art: 200, name: 25, reps: 60 } };
+      const big = { '390x844': { art: 300, name: 26, reps: 70 }, '375x667': { art: 190, name: 25, reps: 58 } };
       for (const reducedMotion of ['no-preference', 'reduce']) {
-        for (const [w, h] of [[390, 844], [375, 667], [320, 568], [844, 390]]) {
+        for (const [w, h, top = 0, bottom = 0] of [[390, 844], [375, 667], [320, 568], [844, 390], [393, 852, 54, 34], [375, 667, 20, 0]]) {
           const ctx = await browser.newContext({
             viewport: { width: w, height: h }, isMobile: true, hasTouch: true, deviceScaleFactor: 2, reducedMotion
           });
@@ -990,6 +995,10 @@ async function run() {
           page.on('pageerror', (e) => errors.push('size: ' + e.message));
           await page.goto(URL);
           await page.waitForFunction(() => window.__app);
+          if (top || bottom) {
+            await page.addStyleTag({ content: `#app { padding-top: ${top}px !important; padding-bottom: ${bottom}px !important; }
+              #screenRun { --usable-h: calc(100dvh - ${top + bottom}px) !important; }` });
+          }
           await page.evaluate(() => window.__app.start());
           const stepCount = await page.evaluate(() => window.__app.state().session.steps.length);
           const bad = [];
@@ -999,8 +1008,10 @@ async function run() {
               const card = document.getElementById('screenRun').getBoundingClientRect();
               const arts = [...document.querySelectorAll('#illustrationRow .illustration')].map((e) => e.getBoundingClientRect());
               const s = window.__app.state().session;
+              const stage = document.getElementById('stage');
               return {
                 art: s.steps[s.index].art,
+                scroll: stage.scrollHeight - stage.clientHeight,
                 bottom: document.getElementById('btnDone').getBoundingClientRect().bottom,
                 artSize: arts.length ? Math.round(arts[0].width) : 0,
                 artOut: arts.some((r) => r.left < card.left - 0.5 || r.right > card.right + 0.5),
@@ -1009,12 +1020,14 @@ async function run() {
               };
             });
             if (!first) first = m;
-            if (m.bottom > h || m.artOut) bad.push(`${m.art} (下端 ${Math.round(m.bottom)}${m.artOut ? ' / 絵がカードの外' : ''})`);
+            if (m.bottom > h - bottom || m.artOut || m.scroll > 0) {
+              bad.push(`${m.art} (下端 ${Math.round(m.bottom)}${m.scroll > 0 ? ` / ${m.scroll}px スクロールできる` : ''}${m.artOut ? ' / 絵がカードの外' : ''})`);
+            }
             if (i < stepCount - 1) await page.evaluate(() => window.__app.complete());
           }
-          const label = `${w}x${h}${reducedMotion === 'reduce' ? ' 動きを減らす' : ''}`;
-          ok(bad.length === 0, `${label}: ${stepCount} ステップとも「できた」と絵が収まる${bad.length ? ' → ' + bad.join(', ') : ''}`);
-          const want = reducedMotion === 'no-preference' && big[`${w}x${h}`];
+          const label = `${w}x${h}${top || bottom ? ` セーフエリア上${top}下${bottom}` : ''}${reducedMotion === 'reduce' ? ' 動きを減らす' : ''}`;
+          ok(bad.length === 0, `${label}: ${stepCount} ステップとも「できた」と絵が収まり、スクロールしない${bad.length ? ' → ' + bad.join(', ') : ''}`);
+          const want = reducedMotion === 'no-preference' && !top && !bottom && big[`${w}x${h}`];
           if (want) {
             ok(first.artSize >= want.art && first.name >= want.name && first.reps >= want.reps,
               `${label}: 絵 ${first.artSize}px (${want.art} 以上)・種目名 ${first.name.toFixed(1)}px (${want.name} 以上)・回数 ${first.reps}px (${want.reps} 以上)`);

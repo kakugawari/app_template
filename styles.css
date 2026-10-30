@@ -61,7 +61,8 @@ body {
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
-  padding: 14px 16px;
+  /* 上下は詰める。実行画面の絵を、そのぶん大きくできる */
+  padding: 8px 16px;
   background: var(--bg-2);
   border-bottom: 3px solid var(--accent-2);
   box-shadow: 0 4px 0 -3px var(--line);
@@ -134,8 +135,8 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  /* 横は詰める。実行画面の絵と種目名を、そのぶん大きくできる */
-  padding: 24px 14px;
+  /* 詰める。実行画面の絵と種目名を、そのぶん大きくできる */
+  padding: 12px 14px;
   text-align: center;
 }
 
@@ -325,14 +326,19 @@ body {
    12 字に読点がつくと 12.2 字ぶんになるので、少し余らせて 12.6 で割る。
    ここの数を変えるときは、名前の折り返しの見張りも流す */
 #screenRun {
+  /* 使える高さ。iPhone の上 (時計) と下 (ホームバー) のセーフエリアは #app の
+     padding に取られるので、100dvh からそのぶんを引く。引かずにいたら、
+     iPhone 15 ではカードが #stage より 29px 高くなり、#stage がスクロールできて
+     ステップによってカードの位置が上下にずれて見えた */
+  --usable-h: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
   max-width: 34em;
   padding: 20px 12px;
   gap: 12px;
 }
 
 #screenRun .illustrationRow .illustration {
-  width: clamp(120px, min(82vw, 100dvh - 440px), 360px);
-  height: clamp(120px, min(82vw, 100dvh - 440px), 360px);
+  width: clamp(100px, min(82vw, var(--usable-h) - 470px), 360px);
+  height: clamp(100px, min(82vw, var(--usable-h) - 470px), 360px);
 }
 
 #screenRun .progress { font-size: 15px; }
@@ -351,7 +357,7 @@ body {
   padding: 4px 22px;
 }
 
-#screenRun #reps { font-size: clamp(48px, 9dvh, 80px); }
+#screenRun #reps { font-size: clamp(48px, calc(var(--usable-h) * .09), 80px); }
 #screenRun .repsUnit { font-size: 22px; }
 
 #screenRun .btn {
@@ -549,7 +555,7 @@ body {
 /* 横向きなど、縦が短いとき。1 コマを大きくしたぶん、そのままだと
    「できた」が画面の下に隠れてしまう。詰めて必ず収める。 */
 @media (max-height: 560px) {
-  #stage { padding: 12px; }
+  #stage { padding: 6px 14px; }
 
   .screen {
     padding: 12px 24px;
@@ -567,9 +573,9 @@ body {
   #reps { font-size: 34px; }
 
   /* 実行画面を大きくした分も、縦が短いときは元へ戻す */
-  #screenRun { padding: 12px 24px; gap: 8px; }
-  #screenRun .illustrationRow .illustration { width: 72px; height: 72px; }
-  #screenRun .stepInfo { gap: 10px; }
+  #screenRun { padding: 10px 24px; gap: 6px; }
+  #screenRun .illustrationRow .illustration { width: 64px; height: 64px; }
+  #screenRun .stepInfo { gap: 8px; }
   #screenRun .exerciseName { font-size: 18px; }
   #screenRun .side { font-size: 14px; line-height: 18px; padding: 4px 18px; }
   #screenRun #reps { font-size: 34px; }
@@ -611,7 +617,7 @@ body {
     flex: 1 1 0;
     min-width: 0;
     width: auto;
-    max-width: clamp(84px, 100dvh - 520px, 170px);
+    max-width: clamp(84px, var(--usable-h) - 520px, 170px);
     height: auto;
     aspect-ratio: 1;
   }
@@ -620,5 +626,5 @@ body {
 /* 動きを減らす設定で、縦も短いとき。コマを並べるぶん 1 コマ版より背が高く、
    「できた」が画面の下端から 3px はみ出していた */
 @media (prefers-reduced-motion: reduce) and (max-height: 560px) {
-  #screenRun .illustrationRow .illustration { max-width: 72px; }
+  #screenRun .illustrationRow .illustration { max-width: 64px; }
 }
