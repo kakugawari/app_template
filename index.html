@@ -357,65 +357,38 @@
       <use href="#hipTwistUpper"/>
     </symbol>
 
+    <!-- 8 番・9 番 (sideOpen / shoulderBack) は、真上から見て体を横長 (頭が左) に置く。
+         以前は体を縦長に置いていて、「縦の体・曲げた膝・前に出した腕」が横から見た
+         「椅子に座っている人」と同じ形になり、寝ているように見えなかった。
+         ただ横に回すだけでは、下向きの腕 2 本と膝 2 つが四つん這いの手足に見えた。
+         そこで: 頭の下に枕を置き、マットも横長にする。8 番は下の脚を体の延長で
+         まっすぐにし、上の脚だけ膝を曲げる (横向き寝のふつうの形)。9 番は名前どおり
+         両膝をくの字にするが、曲げ方を変えて 2 本がそろわないようにする -->
     <!-- 横向きに寝て膝を曲げ、上半身をひねって肩甲骨を開く。真上から見た構図。
          腰と脚は動かさず、そろえていた両腕のうち上の腕だけが反対側へ回る。
          腕の通り道を薄い弧で残し、「開く」動きが一目で分かるようにする。
          before = 両腕をそろえた姿勢 / after = 上の腕を開いた姿勢 -->
-    <g id="sideOpenBody">
-      <!-- 曲げた膝はお腹側 (体の前) に来る。腕も前から始まるので、
-           膝と腕は必ず同じ側に置く。真上から見て頭が上のとき、
-           前が画面の右なら「左向きに寝ている」姿になる。 -->
-      <g stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="65" y1="76" x2="90" y2="88"/>
-        <line x1="90" y1="88" x2="70" y2="104"/>
-        <line x1="55" y1="76" x2="80" y2="90"/>
-        <line x1="80" y1="90" x2="60" y2="106"/>
-      </g>
-      <circle cx="60" cy="24" r="11" fill="currentColor"/>
-      <rect x="49" y="36" width="22" height="42" rx="11" fill="currentColor"/>
-    </g>
     <symbol id="sideOpen-before" viewBox="0 0 120 120">
-      <use href="#matTopBase"/>
-      <use href="#sideOpenBody"/>
-      <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round">
-        <line x1="69" y1="44" x2="104" y2="40"/>
-        <line x1="69" y1="52" x2="104" y2="50"/>
-      </g>
+      <g transform="rotate(90 60 60)"><use href="#matTopBase"/></g><rect x="9" y="40" width="20" height="32" rx="7" stroke="currentColor" stroke-width="3" fill="none" opacity=".45"/><path d="M70 62 L108 64" stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M70 56 L88 82 L106 76" stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect x="30" y="48" width="42" height="20" rx="10" fill="currentColor"/><circle cx="20" cy="57" r="11" fill="currentColor"/><path d="M38 62 L44 96" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M44 62 L52 96" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
     <symbol id="sideOpen-after" viewBox="0 0 120 120">
-      <use href="#matTopBase"/>
-      <use href="#sideOpenBody"/>
-      <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round">
-        <line x1="69" y1="52" x2="104" y2="50"/>
-        <path d="M69 44 Q92 18 60 12" opacity=".28"/>
-        <line x1="51" y1="44" x2="16" y2="40"/>
-      </g>
+      <g transform="rotate(90 60 60)"><use href="#matTopBase"/></g><rect x="9" y="40" width="20" height="32" rx="7" stroke="currentColor" stroke-width="3" fill="none" opacity=".45"/><path d="M70 62 L108 64" stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M70 56 L88 82 L106 76" stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M52 96 Q72 60 46 18" stroke="currentColor" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/><rect x="30" y="48" width="42" height="20" rx="10" fill="currentColor"/><circle cx="20" cy="57" r="11" fill="currentColor"/><path d="M38 62 L44 96" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M44 54 L46 18" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
 
-    <!-- 猫のポーズ。横から見た構図。手と脚は動かさず、背中の線と頭だけを動かす。
+    <!-- 猫のポーズ。横から見た構図 (頭が右)。体は catRock と同じ寸法で描く:
+         膝とすねは床につき (膝 40,103・かかと 12,103)、手も床につく (84,103)。
+         太もも 30・すね 28・腕 33。以前は手足を棒 2 本で描いていて、膝が
+         床についていない (4 本足で立っている) ように見えていた。
+         手・膝・腰・肩は動かさず、背中の線と頭だけを動かす。
          center = 背中がまっすぐ / round = 丸めた姿勢 / arch = 反った姿勢 -->
-    <g id="catLimbs" stroke="currentColor" stroke-width="7" fill="none"
-       stroke-linecap="round" stroke-linejoin="round">
-      <line x1="40" y1="56" x2="38" y2="104"/>
-      <line x1="84" y1="56" x2="86" y2="104"/>
-    </g>
     <symbol id="catPose-center" viewBox="0 0 120 120">
-      <use href="#floorBase"/>
-      <use href="#catLimbs"/>
-      <path d="M40 52 Q62 52 84 52" stroke="currentColor" stroke-width="18" fill="none" stroke-linecap="round"/>
-      <circle cx="98" cy="56" r="12" fill="currentColor"/>
+      <use href="#floorBase"/><g stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"><path class="leg" d="M40 73 L40 103 L12 103"/><path class="arm" d="M81.9 70.1 L84 103"/></g><path d="M40 73 Q61 71.6 81.9 70.1" stroke="currentColor" stroke-width="18" fill="none" stroke-linecap="round"/><circle cx="94.9" cy="72.1" r="11" fill="currentColor"/>
     </symbol>
     <symbol id="catPose-round" viewBox="0 0 120 120">
-      <use href="#floorBase"/>
-      <use href="#catLimbs"/>
-      <path d="M40 52 Q62 26 84 52" stroke="currentColor" stroke-width="18" fill="none" stroke-linecap="round"/>
-      <circle cx="96" cy="68" r="12" fill="currentColor"/>
+      <use href="#floorBase"/><g stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"><path class="leg" d="M40 73 L40 103 L12 103"/><path class="arm" d="M81.9 70.1 L84 103"/></g><path d="M40 73 Q61.9 57.6 81.9 70.1" stroke="currentColor" stroke-width="18" fill="none" stroke-linecap="round"/><circle cx="91.9" cy="82.1" r="11" fill="currentColor"/>
     </symbol>
     <symbol id="catPose-arch" viewBox="0 0 120 120">
-      <use href="#floorBase"/>
-      <use href="#catLimbs"/>
-      <path d="M40 52 Q62 74 84 52" stroke="currentColor" stroke-width="18" fill="none" stroke-linecap="round"/>
-      <circle cx="98" cy="42" r="12" fill="currentColor"/>
+      <use href="#floorBase"/><g stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"><path class="leg" d="M40 73 L40 103 L12 103"/><path class="arm" d="M81.9 70.1 L84 103"/></g><path d="M40 73 Q60.3 81.5 81.9 70.1" stroke="currentColor" stroke-width="18" fill="none" stroke-linecap="round"/><circle cx="93.9" cy="61.1" r="11" fill="currentColor"/>
     </symbol>
 
     <!-- 猫のポーズから、お尻をかかとへ引いて背中を丸める → スキーのジャンプのように
@@ -515,24 +488,29 @@
     </symbol>
 
     <!-- 横向きに寝て膝をくの字に曲げて固め、上の肩だけを後ろへ動かして肩甲骨を広げる。
-         真上から見た構図 (sideOpen と同じ体)。腕を大きく回すのではなく、肩が後ろへ
+         真上から見た構図で、体を横長 (頭が左) に置く (sideOpen と同じ置き方。両膝はくの字)。
+         腕を大きく回すのではなく、肩が後ろへ
          引かれたぶんだけ上の腕が後ろへずれる。動く前の腕を薄く残す
          before = 両腕をそろえた姿勢 / after = 上の肩を後ろへ引いた姿勢 -->
     <symbol id="shoulderBack-before" viewBox="0 0 120 120">
-      <use href="#matTopBase"/><use href="#sideOpenBody"/><g stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M69 44 L104 40"/><path d="M69 52 L104 50"/></g>
+      <g transform="rotate(90 60 60)"><use href="#matTopBase"/></g><rect x="9" y="40" width="20" height="32" rx="7" stroke="currentColor" stroke-width="3" fill="none" opacity=".45"/><path d="M70 62 L92 74 L108 66" stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M70 56 L86 84 L106 82" stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect x="30" y="48" width="42" height="20" rx="10" fill="currentColor"/><circle cx="20" cy="57" r="11" fill="currentColor"/><path d="M38 62 L44 96" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M44 62 L52 96" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
     <symbol id="shoulderBack-after" viewBox="0 0 120 120">
-      <use href="#matTopBase"/><use href="#sideOpenBody"/><path d="M69 44 L104 40" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" opacity=".25"/><g stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M58 40 L90 34"/><path d="M69 52 L104 50"/></g>
+      <g transform="rotate(90 60 60)"><use href="#matTopBase"/></g><rect x="9" y="40" width="20" height="32" rx="7" stroke="currentColor" stroke-width="3" fill="none" opacity=".45"/><path d="M70 62 L92 74 L108 66" stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M70 56 L86 84 L106 82" stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M44 62 L52 96" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/><rect x="30" y="48" width="42" height="20" rx="10" fill="currentColor"/><circle cx="20" cy="57" r="11" fill="currentColor"/><path d="M38 62 L44 96" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M42 54 L44 88" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
 
-    <!-- 四つん這いで、片手を前に出し、反対側の足を後ろへ伸ばす。横から見た構図 (catPose と同じ)。
-         残りの手と足は床についたまま動かさない
+    <!-- 四つん這いで、片手を前に出し、反対側の足を後ろへ伸ばす。横から見た構図
+         (catPose と同じ体)。残りの手と膝・すねは床についたまま動かさない。
+         伸ばす腕は 33、伸ばす脚は太もも+すねの 58 で、まっすぐのまま伸ばす。
+         伸ばした脚が枠に入らないので、この種目だけ体を 0.85 倍にする
+         (膝・手の高さ y=103 を中心に縮めるので、床についている所は床のまま)。
+         前へ伸ばす腕は奥側なので、頭より先に描いて頭の後ろを通す。
          before = 四つん這い / after = 手を前、反対の足を後ろへ伸ばした姿勢 -->
     <symbol id="birdDog-before" viewBox="0 0 120 120">
-      <use href="#floorBase"/><use href="#catLimbs"/><path d="M40 52 Q62 52 84 52" stroke="currentColor" stroke-width="18" fill="none" stroke-linecap="round"/><circle cx="98" cy="56" r="12" fill="currentColor"/>
+      <use href="#floorBase"/><g transform="translate(20.9 15.5) scale(0.85)"><g stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"><path class="leg" d="M40 73 L40 103 L12 103"/><path class="arm" d="M81.9 70.1 L84 103"/></g><path d="M40 73 Q61 71.6 81.9 70.1" stroke="currentColor" stroke-width="18" fill="none" stroke-linecap="round"/><circle cx="94.9" cy="77.1" r="11" fill="currentColor"/></g>
     </symbol>
     <symbol id="birdDog-after" viewBox="0 0 120 120">
-      <use href="#floorBase"/><use href="#catLimbs"/><path d="M40 52 Q62 52 84 52" stroke="currentColor" stroke-width="18" fill="none" stroke-linecap="round"/><g stroke-width="7" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M84 50 L114 38"/><path d="M40 52 L8 48"/></g><circle cx="98" cy="56" r="12" fill="currentColor"/>
+      <use href="#floorBase"/><g transform="translate(20.9 15.5) scale(0.85)"><g stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"><path class="reach-arm" d="M81.9 70.1 L108.9 51.1"/></g><g stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"><path class="leg" d="M40 73 L40 103 L12 103"/><path class="arm" d="M81.9 70.1 L84 103"/><path class="reach-leg" d="M40 73 L-18 69"/></g><path d="M40 73 Q61 71.6 81.9 70.1" stroke="currentColor" stroke-width="18" fill="none" stroke-linecap="round"/><circle cx="94.9" cy="77.1" r="11" fill="currentColor"/></g>
     </symbol>
 
     <!-- 階段の 2 段目に片足をのせ、後ろ足のももの前を伸ばす。横から見た構図。

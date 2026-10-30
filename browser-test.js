@@ -665,6 +665,47 @@ async function run() {
         `前のコマで肩が手より前へ出る (肩 x ${Math.round(rock.front.shoulder[0])} / 手 x ${rock.front.hand[0]})`);
     }
 
+    // 猫のポーズ・対角に伸ばす種目は以前、手足を棒 2 本で描いていて、膝が床に
+    // ついていない (4 本足で立っている) ように見えていた。四つん這いの絵は全部、
+    // 膝とすねを床につけ、支えの手も床につける
+    section('四つん這いの種目は、どのコマも膝・すね・手が床についている');
+    const kneel = await phone.evaluate(() => {
+      const pts = (el) => (el.getAttribute('d').match(/-?\d+(\.\d+)?/g) || []).map(Number)
+        .reduce((a, n, i, all) => (i % 2 ? a : a.concat([[n, all[i + 1]]])), []);
+      const ids = ['catPose', 'catRock', 'birdDog']
+        .flatMap((art) => [...document.querySelectorAll(`symbol[id^="${art}-"]`)].map((el) => el.id));
+      return ids.map((id) => {
+        const sym = document.getElementById(id);
+        const leg = sym.querySelector('.leg');
+        const arm = sym.querySelector('.arm');
+        if (!leg || !arm) return { id, ok: false, why: '脚・腕が無い' };
+        const [, knee, heel] = pts(leg);
+        const [, hand] = pts(arm);
+        const onFloor = (p) => p && p[1] >= 100;
+        return { id, ok: onFloor(knee) && onFloor(heel) && onFloor(hand) && Math.abs(knee[1] - heel[1]) < 2,
+          why: `膝 ${knee} / かかと ${heel} / 手 ${hand}` };
+      });
+    });
+    const floating = kneel.filter((k) => !k.ok);
+    ok(kneel.length >= 8 && floating.length === 0,
+      `四つん這いの ${kneel.length} コマとも膝・すね・手が床につく${floating.length ? ' → ' + floating.map((k) => `${k.id} (${k.why})`).join(', ') : ''}`);
+
+    // 8・9 番 (横向きに寝る種目を真上から見た絵) は以前、体を縦長に置いていて、
+    // 椅子に座っている人に見えていた。体 (胴) は横長に置く
+    section('横向きに寝る種目を真上から見た絵は、体を横長に置く (座っているように見せない)');
+    const lying = await phone.evaluate(() => ['sideOpen', 'shoulderBack']
+      .flatMap((art) => [...document.querySelectorAll(`symbol[id^="${art}-"]`)])
+      .map((sym) => {
+        const torso = [...sym.querySelectorAll('rect')].find((r) => r.getAttribute('fill') === 'currentColor');
+        if (!torso) return { id: sym.id, ok: false, size: '胴が無い' };
+        const w = Number(torso.getAttribute('width')), h = Number(torso.getAttribute('height'));
+        const rotated = !!torso.closest('[transform]');
+        return { id: sym.id, ok: w > h && !rotated, size: `${w}x${h}${rotated ? ' (回して描いている)' : ''}` };
+      }));
+    const upright = lying.filter((l) => !l.ok);
+    ok(lying.length === 4 && upright.length === 0,
+      `8・9 番の ${lying.length} コマとも胴が横長${upright.length ? ' → ' + upright.map((l) => `${l.id} (${l.size})`).join(', ') : ''}`);
+
     section('秒数で数える種目は「秒」と表示する');
     ok(await goToArt(phone, 'birdDog'), '「四つん這いで対角に伸ばす」のステップまで進める');
     await phone.waitForTimeout(60);
