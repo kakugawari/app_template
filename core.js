@@ -5,7 +5,7 @@
  * node からは require() できる。
  *
  * このアプリは「決まった種目を、順番に、左右ぶんこなす」だけの
- * 一本道。回数(20回など)は表示するだけで、アプリ側では数えない
+ * 一本道。回数(10回など)は表示するだけで、アプリ側では数えない
  * — 運動中はボールを抱えていたり寝転んでいたりでタップしづらいため。
  */
 (function (root, factory) {
@@ -80,39 +80,39 @@
   // 途中で体勢を変える回数をなるべく少なくしている。
   const DEFAULT_EXERCISES = [
     // --- 寝る (仰向け) ---
-    { name: '仰向けで両膝を立て、左右に倒す', art: 'kneeFall', reps: 20, sides: null },
+    { name: '仰向けで両膝を立て、左右に倒す', art: 'kneeFall', reps: 10, sides: null },
     {
       // 「腰をひねる」だと、どちらの足を動かすのか読む人によって割れる。
       // 動かす足そのものを書くほうが迷わない。
       name: '仰向けで、片足を反対の足にのせる',
       art: 'hipTwist',
-      reps: 20,
+      reps: 10,
       sides: ['left', 'right'],
       mergeSides: true
     },
-    { name: '仰向けで膝を立て、両手で万歳する', art: 'armRaise', reps: 20, sides: null },
+    { name: '仰向けで膝を立て、両手で万歳する', art: 'armRaise', reps: 10, sides: null },
     {
       // 左右交互の万歳は、体の向きは変わらないので左右をまとめる種目ではない。
       // 首振りの種目と同じく 1 ステップで、下ろす → 左 → 下ろす → 右 と回す
       name: '仰向けで膝を立て、左右交互に万歳する',
       art: 'armAlt',
-      reps: 20,
+      reps: 10,
       sides: null,
       frames: ALT_FRAMES
     },
-    { name: '仰向けで膝を立て、広げた両手を胸で合わせる', art: 'armHug', reps: 20, sides: null },
+    { name: '仰向けで膝を立て、広げた両手を胸で合わせる', art: 'armHug', reps: 10, sides: null },
     // --- 寝る (横向き) ---
     {
       name: '横向きに寝て、曲げた膝を開いて閉じる',
       art: 'sideKnee',
-      reps: 20,
+      reps: 10,
       sides: ['left', 'right'],
       mergeSides: true
     },
     {
       name: '横向きに寝て、伸ばした腕を開いて閉じる',
       art: 'sideArm',
-      reps: 20,
+      reps: 10,
       sides: ['left', 'right'],
       mergeSides: true
     },
@@ -121,7 +121,7 @@
       // 絵そのものが見せるので、名前では「上の腕」とだけ書けば迷わない。
       name: '横向きに寝て膝を曲げ、上の腕を反対側へ開く',
       art: 'sideOpen',
-      reps: 20,
+      reps: 10,
       sides: ['left', 'right'],
       mergeSides: true
     },
@@ -129,7 +129,7 @@
       // sideOpen と近いが、腕ごと回すのではなく肩だけを後ろへ動かす別の種目
       name: '横向きで膝をくの字にし、上の肩だけ後ろに動かす',
       art: 'shoulderBack',
-      reps: 20,
+      reps: 10,
       sides: ['left', 'right'],
       mergeSides: true
     },
@@ -137,7 +137,7 @@
     {
       name: '猫のポーズで、背中を丸めて反らす',
       art: 'catPose',
-      reps: 20,
+      reps: 10,
       sides: null,
       frames: CAT_FRAMES
     },
@@ -146,7 +146,7 @@
       // 前へ乗り出すときは背中を反る。手と膝は床についたまま
       name: '猫のポーズで、お尻を引いて前へ乗り出す',
       art: 'catRock',
-      reps: 20,
+      reps: 10,
       sides: null,
       frames: ROCK_FRAMES
     },
@@ -161,7 +161,7 @@
     {
       name: '壁に手をつき、後ろ足の股関節を伸ばす',
       art: 'wallHip',
-      reps: 20,
+      reps: 10,
       sides: ['left', 'right'],
       mergeSides: true
     },
@@ -169,7 +169,7 @@
       // 体が横に開かないよう、まっすぐ保つ (名前に入りきらないので、ここに残す)
       name: '階段2段目に片足をのせ、後ろ足のももを伸ばす',
       art: 'stairQuad',
-      secs: 30,
+      secs: 10,
       sides: ['left', 'right'],
       mergeSides: true
     },
@@ -177,49 +177,49 @@
       // 段に横向きに立ち、段から外に出した足を前後同じくらいに振る
       name: '階段に片足で立ち、浮いた足を前後に振る',
       art: 'stairSwing',
-      secs: 30,
+      secs: 10,
       sides: ['left', 'right'],
       mergeSides: true,
       frames: LEG_SWING_FRAMES
     },
-    { name: '肩幅に立ち、浅くスクワットする', art: 'shallowSquat', secs: 30, sides: null },
-    { name: '何かにつかまり、股割りでスクワットする', art: 'sumoSquat', reps: 20, sides: null },
+    { name: '肩幅に立ち、浅くスクワットする', art: 'shallowSquat', secs: 10, sides: null },
+    { name: '何かにつかまり、股割りでスクワットする', art: 'sumoSquat', reps: 10, sides: null },
     // 無理をしない深さまで (名前に入りきらないので、ここに残す)
-    { name: '何かにつかまり、お尻を後ろに引いて下げる', art: 'hipBackSquat', reps: 20, sides: null },
+    { name: '何かにつかまり、お尻を後ろに引いて下げる', art: 'hipBackSquat', reps: 10, sides: null },
     // --- 座る ---
     // ボールは「ボール」とだけ書く。どのボールかは絵が見せている
     // (「バランスボール」と書くと後ろの句が 12 字を超えて 3 行になる)。
     {
       name: '椅子に浅く座り、ボールを抱えて体をひねる',
       art: 'chairTwist',
-      reps: 20,
+      reps: 10,
       sides: null,
       frames: SWING_FRAMES
     },
     {
       name: '椅子に浅く座り、ボールを抱えて体を傾ける',
       art: 'chairLean',
-      reps: 20,
+      reps: 10,
       sides: null,
       frames: SWING_FRAMES
     },
-    { name: '椅子に浅く座り、ボールを上げ下げする', art: 'chairLift', reps: 20, sides: null },
+    { name: '椅子に浅く座り、ボールを上げ下げする', art: 'chairLift', reps: 10, sides: null },
     {
       // つま先立ちしながらお腹をへこませて骨盤を後ろへ倒し、足を下ろしながら起こす
       name: '座ってつま先立ちし、骨盤を倒して起こす',
       art: 'pelvisTilt',
-      reps: 20,
+      reps: 10,
       sides: null
     },
     // 次の 2 つは肘の位置だけが違う。肩甲骨を意識しながら後ろに開く
-    { name: '座って腕を斜めに開き、外へ回して後ろへ開く', art: 'armOpen', reps: 20, sides: null },
-    { name: '座って肘を脇につけ、腕を外へ回して開く', art: 'armRotate', reps: 20, sides: null },
+    { name: '座って腕を斜めに開き、外へ回して後ろへ開く', art: 'armOpen', reps: 10, sides: null },
+    { name: '座って肘を脇につけ、腕を外へ回して開く', art: 'armRotate', reps: 10, sides: null },
     {
       // 座ったまま続けてやる種目なので、姿勢は前の種目にまかせて書かない
       // (「椅子に浅く座り、」を付けると後ろの句が長くなり 3 行になる)
       name: 'トゲトゲボールを踏んで、前後に転がす',
       art: 'footRoll',
-      reps: 20,
+      reps: 10,
       sides: ['left', 'right'],
       mergeSides: true
     }
@@ -227,7 +227,7 @@
 
   /**
    * 何回 (reps) か何秒 (secs) かを、表示する数と単位にする。
-   * アプリは数えも計りもしない。「20 回」「30 秒」と見せるだけ。
+   * アプリは数えも計りもしない。「10 回」「10 秒」と見せるだけ。
    */
   function amountOf(exercise) {
     return exercise.secs ? { reps: exercise.secs, unit: '秒' } : { reps: exercise.reps, unit: '回' };

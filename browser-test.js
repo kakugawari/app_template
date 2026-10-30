@@ -180,7 +180,7 @@ async function run() {
       '実行画面だけが表示され、準備・完了画面は本当に隠れている');
     ok(/^1 \/ \d+$/.test(firstStep.progress), `進捗が 1 から始まる (${firstStep.progress})`);
     ok(!firstStep.sideShown, `1 種目め (両足そろえて振る動き) では側バッジが出ない (${firstStep.side})`);
-    ok(firstStep.reps === '20', `回数が 20 と出る (${firstStep.reps})`);
+    ok(firstStep.reps === '10', `回数が 10 と出る (${firstStep.reps})`);
 
     section('進捗バー・タップ領域・読み上げ');
     const barAtStart = await phone.evaluate(() =>
@@ -742,7 +742,7 @@ async function run() {
     ok(await goToArt(phone, 'wallHip'), '次の回数の種目まで進める');
     await phone.waitForTimeout(60);
     const repsShown = await phone.evaluate(() => document.querySelector('.reps').textContent.replace(/\s/g, ''));
-    ok(repsShown === '20回', `回数の種目に戻ると「回」に戻る (${repsShown})`);
+    ok(repsShown === '10回', `回数の種目に戻ると「回」に戻る (${repsShown})`);
 
     section('最後まで進めると完了画面になる');
     // 途中まで進んでいるので、残りぶんだけ押す
@@ -971,6 +971,57 @@ async function run() {
       ok(fit.bottom <= fit.vh,
         `できたボタンが画面の中に収まっている (下端 ${fit.bottom} / 画面 ${fit.vh})`);
       await land.close();
+    }
+
+    // ------------------------------------------------ 実行画面の大きさ
+    // 運動中はスマホを置いて少し離れて見るので、絵と文字を画面に合わせて大きくした。
+    // 大きくすると縦の短い画面で「できた」が押し出されるので、全ステップ・
+    // 画面の大きさ 4 つ・動きを減らす設定の有無で、収まることもあわせて見張る
+    // (動きを減らす設定 + 横向きは、大きくする前から下端が 3px はみ出していた)
+    section('実行画面の絵と文字は、離れて見ても分かる大きさで、どの画面にも収まる');
+    {
+      const big = { '390x844': { art: 300, name: 26, reps: 70 }, '375x667': { art: 200, name: 25, reps: 60 } };
+      for (const reducedMotion of ['no-preference', 'reduce']) {
+        for (const [w, h] of [[390, 844], [375, 667], [320, 568], [844, 390]]) {
+          const ctx = await browser.newContext({
+            viewport: { width: w, height: h }, isMobile: true, hasTouch: true, deviceScaleFactor: 2, reducedMotion
+          });
+          const page = await ctx.newPage();
+          page.on('pageerror', (e) => errors.push('size: ' + e.message));
+          await page.goto(URL);
+          await page.waitForFunction(() => window.__app);
+          await page.evaluate(() => window.__app.start());
+          const stepCount = await page.evaluate(() => window.__app.state().session.steps.length);
+          const bad = [];
+          let first = null;
+          for (let i = 0; i < stepCount; i++) {
+            const m = await page.evaluate(() => {
+              const card = document.getElementById('screenRun').getBoundingClientRect();
+              const arts = [...document.querySelectorAll('#illustrationRow .illustration')].map((e) => e.getBoundingClientRect());
+              const s = window.__app.state().session;
+              return {
+                art: s.steps[s.index].art,
+                bottom: document.getElementById('btnDone').getBoundingClientRect().bottom,
+                artSize: arts.length ? Math.round(arts[0].width) : 0,
+                artOut: arts.some((r) => r.left < card.left - 0.5 || r.right > card.right + 0.5),
+                name: parseFloat(getComputedStyle(document.getElementById('exerciseName')).fontSize),
+                reps: parseFloat(getComputedStyle(document.getElementById('reps')).fontSize)
+              };
+            });
+            if (!first) first = m;
+            if (m.bottom > h || m.artOut) bad.push(`${m.art} (下端 ${Math.round(m.bottom)}${m.artOut ? ' / 絵がカードの外' : ''})`);
+            if (i < stepCount - 1) await page.evaluate(() => window.__app.complete());
+          }
+          const label = `${w}x${h}${reducedMotion === 'reduce' ? ' 動きを減らす' : ''}`;
+          ok(bad.length === 0, `${label}: ${stepCount} ステップとも「できた」と絵が収まる${bad.length ? ' → ' + bad.join(', ') : ''}`);
+          const want = reducedMotion === 'no-preference' && big[`${w}x${h}`];
+          if (want) {
+            ok(first.artSize >= want.art && first.name >= want.name && first.reps >= want.reps,
+              `${label}: 絵 ${first.artSize}px (${want.art} 以上)・種目名 ${first.name.toFixed(1)}px (${want.name} 以上)・回数 ${first.reps}px (${want.reps} 以上)`);
+          }
+          await ctx.close();
+        }
+      }
     }
 
     // ------------------------------------------------ 動きを減らす設定

@@ -11,8 +11,8 @@ test('既定の種目は 25 種目、左右まとめたぶんも含めて 25 ス
 test('回数で数える種目は「回」、秒数で数える種目は「秒」で表示する', () => {
   const steps = Core.buildSteps(Core.DEFAULT_EXERCISES);
   const secs = steps.filter((s) => s.unit === '秒').map((s) => s.art + ':' + s.reps);
-  assert.deepStrictEqual(secs, ['birdDog:10', 'stairQuad:30', 'stairSwing:30', 'shallowSquat:30']);
-  assert.ok(steps.filter((s) => s.unit === '回').every((s) => s.reps === 20));
+  assert.deepStrictEqual(secs, ['birdDog:10', 'stairQuad:10', 'stairSwing:10', 'shallowSquat:10']);
+  assert.ok(steps.filter((s) => s.unit === '回').every((s) => s.reps === 10));
   assert.ok(steps.every((s) => s.unit === '回' || s.unit === '秒'));
 });
 
@@ -80,7 +80,7 @@ test('セッションは index 0 から始まり、最初の種目名と回数�
   const session = Core.createSession(Core.DEFAULT_EXERCISES);
   const step = Core.currentStep(session);
   assert.strictEqual(step.name, Core.DEFAULT_EXERCISES[0].name);
-  assert.strictEqual(step.reps, 20);
+  assert.strictEqual(step.reps, 10);
 });
 
 test('advanceSession でステップが 1 つずつ進む', () => {

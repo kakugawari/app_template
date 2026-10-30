@@ -134,7 +134,8 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  /* 横は詰める。実行画面の絵と種目名を、そのぶん大きくできる */
+  padding: 24px 14px;
   text-align: center;
 }
 
@@ -313,6 +314,50 @@ body {
   font-size: 16px;
   font-weight: 700;
   color: var(--muted);
+}
+
+/* ---------------------------------------------------------- 実行画面を大きく
+   運動中はスマホを床や台に置き、少し離れて見る。絵と文字を画面いっぱいまで
+   大きくする。大きさは画面の幅と高さの両方から決め、どちらか足りない方に合わせる
+   (幅だけで決めると、縦の短い画面で「できた」が下へ押し出される)。
+   種目名の字の大きさは「句は 12 字以内」が 1 行に入る幅から決めている。
+   文字を置ける幅は 画面幅 - 56px (#stage の左右 14 + カードの左右 12 + 枠 2)。
+   12 字に読点がつくと 12.2 字ぶんになるので、少し余らせて 12.6 で割る。
+   ここの数を変えるときは、名前の折り返しの見張りも流す */
+#screenRun {
+  max-width: 34em;
+  padding: 20px 12px;
+  gap: 12px;
+}
+
+#screenRun .illustrationRow .illustration {
+  width: clamp(120px, min(82vw, 100dvh - 440px), 360px);
+  height: clamp(120px, min(82vw, 100dvh - 440px), 360px);
+}
+
+#screenRun .progress { font-size: 15px; }
+
+#screenRun .stepInfo { gap: 12px; }
+
+#screenRun .exerciseName {
+  font-size: clamp(18px, calc((100vw - 56px) / 12.6), 30px);
+  line-height: 1.45;
+  min-height: 2.9em;
+}
+
+#screenRun .side {
+  font-size: 17px;
+  line-height: 22px;
+  padding: 4px 22px;
+}
+
+#screenRun #reps { font-size: clamp(48px, 9dvh, 80px); }
+#screenRun .repsUnit { font-size: 22px; }
+
+#screenRun .btn {
+  min-height: 52px;
+  font-size: 16px;
+  padding: 12px 26px;
 }
 
 /* ---------------------------------------------------------- スタンプカード */
@@ -521,6 +566,16 @@ body {
   .exerciseName { font-size: 18px; }
   #reps { font-size: 34px; }
 
+  /* 実行画面を大きくした分も、縦が短いときは元へ戻す */
+  #screenRun { padding: 12px 24px; gap: 8px; }
+  #screenRun .illustrationRow .illustration { width: 72px; height: 72px; }
+  #screenRun .stepInfo { gap: 10px; }
+  #screenRun .exerciseName { font-size: 18px; }
+  #screenRun .side { font-size: 14px; line-height: 18px; padding: 4px 18px; }
+  #screenRun #reps { font-size: 34px; }
+  #screenRun .repsUnit { font-size: 16px; }
+  #screenRun .btn { min-height: 44px; font-size: 13px; padding: 9px 16px; }
+
   /* 横に広いので、スタンプは 2 段ではなく 1 列に並べる。
      こうすると縦を 100px ぶん返せて「はじめる」が画面に収まる */
   .stampSlots {
@@ -549,4 +604,21 @@ body {
 
   .illustrationRow .illustration { width: 84px; height: 84px; }
   .illustrationRow .illustrationArrow { display: block; }
+
+  /* 並べるときは、並べたコマ全部がカードの幅に入る大きさにする */
+  .illustrationRow { width: 100%; justify-content: center; }
+  #screenRun .illustrationRow .illustration {
+    flex: 1 1 0;
+    min-width: 0;
+    width: auto;
+    max-width: clamp(84px, 100dvh - 520px, 170px);
+    height: auto;
+    aspect-ratio: 1;
+  }
+}
+
+/* 動きを減らす設定で、縦も短いとき。コマを並べるぶん 1 コマ版より背が高く、
+   「できた」が画面の下端から 3px はみ出していた */
+@media (prefers-reduced-motion: reduce) and (max-height: 560px) {
+  #screenRun .illustrationRow .illustration { max-width: 72px; }
 }
