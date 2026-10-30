@@ -35,6 +35,9 @@
 
   const CAT_FRAMES = ['center', 'round', 'center', 'arch'];
 
+  /** 四つん這いから後ろ (お尻をかかとへ) と前 (乗り出す) へ、真ん中を通って揺らす */
+  const ROCK_FRAMES = ['center', 'back', 'center', 'front'];
+
   /** 左右交互の万歳。下ろす → 左手 → 下ろす → 右手 (どれも左から始める) */
   const ALT_FRAMES = ['down', 'left', 'down', 'right'];
 
@@ -137,6 +140,15 @@
       reps: 20,
       sides: null,
       frames: CAT_FRAMES
+    },
+    {
+      // お尻をかかとにつけるときは背中を丸め、スキーのジャンプのように
+      // 前へ乗り出すときは背中を反る。手と膝は床についたまま
+      name: '猫のポーズで、お尻を引いて前へ乗り出す',
+      art: 'catRock',
+      reps: 20,
+      sides: null,
+      frames: ROCK_FRAMES
     },
     {
       name: '四つん這いで、片手と反対の足を伸ばす',
@@ -557,6 +569,7 @@
     DEFAULT_FRAMES: DEFAULT_FRAMES,
     SWING_FRAMES: SWING_FRAMES,
     ALT_FRAMES: ALT_FRAMES,
+    ROCK_FRAMES: ROCK_FRAMES,
     LEG_SWING_FRAMES: LEG_SWING_FRAMES,
     amountOf: amountOf,
     SIDE_REPEAT: SIDE_REPEAT,

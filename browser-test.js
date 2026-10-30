@@ -632,6 +632,39 @@ async function run() {
     ok(supine.length >= 10 && oddBody.length === 0,
       `仰向けの ${supine.length} コマとも胴は 1 つで同じ大きさ${oddBody.length ? ' → ' + oddBody.map((s) => `${s.id} (${s.n} 個: ${s.size})`).join(', ') : ''}`);
 
+    // 猫のポーズで前後に揺れる種目。手・膝・かかとは床についたまま動かず、
+    // 後ろではお尻がかかとにつき、前では肩が手より前へ出る
+    section('猫のポーズで前後に揺れる種目は、手と膝を動かさずにお尻を引き、前へ乗り出す');
+    const rock = await phone.evaluate(() => {
+      const pts = (el) => (el.getAttribute('d').match(/-?\d+(\.\d+)?/g) || []).map(Number)
+        .reduce((a, n, i, all) => (i % 2 ? a : a.concat([[n, all[i + 1]]])), []);
+      const read = (f) => {
+        const sym = document.getElementById('catRock-' + f);
+        const leg = sym && sym.querySelector('.leg');
+        const arm = sym && sym.querySelector('.arm');
+        if (!leg || !arm) return null;
+        const [hip, knee, heel] = pts(leg);
+        const [shoulder, hand] = pts(arm);
+        return { hip, knee, heel, shoulder, hand,
+          thigh: Math.hypot(hip[0] - knee[0], hip[1] - knee[1]), armLen: Math.hypot(shoulder[0] - hand[0], shoulder[1] - hand[1]) };
+      };
+      return { center: read('center'), back: read('back'), front: read('front') };
+    });
+    if (!rock.center || !rock.back || !rock.front) {
+      ok(false, '揺れる種目の 3 コマに脚と腕が描かれている');
+    } else {
+      const fr = [rock.center, rock.back, rock.front];
+      const same = (k) => fr.every((f) => Math.abs(f[k][0] - fr[0][k][0]) < 0.5 && Math.abs(f[k][1] - fr[0][k][1]) < 0.5);
+      const spread = (k) => Math.max(...fr.map((f) => f[k])) - Math.min(...fr.map((f) => f[k]));
+      ok(same('hand') && same('knee') && same('heel'), '手・膝・かかとは 3 コマとも動かない');
+      ok(spread('thigh') < 0.6 && spread('armLen') < 0.6,
+        `太ももと腕の長さが 3 コマで同じ (太もも ${fr.map((f) => f.thigh.toFixed(1)).join('/')} ・腕 ${fr.map((f) => f.armLen.toFixed(1)).join('/')})`);
+      ok(rock.back.hip[0] - rock.back.heel[0] < 8 && rock.back.hip[1] > rock.center.hip[1] + 8,
+        `後ろのコマでお尻がかかとの上まで下がる (腰 ${rock.back.hip.map(Math.round)} / かかと ${rock.back.heel})`);
+      ok(rock.front.shoulder[0] > rock.front.hand[0] + 5,
+        `前のコマで肩が手より前へ出る (肩 x ${Math.round(rock.front.shoulder[0])} / 手 x ${rock.front.hand[0]})`);
+    }
+
     section('秒数で数える種目は「秒」と表示する');
     ok(await goToArt(phone, 'birdDog'), '「四つん這いで対角に伸ばす」のステップまで進める');
     await phone.waitForTimeout(60);
@@ -967,7 +1000,7 @@ async function run() {
       }));
       ok(reopened.screen === 'warmup' && reopened.shown,
         '開き直すと準備画面に「つづきから」が出る');
-      ok(reopened.note.startsWith('9 / 24 まで進んでいます'),
+      ok(reopened.note.startsWith('9 / 25 まで進んでいます'),
         `どこまでやったかが読める (${reopened.note})`);
       ok(!reopened.startIsPrimary, '続きがあるときは「つづきから」が主なボタンになる');
       ok(reopened.rowH <= 56, `ボタンが 1 段に収まっている (${reopened.rowH}px)`);
@@ -978,7 +1011,7 @@ async function run() {
         index: window.__app.state().session.index,
         progress: document.getElementById('progress').textContent.trim()
       }));
-      ok(resumed.index === 8 && resumed.progress === '9 / 24',
+      ok(resumed.index === 8 && resumed.progress === '9 / 25',
         `閉じたところから再開する (${resumed.progress})`);
 
       // はじめから を選べば 1 ステップめに戻り、続きは消える

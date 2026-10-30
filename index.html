@@ -418,6 +418,23 @@
       <circle cx="98" cy="42" r="12" fill="currentColor"/>
     </symbol>
 
+    <!-- 猫のポーズから、お尻をかかとへ引いて背中を丸める → スキーのジャンプのように
+         体を前へ乗り出して背中を反る。横から見た構図 (catPose と同じ向き、頭が右)。
+         動かないもの: 手・膝・かかとの位置 (床についたまま)。腕 (33) と太もも (30) の
+         長さはどのコマも同じ。座標はその長さから計算して置いた
+         (腰は膝からの角度で、肩は腰と手の両方からの距離で決まる)。
+         center = 四つん這い / back = お尻をかかとにつけて背中を丸めた姿勢 /
+         front = 肩を手より前へ出して背中を反った姿勢 -->
+    <symbol id="catRock-center" viewBox="0 0 120 120">
+      <use href="#floorBase"/><g stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"><path class="leg" d="M40 73 L40 103 L12 103"/><path class="arm" d="M81.9 70.1 L84 103"/></g><path d="M40 73 Q60.9 71.5 81.9 70.1" stroke="currentColor" stroke-width="18" fill="none" stroke-linecap="round"/><circle cx="94.9" cy="72.1" r="11" fill="currentColor"/>
+    </symbol>
+    <symbol id="catRock-back" viewBox="0 0 120 120">
+      <use href="#floorBase"/><g stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"><path class="leg" d="M15.4 85.8 L40 103 L12 103"/><path class="arm" d="M54.3 88.6 L84 103"/></g><path d="M15.4 85.8 Q33.9 73.2 54.3 88.6" stroke="currentColor" stroke-width="18" fill="none" stroke-linecap="round"/><circle cx="64.3" cy="91.6" r="11" fill="currentColor"/>
+    </symbol>
+    <symbol id="catRock-front" viewBox="0 0 120 120">
+      <use href="#floorBase"/><g stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"><path class="leg" d="M57.6 78.7 L40 103 L12 103"/><path class="arm" d="M95 71.9 L84 103"/></g><path d="M57.6 78.7 Q74.9 83.2 95 71.9" stroke="currentColor" stroke-width="18" fill="none" stroke-linecap="round"/><circle cx="106" cy="62.9" r="11" fill="currentColor"/>
+    </symbol>
+
     <!-- 壁に手をついて、アキレス腱を伸ばすときと同じ形で股関節を伸ばす。横から見た構図。
          足は前後に開いたまま 2 コマとも動かさない。前の膝を曲げて腰を前へ出し、
          後ろ脚はまっすぐ・かかとは床につけたまま。壁へ寄っていくのではない。

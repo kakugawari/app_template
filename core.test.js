@@ -2,10 +2,10 @@ const test = require('node:test');
 const assert = require('node:assert');
 const Core = require('./core.js');
 
-test('既定の種目は 24 種目、左右まとめたぶんも含めて 24 ステップになる', () => {
+test('既定の種目は 25 種目、左右まとめたぶんも含めて 25 ステップになる', () => {
   const steps = Core.buildSteps(Core.DEFAULT_EXERCISES);
-  assert.strictEqual(Core.DEFAULT_EXERCISES.length, 24);
-  assert.strictEqual(steps.length, 24);
+  assert.strictEqual(Core.DEFAULT_EXERCISES.length, 25);
+  assert.strictEqual(steps.length, 25);
 });
 
 test('回数で数える種目は「回」、秒数で数える種目は「秒」で表示する', () => {
@@ -26,7 +26,7 @@ test('並びは 寝る → 四つん這い → 立つ → 座る の順になっ
   assert.deepStrictEqual(Core.DEFAULT_EXERCISES.map((e) => e.art), [
     'kneeFall', 'hipTwist', 'armRaise', 'armAlt', 'armHug',
     'sideKnee', 'sideArm', 'sideOpen', 'shoulderBack',
-    'catPose', 'birdDog',
+    'catPose', 'catRock', 'birdDog',
     'wallHip', 'stairQuad', 'stairSwing', 'shallowSquat', 'sumoSquat', 'hipBackSquat',
     'chairTwist', 'chairLean', 'chairLift', 'pelvisTilt', 'armOpen', 'armRotate', 'footRoll'
   ]);
@@ -144,7 +144,7 @@ test('sessionProgress は current が total を超えない', () => {
 
 test('sessionProgress は 1 始まりで、途中経過を正しく返す', () => {
   const session = Core.createSession(Core.DEFAULT_EXERCISES);
-  assert.deepStrictEqual(Core.sessionProgress(session), { current: 1, total: 24 });
+  assert.deepStrictEqual(Core.sessionProgress(session), { current: 1, total: 25 });
 });
 
 test('sessionRatio は最初のステップでは 0 (まだ何も終わっていない)', () => {
@@ -284,7 +284,14 @@ test('既定の種目のうち、左右を入れ替えてやる 10 種目が mer
 test('スイング系 (体は動かさず手足だけ振る) は、今まで通り文字列のコマのまま', () => {
   const steps = Core.buildSteps(Core.DEFAULT_EXERCISES);
   const swing = steps.filter((s) => s.frames.length === 4 && typeof s.frames[0] === 'string');
-  assert.deepStrictEqual(swing.map((s) => s.art), ['armAlt', 'catPose', 'chairTwist', 'chairLean']);
+  assert.deepStrictEqual(swing.map((s) => s.art), ['armAlt', 'catPose', 'catRock', 'chairTwist', 'chairLean']);
+});
+
+test('猫のポーズで前後に揺れる種目は まん中 → 後ろ → まん中 → 前 の 4 コマ', () => {
+  const rock = Core.buildSteps(Core.DEFAULT_EXERCISES).find((s) => s.art === 'catRock');
+  assert.deepStrictEqual(rock.frames, ['center', 'back', 'center', 'front']);
+  const arts = Core.DEFAULT_EXERCISES.map((e) => e.art);
+  assert.strictEqual(arts.indexOf('catRock'), arts.indexOf('catPose') + 1, '猫のポーズのすぐ後ろ');
 });
 
 test('猫のポーズは まん中 → 丸める → まん中 → 反る の 4 コマ', () => {
@@ -429,7 +436,7 @@ test('createProgress は今の位置とステップ数を持つ', () => {
   let session = Core.createSession(Core.DEFAULT_EXERCISES);
   session = Core.advanceSession(session);
   session = Core.advanceSession(session);
-  assert.deepStrictEqual(Core.createProgress(session), { index: 2, total: 24 });
+  assert.deepStrictEqual(Core.createProgress(session), { index: 2, total: 25 });
 });
 
 test('途中まで進んだ位置は、続きとして取り出せる', () => {
