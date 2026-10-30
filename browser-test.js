@@ -609,11 +609,13 @@ async function run() {
     ok(artCheck.out.length === 0, `絵が枠 (120 四方) からはみ出していない${artCheck.out.length ? ' → ' + artCheck.out.join(' | ') : ''}`);
 
     // 片足を反対の足にのせる種目 (hipTwist) だけ、胴の下に腰の丸を別に描いていて、
-    // ほかの仰向けの種目に無い塊が目立っていた。仰向けの絵は同じ体でそろえる
-    section('仰向けの種目は、どれも同じ体 (胴は 1 つ、腰の塊なし) で描く');
-    const supine = await phone.evaluate(() => {
-      const ids = ['kneeFall', 'hipTwist', 'armRaise', 'armAlt', 'armHug']
-        .flatMap((art) => [...document.querySelectorAll(`symbol[id^="${art}-"]`)].map((el) => el.id));
+    // ほかの仰向けの種目に無い塊が目立っていた。仰向けの絵は、同じ向きから見るものどうし
+    // (真上から: 1・2 番 / 横から: 3〜5 番) で同じ体にそろえる
+    section('仰向けの種目は、同じ向きから見る絵どうしで同じ体 (胴は 1 つ、腰の塊なし) で描く');
+    const supineGroups = { '22x36': ['kneeFall', 'hipTwist'], '40x13': ['armRaise', 'armAlt', 'armHug'] };
+    const supine = await phone.evaluate((groups) => {
+      const ids = Object.entries(groups).flatMap(([want, arts]) => arts
+        .flatMap((art) => [...document.querySelectorAll(`symbol[id^="${art}-"]`)].map((el) => ({ id: el.id, want }))));
       // <use> で呼んでいる部品も中身まで数える (床のマットは除く)
       const parts = (el) => [...el.children].flatMap((c) => {
         if (c.tagName === 'use') {
@@ -622,15 +624,41 @@ async function run() {
         }
         return [c, ...parts(c)];
       });
-      return ids.map((id) => {
+      return ids.map(({ id, want }) => {
         const rects = parts(document.getElementById(id))
           .filter((e) => e.tagName === 'rect' && e.getAttribute('fill') === 'currentColor');
-        return { id, n: rects.length, size: rects.map((r) => r.getAttribute('width') + 'x' + r.getAttribute('height')).join(',') };
+        return { id, want, n: rects.length, size: rects.map((r) => r.getAttribute('width') + 'x' + r.getAttribute('height')).join(',') };
       });
-    });
-    const oddBody = supine.filter((s) => s.n !== 1 || s.size !== '22x36');
+    }, supineGroups);
+    const oddBody = supine.filter((s) => s.n !== 1 || s.size !== s.want);
     ok(supine.length >= 10 && oddBody.length === 0,
       `仰向けの ${supine.length} コマとも胴は 1 つで同じ大きさ${oddBody.length ? ' → ' + oddBody.map((s) => `${s.id} (${s.n} 個: ${s.size})`).join(', ') : ''}`);
+
+    // 3〜5 番 (仰向けで膝を立てる種目) は以前、真上から見た絵で、立てた膝が
+    // 短い脚にしか見えなかった。横から見て、膝が腰と足より高く「∧」に立っていること、
+    // 腕を動かすコマでも脚は同じ形のままであることを見張る
+    section('仰向けで膝を立てる 3〜5 番は、横から見て膝が立っている');
+    const kneesUp = await phone.evaluate(() => {
+      const pts = (el) => (el.getAttribute('d').match(/-?\d+(\.\d+)?/g) || []).map(Number)
+        .reduce((a, n, i, all) => (i % 2 ? a : a.concat([[n, all[i + 1]]])), []);
+      // <use> で呼んだ部品の中の .leg も拾う
+      const legsOf = (el) => [...el.children].flatMap((c) => {
+        if (c.tagName === 'use') { const ref = document.querySelector(c.getAttribute('href')); return ref ? legsOf(ref) : []; }
+        return (c.classList.contains('leg') ? [c] : []).concat(legsOf(c));
+      });
+      return ['armRaise', 'armAlt', 'armHug']
+        .flatMap((art) => [...document.querySelectorAll(`symbol[id^="${art}-"]`)])
+        .map((sym) => {
+          const legs = legsOf(sym).map(pts);
+          const up = legs.length >= 1 && legs.every(([hip, knee, foot]) =>
+            foot && knee[1] < hip[1] - 15 && knee[1] < foot[1] - 15 && Math.abs(foot[1] - hip[1]) < 8);
+          return { id: sym.id, ok: up, legs: legs.map((l) => l.map((p) => p.join(',')).join(' ')).join(' / ') || '脚が無い' };
+        });
+    });
+    const flat = kneesUp.filter((k) => !k.ok);
+    ok(kneesUp.length === 7 && flat.length === 0,
+      `3〜5 番の ${kneesUp.length} コマとも膝が腰と足より 15 以上高い${flat.length ? ' → ' + flat.map((k) => `${k.id} (${k.legs})`).join(', ') : ''}`);
+    ok(new Set(kneesUp.map((k) => k.legs)).size === 1, '3〜5 番の脚は、どのコマも同じ形 (腕だけが動く)');
 
     // 猫のポーズで前後に揺れる種目。手・膝・かかとは床についたまま動かず、
     // 後ろではお尻がかかとにつき、前では肩が手より前へ出る

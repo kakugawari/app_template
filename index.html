@@ -455,36 +455,48 @@
     <g id="railBase" stroke="currentColor" stroke-width="4" opacity=".45" fill="none" stroke-linecap="round">
       <line x1="104" y1="40" x2="104" y2="110"/><line x1="12" y1="110" x2="110" y2="110"/></g>
 
-    <!-- 仰向けで膝を立て、両手で万歳する。真上から見た構図。
+    <!-- 3〜5 番 (仰向けで膝を立てて腕を動かす種目) は横から見た構図 (頭が左)。
+         真上から見ると立てた膝が短い脚にしか見えず、「膝を立てる」が伝わらなかった。
+         動かないもの: 頭・胴・膝を立てた脚 (bentKneesSide にまとめて、3 種目で同じ体)。腕だけが動く。
+         床は奥行きのある帯 (奥の縁・手前の縁)。本人の右手が手前 (濃く)、左手が奥 (薄く)。
+         下ろした腕は体の横に沿うので、胴に隠れて見えない -->
+    <g id="matSideBase" stroke="currentColor" stroke-width="4" opacity=".45" fill="none" stroke-linecap="round">
+      <line x1="6" y1="68" x2="114" y2="68"/><line x1="6" y1="92" x2="114" y2="92"/></g>
+    <g id="bentKneesSide">
+      <path class="leg" d="M74 76 L90 50 L106 80" stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".45"/>
+      <path class="leg" d="M76 78 L92 52 L108 82" stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="38" y="70" width="40" height="13" rx="6.5" fill="currentColor"/>
+      <circle cx="28" cy="75" r="10" fill="currentColor"/></g>
+
+    <!-- 仰向けで膝を立て、両手で万歳する
          before = 腕を体の横に下ろした姿勢 / after = 両腕を頭の上へ伸ばした姿勢 -->
     <symbol id="armRaise-before" viewBox="0 0 120 120">
-      <use href="#matTopBase"/><g stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M54 70 L47 88 L52 104"/><path d="M66 70 L73 88 L68 104"/></g><circle cx="60" cy="22" r="11" fill="currentColor"/><rect x="49" y="34" width="22" height="36" rx="11" fill="currentColor"/><g stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M50 40 L41 66"/><path d="M70 40 L79 66"/></g>
+      <use href="#matSideBase"/><use href="#bentKneesSide"/>
     </symbol>
     <symbol id="armRaise-after" viewBox="0 0 120 120">
-      <use href="#matTopBase"/><g stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M54 70 L47 88 L52 104"/><path d="M66 70 L73 88 L68 104"/></g><circle cx="60" cy="22" r="11" fill="currentColor"/><rect x="49" y="34" width="22" height="36" rx="11" fill="currentColor"/><g stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M50 40 L43 9"/><path d="M70 40 L77 9"/></g>
+      <use href="#matSideBase"/><path class="arm-far" d="M46 76 L14 54" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" opacity=".45"/><use href="#bentKneesSide"/><path class="arm-near" d="M46 76 L14 56" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round"/>
     </symbol>
 
-    <!-- 仰向けで膝を立て、左右交互に万歳する。真上から見た構図。
-         上から見ているので、本人の左手は画面の右側。左手から始める
-         down = 両腕を下ろした姿勢 / left = 左手だけ上げた姿勢 / right = 右手だけ上げた姿勢 -->
+    <!-- 仰向けで膝を立て、左右交互に万歳する。左手 (奥) から始める
+         down = 両腕を下ろした姿勢 / left = 左手 (奥・薄い) だけ上げた姿勢 / right = 右手 (手前・濃い) だけ上げた姿勢 -->
     <symbol id="armAlt-down" viewBox="0 0 120 120">
-      <use href="#matTopBase"/><g stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M54 70 L47 88 L52 104"/><path d="M66 70 L73 88 L68 104"/></g><circle cx="60" cy="22" r="11" fill="currentColor"/><rect x="49" y="34" width="22" height="36" rx="11" fill="currentColor"/><g stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M50 40 L41 66"/><path d="M70 40 L79 66"/></g>
+      <use href="#matSideBase"/><use href="#bentKneesSide"/>
     </symbol>
     <symbol id="armAlt-left" viewBox="0 0 120 120">
-      <use href="#matTopBase"/><g stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M54 70 L47 88 L52 104"/><path d="M66 70 L73 88 L68 104"/></g><circle cx="60" cy="22" r="11" fill="currentColor"/><rect x="49" y="34" width="22" height="36" rx="11" fill="currentColor"/><g stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M50 40 L41 66"/><path d="M70 40 L77 9"/></g>
+      <use href="#matSideBase"/><path class="arm-far" d="M46 76 L14 54" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" opacity=".45"/><use href="#bentKneesSide"/>
     </symbol>
     <symbol id="armAlt-right" viewBox="0 0 120 120">
-      <use href="#matTopBase"/><g stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M54 70 L47 88 L52 104"/><path d="M66 70 L73 88 L68 104"/></g><circle cx="60" cy="22" r="11" fill="currentColor"/><rect x="49" y="34" width="22" height="36" rx="11" fill="currentColor"/><g stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M50 40 L43 9"/><path d="M70 40 L79 66"/></g>
+      <use href="#matSideBase"/><use href="#bentKneesSide"/><path class="arm-near" d="M46 76 L14 56" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round"/>
     </symbol>
 
-    <!-- 仰向けで膝を立て、両手をできるだけ広げてから胸の前で合わせる。真上から見た構図。
-         合わせた腕は天井へ伸びているので、真上からは短く見える
-         before = 両腕を横へ広げた姿勢 / after = 胸の前で両手を合わせた姿勢 -->
+    <!-- 仰向けで膝を立て、両手をできるだけ広げてから胸の前で合わせる
+         広げた腕は床の上を横へ伸びるので、横からは手前の床・奥の床へ向かう短い腕に見える
+         before = 両腕を横へ広げた姿勢 / after = 天井へ伸ばして胸の前で両手を合わせた姿勢 -->
     <symbol id="armHug-before" viewBox="0 0 120 120">
-      <use href="#matTopBase"/><g stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M54 70 L47 88 L52 104"/><path d="M66 70 L73 88 L68 104"/></g><circle cx="60" cy="22" r="11" fill="currentColor"/><rect x="49" y="34" width="22" height="36" rx="11" fill="currentColor"/><g stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M50 40 L24 44"/><path d="M70 40 L96 44"/></g>
+      <use href="#matSideBase"/><path class="arm-far" d="M46 76 L42 64" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" opacity=".45"/><use href="#bentKneesSide"/><path class="arm-near" d="M46 76 L42 90" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round"/>
     </symbol>
     <symbol id="armHug-after" viewBox="0 0 120 120">
-      <use href="#matTopBase"/><g stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M54 70 L47 88 L52 104"/><path d="M66 70 L73 88 L68 104"/></g><circle cx="60" cy="22" r="11" fill="currentColor"/><rect x="49" y="34" width="22" height="36" rx="11" fill="currentColor"/><path d="M50 40 L57 50 L60 46" style="stroke: var(--bg-2)" stroke-width="11" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M50 40 L57 50 L60 46" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M70 40 L63 50 L60 46" style="stroke: var(--bg-2)" stroke-width="11" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M70 40 L63 50 L60 46" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <use href="#matSideBase"/><path class="arm-far" d="M46 76 L48 38" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" opacity=".45"/><use href="#bentKneesSide"/><path class="arm-near" d="M46 76 L48 38" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round"/>
     </symbol>
 
     <!-- 横向きに寝て膝をくの字に曲げて固め、上の肩だけを後ろへ動かして肩甲骨を広げる。
