@@ -13,6 +13,8 @@
 <link rel="icon" href="./icon-512.png" type="image/png" sizes="512x512">
 <!-- iOS は SVG を読めないので、ホーム画面用は PNG を渡す (make-icons.js で作る) -->
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<!-- iOS のホーム画面に出る名前。無いと <title> が使われ、長くて途中で切れる -->
+<meta name="apple-mobile-web-app-title" content="ストレッチ">
 <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
@@ -619,7 +621,10 @@
   <header id="topbar">
     <h1 class="title">STRETCH ROUTINE</h1>
     <div class="topbar-actions">
-      <button type="button" id="btnRestart" class="btn">はじめから</button>
+      <!-- 実行中だけ出す。途中の位置は残したままタイトルへ戻る
+           (タイトルの「つづきから」で戻れる)。以前は「はじめから」で、
+           1 回触れただけで途中の位置が消えていた -->
+      <button type="button" id="btnRestart" class="btn">タイトルへ</button>
     </div>
   </header>
 
@@ -635,7 +640,7 @@
       <p class="lead" id="warmupText">—</p>
 
       <!-- スタンプカード。1 周やりきるごとに 1 個たまる -->
-      <div class="stampCard">
+      <div class="stampCard" id="stampCard">
         <p class="stampHead">
           <span>STAMP CARD</span>
           <span id="cardCount" class="stampCount">—</span>
@@ -693,7 +698,9 @@
       <svg class="illustration" aria-hidden="true"><use href="#iconComplete"></use></svg>
       <p class="badge">COMPLETE</p>
       <p class="lead">おつかれさまでした。</p>
-      <button type="button" id="btnAgain" class="btn btn-primary">もう一度</button>
+      <!-- スタンプカードは 1 つだけ。やりきった瞬間に押すところを見せたいので、
+           完了画面のあいだは app.js がここ (ボタンの前) へ移してくる -->
+      <button type="button" id="btnAgain" class="btn btn-primary">タイトルへ</button>
     </section>
 
   </main>

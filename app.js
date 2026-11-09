@@ -16,6 +16,7 @@
     screenCustom: document.getElementById('screenCustom'),
     mascot: document.getElementById('mascot'),
     mascotPreview: document.getElementById('mascotPreview'),
+    stampCard: document.getElementById('stampCard'),
     stampSlots: document.getElementById('stampSlots'),
     stampNote: document.getElementById('stampNote'),
     cardCount: document.getElementById('cardCount'),
@@ -150,6 +151,9 @@
 
   const SVG_NS = 'http://www.w3.org/2000/svg';
 
+  /** 絵の symbol の枠 (viewBox) の 1 辺 */
+  const ART_BOX = 120;
+
   function svgUse(className, href) {
     const svg = document.createElementNS(SVG_NS, 'svg');
     svg.setAttribute('class', className);
@@ -161,6 +165,90 @@
   }
 
   /**
+   * 種目の絵。symbol を等倍 (1 単位 = 1 単位) で置き、どこを見せるかは
+   * svg の viewBox で決められるようにしておく (centerArt が使う)。
+   */
+  function svgArt(className, href) {
+    const svg = svgUse(className, href);
+    svg.setAttribute('viewBox', '0 0 ' + ART_BOX + ' ' + ART_BOX);
+    svg.firstChild.setAttribute('width', ART_BOX);
+    svg.firstChild.setAttribute('height', ART_BOX);
+    return svg;
+  }
+
+  /** 種目 (art) ごとの、絵が実際に占めている範囲のまん中。測るのは 1 度だけ */
+  const artCenters = {};
+
+  /**
+   * 絵を枠のまん中に置く。
+   *
+   * 寝る・四つん這いの絵は背が低く、枠の下半分にしか描かれていない
+   * (床が y=106、頭が y=50 あたり)。そのまま出すと、立つ・座る絵に比べて
+   * 絵だけ下がって見え、上に大きな空きができる。
+   * ステップの全コマをまとめた範囲のまん中が枠のまん中に来るよう、
+   * 全コマの viewBox を同じだけずらす (コマごとにずらすと、切り替えの
+   * たびに床が動く)。大きさは変えない。
+   */
+  function centerArt(step, shots) {
+    let center = artCenters[step.art];
+    if (!center) {
+      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+      shots.forEach(function (svg) {
+        let box = null;
+        try { box = svg.firstChild.getBBox(); } catch (e) { /* 描かれていないと測れない */ }
+        if (!box || (!box.width && !box.height)) return;
+        x0 = Math.min(x0, box.x); y0 = Math.min(y0, box.y);
+        x1 = Math.max(x1, box.x + box.width); y1 = Math.max(y1, box.y + box.height);
+      });
+      // 測れなかったら何もしない (覚えもしない。次に描くときにもう一度測る)
+      if (x0 === Infinity) return;
+      center = artCenters[step.art] = { x: (x0 + x1) / 2, y: (y0 + y1) / 2 };
+    }
+    const half = ART_BOX / 2;
+    const viewBox = [center.x - half, center.y - half, ART_BOX, ART_BOX]
+      .map(function (n) { return Math.round(n * 10) / 10; }).join(' ');
+    shots.forEach(function (svg) { svg.setAttribute('viewBox', viewBox); });
+  }
+
+  /** 句ごとの span に分けて置く。行が変わるのは句の切れ目だけになる */
+  function setPhrases(el, phrases) {
+    el.textContent = '';
+    phrases.forEach(function (phrase) {
+      const span = document.createElement('span');
+      span.className = 'phrase';
+      span.textContent = phrase;
+      el.appendChild(span);
+    });
+  }
+
+  function renderName(name) {
+    setPhrases(els.exerciseName, C.namePhrases(name));
+  }
+
+  /**
+   * 側バッジ。左右をまとめた種目は「左 → 右」の左と右を別の span にして、
+   * 絵がいま見せている側を startFlip が濃くできるようにする。
+   */
+  function renderSide(step) {
+    const label = C.sideLabel(step);
+    els.side.classList.toggle('is-empty', !label);
+    els.side.textContent = '';
+    if (!label) {
+      els.side.textContent = '\u00a0';
+    } else if (!step.sideOrder) {
+      els.side.textContent = label;
+    } else {
+      step.sideOrder.forEach(function (side, i) {
+        if (i > 0) els.side.appendChild(document.createTextNode(' → '));
+        const span = document.createElement('span');
+        span.className = 'sideNow';
+        span.textContent = C.SIDE_LABELS[side];
+        els.side.appendChild(span);
+      });
+    }
+  }
+
+  /**
    * コマの名前と、ミラーするかどうかを取り出す。
    *
    * コマは文字列 ('before' など、今まで通り) か、{ name, side } のどちらか。
@@ -169,17 +257,6 @@
    * ミラーする (今まで通りの `step.side`) のではなく、コマ 1 つずつが
    * 自分の側を持つ。
    */
-  /** 種目名を句ごとの span に分けて置く。行が変わるのは句の切れ目だけになる */
-  function renderName(name) {
-    els.exerciseName.textContent = '';
-    C.namePhrases(name).forEach(function (phrase) {
-      const span = document.createElement('span');
-      span.className = 'phrase';
-      span.textContent = phrase;
-      els.exerciseName.appendChild(span);
-    });
-  }
-
   function frameName(frame) {
     return typeof frame === 'string' ? frame : frame.name;
   }
@@ -200,14 +277,17 @@
     const frames = calm ? C.stillFrames(step) : step.frames;
 
     els.illustrationRow.textContent = '';
+    const shots = [];
     frames.forEach(function (frame, i) {
       if (calm && i > 0) {
         els.illustrationRow.appendChild(svgUse('illustrationArrow', '#iconArrow'));
       }
       const mirror = frameMirror(step, frame) ? ' mirror' : '';
-      els.illustrationRow.appendChild(
-        svgUse('illustration' + mirror, '#' + step.art + '-' + frameName(frame)));
+      const shot = svgArt('illustration' + mirror, '#' + step.art + '-' + frameName(frame));
+      shots.push(shot);
+      els.illustrationRow.appendChild(shot);
     });
+    centerArt(step, shots);
   }
 
   /**
@@ -218,6 +298,25 @@
    * コマが 1 度も切り替わらないことがあるため。
    * ステップが変わるたびに呼び直すので、必ず 1 コマめから始まる。
    */
+  /** 左右をまとめた種目で、いまやっていない側の字の濃さ */
+  const SIDE_DIM = 0.4;
+
+  /**
+   * 一周のうち from 〜 to のあいだだけ on、ほかは off にするキーフレーム。
+   * ぱっと切り替える (パラパラ漫画なので、間をなめらかにつながない)。
+   */
+  function windowKeys(from, to, on, off, eps) {
+    const keys = [{ opacity: from <= 0 ? on : off, offset: 0 }];
+    if (from > 0) {
+      keys.push({ opacity: off, offset: from - eps });
+      keys.push({ opacity: on, offset: from });
+    }
+    keys.push({ opacity: on, offset: to - eps });
+    keys.push({ opacity: off, offset: to });
+    if (to < 1) keys.push({ opacity: off, offset: 1 });
+    return keys;
+  }
+
   function startFlip() {
     stopFlip();
     // 動きを減らす設定のときは切り替えない。すでに横に並べてある
@@ -226,24 +325,22 @@
     const shots = els.illustrationRow.querySelectorAll('.illustration');
     if (shots.length < 2) return;
 
-    // ぱっと切り替える (パラパラ漫画なので、間をなめらかにつながない)。
     // i 番めのコマは i/n 〜 (i+1)/n のあいだだけ見せる。
     const n = shots.length;
     const eps = 0.001 / n;
     const timing = { duration: FLIP_MS * n, iterations: Infinity };
 
     flipAnimations = Array.prototype.map.call(shots, function (shot, i) {
-      const from = i / n;
-      const to = (i + 1) / n;
-      const keys = [{ opacity: i === 0 ? 1 : 0, offset: 0 }];
-      if (i > 0) {
-        keys.push({ opacity: 0, offset: from - eps });
-        keys.push({ opacity: 1, offset: from });
-      }
-      keys.push({ opacity: 1, offset: to - eps });
-      keys.push({ opacity: 0, offset: to });
-      if (to < 1) keys.push({ opacity: 0, offset: 1 });
-      return shot.animate(keys, timing);
+      return shot.animate(windowKeys(i / n, (i + 1) / n, 1, 0, eps), timing);
+    });
+
+    // 左右をまとめた種目は、コマが「左の動き → 右の動き」の順に並んでいる。
+    // 側バッジの「左 → 右」のうち、いま絵が見せている側だけを濃くして、
+    // 絵がどちら側なのかを分かるようにする (絵と同じ時計で動かすので、ずれない)。
+    const sides = els.side.querySelectorAll('.sideNow');
+    Array.prototype.forEach.call(sides, function (label, k) {
+      flipAnimations.push(label.animate(
+        windowKeys(k / sides.length, (k + 1) / sides.length, 1, SIDE_DIM, eps), timing));
     });
   }
 
@@ -348,12 +445,13 @@
         + '「' + reward.name + '」をもらいました。きせかえから使えます。';
     }
     if (record.stamps === 0) {
-      return '1 周やりきるとスタンプが 1 つたまります。'
+      // どちらの文も、幅 320 の画面で 1 行に入る長さにしてある
+      return '1 周でスタンプが 1 つたまります。'
         + C.CARD_SIZE + ' 個でカードが 1 枚うまります。';
     }
     const left = C.CARD_SIZE - C.filledSlots(record);
     return '通算 ' + record.stamps + ' 個。'
-      + (left === 0 ? '次のスタンプから新しいカードです。' : 'あと ' + left + ' 個でカードがうまります。');
+      + (left === 0 ? '次から新しいカードです。' : 'あと ' + left + ' 個でカードがうまります。');
   }
 
   // ---------------------------------------------------------------- きせかえ
@@ -394,11 +492,18 @@
     });
   }
 
-  function chip(label, pressed, locked, onPick) {
+  /** まだもらっていないごほうびには、いつもらえるかを書く (「まだ」だけでは、どうすればよいか分からない) */
+  function chip(label, pressed, locked, onPick, cardNumber) {
     const b = document.createElement('button');
     b.type = 'button';
     b.className = 'chip';
-    b.textContent = locked ? label + '(まだ)' : label;
+    b.textContent = label;
+    if (locked) {
+      const hint = document.createElement('span');
+      hint.className = 'chipHint';
+      hint.textContent = 'カード' + cardNumber + '枚で';
+      b.appendChild(hint);
+    }
     b.setAttribute('aria-pressed', String(pressed));
     b.disabled = locked;
     if (!locked) b.addEventListener('click', onPick);
@@ -417,7 +522,7 @@
         els.skinChips.appendChild(chip(C.skinName(id), record.skin === id, locked, function () {
           pickSkin(id);
           renderCustom();
-        }));
+        }, C.rewardCardNumber(id)));
       });
 
     els.gearChips.textContent = '';
@@ -431,15 +536,54 @@
         state.record = Object.assign({}, state.record, { gear: gear });
         saveRecord(state.record);
         renderCustom();
-      }));
+      }, C.rewardCardNumber(r.id)));
     });
   }
 
+  /**
+   * 画面が替わって、フォーカスのあったボタンが消えたときは、新しい画面の
+   * 主なボタンへ移す。そのままだとフォーカスが行き場を失い、キーボードや
+   * 読み上げで使っている人は画面の先頭から探し直すことになる。
+   *
+   * キーボードで動かしているときだけにする。指で使っているときにも移すと、
+   * ブラウザによっては「できた」にフォーカスの枠が出たままになる
+   * (スクリプトから移したフォーカスに枠を出すかどうかは、ブラウザごとに違う)。
+   */
+  let usingKeyboard = false;
+
+  function keepFocus() {
+    if (!usingKeyboard) return;
+    const active = document.activeElement;
+    const lost = !active || active === document.body
+      || !active.getClientRects().length || getComputedStyle(active).visibility === 'hidden';
+    if (!lost) return;
+    const main = {
+      warmup: state.resume ? els.btnResume : els.btnStart,
+      running: els.btnDone,
+      done: els.btnAgain,
+      custom: els.btnCloseCustom
+    }[state.screen];
+    if (main && !main.disabled) main.focus({ preventScroll: true });
+  }
+
+  let shownScreen = null;
+
   function render() {
+    draw();
+    // はじめて描くとき (開いた直後) は動かさない。画面が替わったときだけ
+    if (shownScreen !== null && shownScreen !== state.screen) keepFocus();
+    shownScreen = state.screen;
+  }
+
+  function draw() {
     els.screenCustom.hidden = state.screen !== 'custom';
     els.screenWarmup.hidden = state.screen !== 'warmup';
     els.screenRun.hidden = state.screen !== 'running';
     els.screenDone.hidden = state.screen !== 'done';
+
+    // 「タイトルへ」は実行中だけ出す。タイトルや完了画面では押しても行き先が無い。
+    // 見出しの高さが変わらないよう、消すのではなく見えなくする
+    els.btnRestart.style.visibility = state.screen === 'running' ? '' : 'hidden';
 
     if (state.screen === 'running') {
       keepScreenOn();
@@ -453,16 +597,28 @@
       return;
     }
 
-    if (state.screen === 'warmup') {
-      els.warmupText.textContent = C.WARMUP_NOTE;
-      drawMascot(els.mascot, state.record.gear);
-      renderSwatches();
-      // 押したてのスタンプは 1 度だけ動かす。描き直すたびに動くと、
-      // きせかえから戻ってくるだけで何度も押されているように見える
+    if (state.screen === 'done') {
+      // やりきった瞬間に、その場でスタンプを押す。スタンプカードは 1 つだけなので、
+      // 完了画面のあいだはこちらへ移してくる (タイトルへ戻るときに返す)。
+      // 押したてのスタンプは 1 度だけ動かす
       const pressNewest = state.freshStamp;
       state.freshStamp = false;
+      els.screenDone.insertBefore(els.stampCard, els.btnAgain);
       renderStampCard(pressNewest);
-      els.stampNote.textContent = stampNote(pressNewest);
+      setPhrases(els.stampNote, C.textPhrases(stampNote(pressNewest)));
+      return;
+    }
+
+    if (state.screen === 'warmup') {
+      setPhrases(els.warmupText, C.textPhrases(C.WARMUP_NOTE));
+      drawMascot(els.mascot, state.record.gear);
+      renderSwatches();
+      els.screenWarmup.insertBefore(els.stampCard, els.btnStart.parentNode);
+      // スタンプは完了画面で押し終えているので、ここでは動かさない。
+      // 描き直すたびに動くと、きせかえから戻ってくるだけで何度も
+      // 押されているように見える
+      renderStampCard(false);
+      setPhrases(els.stampNote, C.textPhrases(stampNote(false)));
       els.btnCustom.hidden = C.unlockedRewards(state.record).length === 0;
 
       // 途中でやめていたら「つづきから」を出し、そちらを主なボタンにする。
@@ -481,13 +637,12 @@
       els.progress.textContent = progress.current + ' / ' + progress.total;
       els.progressBarFill.style.width = (C.sessionRatio(state.session) * 100) + '%';
       buildIllustration(step);
-      startFlip();
       renderName(step.name);
       els.reps.textContent = String(step.reps);
       els.repsUnit.textContent = step.unit;
-      const label = C.sideLabel(step);
-      els.side.classList.toggle('is-empty', !label);
-      els.side.textContent = label || '\u00a0';
+      renderSide(step);
+      // 側バッジも絵と同じ時計で動かすので、両方を置いてから始める
+      startFlip();
     }
   }
 
@@ -518,7 +673,7 @@
 
   /**
    * 「できた」を連打すると、実際にストレッチをしていなくても
-   * 一瞬で 17 ステップぶん進んでスタンプまでついてしまう
+   * 一瞬で何ステップも進んでスタンプまでついてしまう
    * (実測: 連続で押すと index が 0 → 2 のように 2 つ以上進む)。
    * 一定時間は次のタップを受け付けないことで、連打で素通りできないようにする。
    */
@@ -528,11 +683,16 @@
   function tapDone() {
     if (doneLocked) return;
     doneLocked = true;
+    // 押せなくしたボタンからは、ブラウザがフォーカスを外す。キーボードや
+    // スイッチで押している人は、そのたびに「できた」を探し直すことになるので、
+    // 押せるように戻したときにフォーカスも返す
+    const hadFocus = document.activeElement === els.btnDone;
     els.btnDone.disabled = true;
     complete();
     setTimeout(function () {
       doneLocked = false;
       els.btnDone.disabled = false;
+      if (hadFocus && state.screen === 'running') els.btnDone.focus({ preventScroll: true });
     }, TAP_COOLDOWN_MS);
   }
 
@@ -540,7 +700,7 @@
     state.session = C.advanceSession(state.session);
     if (C.isSessionFinished(state.session)) {
       state.screen = 'done';
-      // 1 周やりきったのでスタンプが 1 つたまる。準備画面に戻ったときに押す
+      // 1 周やりきったのでスタンプが 1 つたまる。完了画面で、その場で押す
       state.record = C.addStamp(state.record);
       saveRecord(state.record);
       state.freshStamp = true;
@@ -553,11 +713,28 @@
     render();
   }
 
+  /** 完了画面からタイトルへ。やりきっているので、途中の位置は何も残っていない */
   function restart() {
     state.screen = 'warmup';
     state.session = C.createSession(C.DEFAULT_EXERCISES);
     state.resume = null;
     clearProgress();
+    render();
+  }
+
+  /**
+   * 実行中にタイトルへ戻る。途中の位置は残す (タイトルに「つづきから」が出る)。
+   *
+   * 以前はここが「はじめから」で、押したとたんに途中の位置を捨てていた。
+   * 見出しのボタンは寝転んだままでも指が当たりやすく、20 種目めで 1 回
+   * 触れただけで最初からやり直しになる。最初からやり直したいときは、
+   * タイトルの「はじめる」を押せばよい。
+   */
+  function pause() {
+    if (state.screen !== 'running') return;
+    state.screen = 'warmup';
+    // 位置は「できた」のたびにしまってある。1 種目めなら何も無いので、続きも出ない
+    state.resume = loadProgress(state.session.steps.length);
     render();
   }
 
@@ -580,7 +757,7 @@
     els.btnBack.addEventListener('click', goBack);
     els.btnDone.addEventListener('click', tapDone);
     els.btnAgain.addEventListener('click', restart);
-    els.btnRestart.addEventListener('click', restart);
+    els.btnRestart.addEventListener('click', pause);
     els.btnCustom.addEventListener('click', function () {
       state.screen = 'custom';
       render();
@@ -594,6 +771,10 @@
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js').catch(function () {});
     }
+
+    // いまキーボードで動かしているか、指やマウスか (keepFocus が見る)
+    document.addEventListener('keydown', function () { usingKeyboard = true; }, true);
+    document.addEventListener('pointerdown', function () { usingKeyboard = false; }, true);
 
     // 画面を閉じたりタブを移ると、ブラウザが Wake Lock を勝手に解除する。
     // 戻ってきたときに握り直さないと、そこから先は画面が消えるようになる。
@@ -613,6 +794,7 @@
       screenHeldOn: function () { return !!screenLock; },
       complete: complete,
       restart: restart,
+      pause: pause,
       goBack: goBack,
       render: render,
       flipMs: FLIP_MS,

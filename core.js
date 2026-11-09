@@ -18,12 +18,14 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
-  const WARMUP_NOTE = '肩と膝の上を温めてから始めましょう。';
+  // 読点を入れてあるのは、画面でそこだけ折り返せるようにするため (textPhrases)。
+  // 読点なしだと幅 393 の画面で「…始めましょ / う。」と 1 字だけ次の行に落ちる
+  const WARMUP_NOTE = '肩と膝の上を温めてから、始めましょう。';
 
   const SIDE_LABELS = { left: '左', right: '右' };
 
   /**
-   * イラストのコマ割り。`ex<種目番号>-<コマ名>` の symbol を順に見せる。
+   * イラストのコマ割り。`<art>-<コマ名>` の symbol を順に見せる。
    *
    * 既定は「はじめ → 動いた先」の 2 コマ。
    * 左右に振る種目は、真ん中を通って反対側へ行くのが本当の動きなので、
@@ -311,6 +313,15 @@
   }
 
   /**
+   * 種目名でない文 (準備のひとこと、スタンプカードの説明) を、折り返してよい
+   * 単位に区切る。読点 (、) と句点 (。) の後ろで区切り、どちらも前の句に残す。
+   * 「…新しいカードで / す。」のように 1〜2 字だけ次の行に落ちるのを防ぐ。
+   */
+  function textPhrases(text) {
+    return String(text).match(/[^、。]+[、。]?|[、。]/g) || [];
+  }
+
+  /**
    * コマ割りから、重複を取り除いて出てきた順に並べたもの。
    * 動きを止めて横に並べるときに使う (真ん中を 2 回並べても意味がないため)。
    *
@@ -468,6 +479,14 @@
     return REWARDS[completedCards(record) - 1] || null;
   }
 
+  /** そのごほうびがもらえるのは、カードを何枚うめたときか。ごほうびでなければ 0 */
+  function rewardCardNumber(id) {
+    for (let i = 0; i < REWARDS.length; i++) {
+      if (REWARDS[i].id === id) return i + 1;
+    }
+    return 0;
+  }
+
   /** 使える色の一覧。はじめから選べる色 → もらった色の順 */
   function availableSkins(record) {
     return FREE_SKINS.map(function (s) { return s.id; }).concat(
@@ -506,7 +525,7 @@
   // ------------------------------------------------------------------
   // 途中でやめたときの位置
   //
-  // 17 ステップは何分もかかるので、電話が来たり画面がロックされたりして
+  // 1 周は何分もかかるので、電話が来たり画面がロックされたりして
   // 閉じることがある。どこまでやったかを覚えておいて、次に開いたときに
   // 「つづきから」を出せるようにする。
   //
@@ -553,6 +572,7 @@
     isUnlocked: isUnlocked,
     justFilledCard: justFilledCard,
     rewardAt: rewardAt,
+    rewardCardNumber: rewardCardNumber,
     availableSkins: availableSkins,
     normalizeRecord: normalizeRecord,
     DEFAULT_EXERCISES: DEFAULT_EXERCISES,
@@ -566,6 +586,7 @@
     sessionRatio: sessionRatio,
     sideLabel: sideLabel,
     namePhrases: namePhrases,
+    textPhrases: textPhrases,
     DEFAULT_FRAMES: DEFAULT_FRAMES,
     SWING_FRAMES: SWING_FRAMES,
     ALT_FRAMES: ALT_FRAMES,

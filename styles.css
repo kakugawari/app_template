@@ -106,6 +106,26 @@ body {
     font-size: 12px;
     letter-spacing: 0;
   }
+
+  /* 見出しも詰める。幅 320 では題とボタンが 1 行に入らず、ボタンが 2 行めに
+     落ちて見出しが 95px (ふつうは 63px) になり、そのぶん下の画面が狭くなっていた */
+  .title {
+    font-size: 15px;
+    letter-spacing: .06em;
+  }
+
+  /* カードの余白も詰める。幅 320 のタイトル画面はカードが画面より高く、
+     まん中寄せのせいで上が見出しの下にもぐって切れていた (下端だけ見ると
+     収まっているように見えた) */
+  .screen { padding: 22px 18px; }
+}
+
+/* キーボードやスイッチで動かす人に、いまどこにいるかを見せる
+   (指で押したときには出ない) */
+.btn:focus-visible,
+.chip:focus-visible {
+  outline: 3px solid var(--accent-2);
+  outline-offset: 2px;
 }
 
 .btn:hover { border-color: var(--accent-2); }
@@ -134,7 +154,9 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  /* 縦のまん中寄せは、中のカード (.screen) の margin: auto が受け持つ。
+     ここで justify-content: center にすると、カードが画面より高いときに
+     上にはみ出したぶんがスクロールしても見えなくなる (きせかえ画面で起きる) */
   /* 詰める。実行画面の絵と種目名を、そのぶん大きくできる */
   padding: 12px 14px;
   text-align: center;
@@ -147,6 +169,8 @@ body {
   gap: 16px;
   width: 100%;
   max-width: 26em;
+  /* 上下の auto で縦のまん中に置く。入りきらないときは 0 になり、上から順に見える */
+  margin: auto 0;
   padding: 36px 28px;
   background: var(--bg-2);
   border: 2px solid var(--line);
@@ -269,7 +293,7 @@ body {
 
 /* 句 (読点まで) をひとかたまりにして、句の途中では折り返さない。
    句が 1 行より長いときだけ、中で折り返す (はみ出しはしない)。 */
-.exerciseName .phrase {
+.phrase {
   display: inline-block;
 }
 
@@ -428,6 +452,14 @@ body {
   color: var(--muted);
 }
 
+/* ---------------------------------------------------------- 完了画面
+   スタンプカードがここへ移ってくるので、しるしは画面の高さに合わせて
+   小さくする (決め打ちだと、縦の短い端末で「タイトルへ」が画面の外に出る) */
+#screenDone .illustration {
+  width: clamp(44px, 9vh, 84px);
+  height: clamp(44px, 9vh, 84px);
+}
+
 /* ---------------------------------------------------------- きせかえ */
 
 .customGroup { width: 100%; }
@@ -458,6 +490,7 @@ body {
   border-radius: 999px;
   padding: 0 16px;
   min-height: 44px;
+  line-height: 1.25;
   cursor: pointer;
 }
 
@@ -470,6 +503,15 @@ body {
 .chip:disabled {
   opacity: .4;
   cursor: default;
+}
+
+/* まだもらっていないごほうびの、もらえる条件。名前の下に小さく 2 行めとして置く
+   (横に並べると丸が長くなり、1 行に 1 つしか入らなくなって画面からあふれる) */
+.chip .chipHint {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.2;
 }
 
 /* アプリの人につける飾り。地の色と分けたいので accent で塗る */
@@ -552,6 +594,19 @@ body {
 
 .swatch:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
 
+/* 縦が少し短いスマホ (iPhone SE など)。タイトルと完了の画面は、スタンプカードの
+   ぶんカードが画面より高くなり、スクロールしないと「はじめる」が見えなかった。
+   間隔・人・ひとことを少しずつ詰めて 1 画面に収める */
+@media (max-height: 700px) {
+  .screen { gap: 12px; padding-top: 18px; padding-bottom: 18px; }
+  .mascot { width: clamp(52px, 10vh, 108px); height: clamp(52px, 10vh, 108px); }
+  .lead { font-size: 16px; line-height: 1.5; }
+  .swatch { flex-basis: 34px; max-height: 34px; }
+  .stampCard { padding: 10px 12px 8px; }
+  .stampHead { margin-bottom: 8px; }
+  .stampNote { margin-top: 8px; }
+}
+
 /* 横向きなど、縦が短いとき。1 コマを大きくしたぶん、そのままだと
    「できた」が画面の下に隠れてしまう。詰めて必ず収める。 */
 @media (max-height: 560px) {
@@ -591,7 +646,50 @@ body {
 
   .stampCard { padding: 8px 12px 6px; }
   .stampHead { margin-bottom: 6px; }
-  .stampNote { margin-top: 6px; min-height: 2.4em; font-size: 11px; }
+  /* 横に広いので説明は 1 行に入る。2 行ぶんの場所を取っておくと
+     「はじめる」が画面の下へ出る */
+  .stampNote { margin-top: 6px; min-height: 1.4em; font-size: 11px; }
+  .lead { font-size: 16px; line-height: 1.4; }
+  .mascot { width: 48px; height: 48px; }
+}
+
+/* 横向きのスマホ。縦に積むと絵が 64px まで小さくなり、置いて離れて見る
+   使い方では何の絵か分からない。左に絵、右に文字とボタンの 2 列にして、
+   絵を画面の高さいっぱいまで使う。
+   絵の 1 辺は「使える高さ - 見出し 63 - #stage の余白 12 - カードの余白と枠 24」
+   が上限 (そこから 5px 余らせて 104 を引く)。幅が足りない端末のために
+   画面幅の 4 割でも抑える */
+@media (max-height: 560px) and (orientation: landscape) {
+  #screenRun {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto auto auto auto;
+    align-content: center;
+    align-items: center;
+    justify-items: center;
+    column-gap: 24px;
+    row-gap: 8px;
+    max-width: 46em;
+    padding: 10px 24px;
+  }
+
+  #screenRun .illustrationRow { grid-column: 1; grid-row: 1 / -1; }
+  #screenRun .progress,
+  #screenRun .progressBar,
+  #screenRun .stepInfo,
+  #screenRun .actions { grid-column: 2; }
+
+  #screenRun .illustrationRow .illustration {
+    width: clamp(64px, min(40vw, var(--usable-h) - 104px), 300px);
+    height: clamp(64px, min(40vw, var(--usable-h) - 104px), 300px);
+  }
+
+  /* 右の列の幅は「画面幅 - 絵 - 余白」。12 字の句が 1 行に入る大きさにする */
+  #screenRun .exerciseName { font-size: clamp(15px, 2.5vw, 21px); min-height: 2.9em; }
+  #screenRun #reps { font-size: clamp(34px, 12vh, 52px); }
+  #screenRun .repsUnit { font-size: 18px; }
+  #screenRun .side { font-size: 15px; line-height: 20px; }
+  #screenRun .btn { min-height: 46px; font-size: 14px; padding: 9px 20px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -627,4 +725,15 @@ body {
    「できた」が画面の下端から 3px はみ出していた */
 @media (prefers-reduced-motion: reduce) and (max-height: 560px) {
   #screenRun .illustrationRow .illustration { max-width: 64px; }
+}
+
+/* 動きを減らす設定の横向き。コマは左の列に横に並べる (左の列の幅は中身で決まるので、
+   コマの大きさを画面幅から決め打ちする。3 コマ + 矢印 2 本が入る大きさ) */
+@media (prefers-reduced-motion: reduce) and (max-height: 560px) and (orientation: landscape) {
+  #screenRun .illustrationRow { width: auto; }
+  #screenRun .illustrationRow .illustration {
+    flex: none;
+    width: clamp(64px, 11vw, 120px);
+    max-width: none;
+  }
 }

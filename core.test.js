@@ -464,3 +464,37 @@ test('normalizeProgress は壊れた値でも落ちない', () => {
   assert.strictEqual(Core.normalizeProgress({ index: -3, total: 17 }, 17), null);
   assert.deepStrictEqual(Core.normalizeProgress({ index: 4.7, total: 17 }, 17), { index: 4, total: 17 });
 });
+
+test('textPhrases は読点と句点の後ろで区切り、区切りの字は前の句に残す', () => {
+  assert.deepStrictEqual(Core.textPhrases('肩と膝の上を温めてから、始めましょう。'),
+    ['肩と膝の上を温めてから、', '始めましょう。']);
+  assert.deepStrictEqual(Core.textPhrases('通算 30 個。次のスタンプから新しいカードです。'),
+    ['通算 30 個。', '次のスタンプから新しいカードです。']);
+  assert.deepStrictEqual(Core.textPhrases('区切りなし'), ['区切りなし']);
+  assert.deepStrictEqual(Core.textPhrases(''), []);
+});
+
+test('textPhrases は字を落とさない (つなげると元の文に戻る)', () => {
+  ['カードが 1 枚うまりました。「ミッドナイト」をもらいました。きせかえから使えます。',
+    Core.WARMUP_NOTE, '。。、', 'あ、、い'].forEach((text) => {
+    assert.strictEqual(Core.textPhrases(text).join(''), text);
+  });
+});
+
+test('準備のひとことは、どの句も 12 字以内 (幅 320 の画面でも句の途中で折れない)', () => {
+  Core.textPhrases(Core.WARMUP_NOTE).forEach((phrase) => {
+    assert.ok(phrase.length <= 12, `${phrase} (${phrase.length} 字)`);
+  });
+});
+
+test('rewardCardNumber は、ごほうびがもらえるカードの枚数を返す', () => {
+  assert.strictEqual(Core.rewardCardNumber(Core.REWARDS[0].id), 1);
+  assert.strictEqual(Core.rewardCardNumber(Core.REWARDS[Core.REWARDS.length - 1].id), Core.REWARDS.length);
+  assert.strictEqual(Core.rewardCardNumber('classic'), 0);
+  // もらえる枚数ちょうどで、はじめて使えるようになる
+  Core.REWARDS.forEach((r) => {
+    const n = Core.rewardCardNumber(r.id);
+    assert.ok(!Core.isUnlocked({ stamps: n * Core.CARD_SIZE - 1 }, r.id));
+    assert.ok(Core.isUnlocked({ stamps: n * Core.CARD_SIZE }, r.id));
+  });
+});

@@ -761,13 +761,13 @@ async function run() {
     ok(doneScreen.finished === doneScreen.total,
       `ステップの index が最後まで進んでいる (${doneScreen.finished} / ${doneScreen.total})`);
 
-    section('もう一度で最初からやり直せる');
+    section('完了画面から、タイトルへ戻って最初からやり直せる');
     await phone.locator('#btnAgain').tap();
     await phone.waitForTimeout(120);
     const restarted = Object.assign(await shownFlags(), await phone.evaluate(() => ({
       index: window.__app.state().session.index
     })));
-    ok(restarted.warmupVisible && restarted.index === 0, 'もう一度を押すと準備画面・最初のステップに戻る');
+    ok(restarted.warmupVisible && restarted.index === 0, '「タイトルへ」を押すと準備画面・最初のステップに戻る');
 
     // 準備画面に戻った直後、見出しが飛ばないか (CSS アニメーションの上書き事故よけ)
     await phone.locator('#btnStart').tap();
@@ -1147,15 +1147,59 @@ async function run() {
       ok(resumed.index === 8 && resumed.progress === '9 / 25',
         `閉じたところから再開する (${resumed.progress})`);
 
-      // はじめから を選べば 1 ステップめに戻り、続きは消える
+      // 見出しの「タイトルへ」は、途中の位置を残したままタイトルへ戻る。
+      // 以前は「はじめから」で、1 回触れただけで途中の位置が消えていた
+      await page.evaluate(() => window.__app.complete()); // 10 種目めへ
       await page.locator('#btnRestart').tap();
       await page.waitForTimeout(60);
+      const paused = await page.evaluate(() => ({
+        screen: window.__app.state().screen,
+        shown: getComputedStyle(document.getElementById('btnResume')).display !== 'none',
+        note: document.getElementById('stampNote').textContent.trim(),
+        saved: JSON.parse(localStorage.getItem('stretch-routine-progress') || 'null')
+      }));
+      ok(paused.screen === 'warmup' && paused.shown && paused.saved && paused.saved.index === 9,
+        `「タイトルへ」で戻っても続きが残り、「つづきから」が出る (${JSON.stringify(paused.saved)})`);
+      ok(paused.note.startsWith('10 / 25 まで進んでいます'), `どこまでやったかが読める (${paused.note})`);
+
+      await page.locator('#btnResume').tap();
+      await page.waitForTimeout(60);
+      const back = await page.evaluate(() => window.__app.state().session.index);
+      ok(back === 9, `「つづきから」で同じ種目に戻る (${back + 1} 種目め)`);
+
+      // 最初からやり直したいときは、タイトルの「はじめる」。続きは消える
+      await page.locator('#btnRestart').tap();
+      await page.locator('#btnStart').tap();
+      await page.waitForTimeout(60);
       const afterRestart = await page.evaluate(() => ({
-        shown: !document.getElementById('btnResume').hidden,
+        index: window.__app.state().session.index,
         saved: localStorage.getItem('stretch-routine-progress')
       }));
-      ok(!afterRestart.shown && afterRestart.saved === null,
-        'はじめからを選ぶと、続きは消える');
+      ok(afterRestart.index === 0 && afterRestart.saved === null,
+        '「はじめる」を選ぶと 1 種目めから始まり、続きは消える');
+
+      // 1 種目めで「タイトルへ」を押しても、続きは出ない (まだ何も進んでいない)
+      await page.locator('#btnRestart').tap();
+      await page.waitForTimeout(60);
+      const noResume = await page.evaluate(() =>
+        getComputedStyle(document.getElementById('btnResume')).display === 'none');
+      ok(noResume, '1 種目めから戻ったときは「つづきから」を出さない');
+
+      // 「タイトルへ」は実行中だけ見える。タイトル・完了・きせかえでは行き先が無い
+      const headerBtn = async () => page.evaluate(() => {
+        const b = document.getElementById('btnRestart');
+        return { vis: getComputedStyle(b).visibility, h: Math.round(document.getElementById('topbar').getBoundingClientRect().height) };
+      });
+      const onTitle = await headerBtn();
+      await page.locator('#btnStart').tap();
+      const onRunning = await headerBtn();
+      await page.evaluate(() => { const n = window.__app.state().session.steps.length; for (let i = 0; i < n; i++) window.__app.complete(); });
+      const onDone = await headerBtn();
+      ok(onTitle.vis === 'hidden' && onRunning.vis === 'visible' && onDone.vis === 'hidden',
+        `「タイトルへ」は実行中だけ見える (タイトル ${onTitle.vis} / 実行中 ${onRunning.vis} / 完了 ${onDone.vis})`);
+      ok(onTitle.h === onRunning.h && onRunning.h === onDone.h,
+        `出し入れしても見出しの高さは変わらない (${onTitle.h} / ${onRunning.h} / ${onDone.h}px)`);
+      await page.locator('#btnAgain').tap();
 
       // やりきったら続きは残らない (次の日また最初から始められる)
       await page.evaluate(() => {
@@ -1240,13 +1284,26 @@ async function run() {
       ok(kept.stamps === 1 && kept.filled === 1,
         `開き直してもスタンプが残っている (${kept.stamps} 個 / ${kept.filled} マス)`);
 
+      // やりきった瞬間に、完了画面でその場で押す (タイトルへ戻るまで待たせない)。
       // 押すところが動く。「アニメを作った」ではなく「本当に動いた」を見る
       await page.evaluate(() => {
         window.__app.start();
         const total = window.__app.state().session.steps.length;
         for (let i = 0; i < total; i++) window.__app.complete();
       });
-      await page.locator('#btnAgain').tap();
+      const onDoneScreen = await page.evaluate(() => {
+        const card = document.getElementById('stampCard');
+        const r = card.getBoundingClientRect();
+        return {
+          inDone: !!card.closest('#screenDone'),
+          shown: getComputedStyle(card).display !== 'none' && r.height > 0,
+          filled: document.querySelectorAll('#stampSlots .slot.is-filled').length,
+          note: document.getElementById('stampNote').textContent.trim()
+        };
+      });
+      ok(onDoneScreen.inDone && onDoneScreen.shown && onDoneScreen.filled === 2,
+        `完了画面にスタンプカードが出て、いま押したぶんまで入っている (${onDoneScreen.filled} マス)`);
+      ok(onDoneScreen.note.startsWith('通算 2 個'), `完了画面で通算の数が読める (${onDoneScreen.note})`);
       const shape = () => page.evaluate(() => {
         const marks = document.querySelectorAll('#stampSlots .slot.is-filled .stampMark');
         const m = marks[marks.length - 1];
@@ -1269,6 +1326,19 @@ async function run() {
       ok(settling.scale < pressing.scale, `降りてきている (${pressing.scale} → ${settling.scale} 倍)`);
       ok(settled.running === 0 && Math.abs(settled.scale - 1) < 0.02,
         `押し終わると等倍で止まる (${settled.scale} 倍 / 動き ${settled.running} 件)`);
+
+      // タイトルへ戻るとカードも戻り、もう押し直さない (同じスタンプを 2 度押さない)
+      await page.locator('#btnAgain').tap();
+      await page.waitForTimeout(60);
+      const backOnTitle = await page.evaluate(() => ({
+        inTitle: !!document.getElementById('stampCard').closest('#screenWarmup'),
+        beforeButtons: !!(document.getElementById('stampCard').compareDocumentPosition(document.getElementById('btnStart')) & Node.DOCUMENT_POSITION_FOLLOWING),
+        running: document.getAnimations().length,
+        filled: document.querySelectorAll('#stampSlots .slot.is-filled').length
+      }));
+      ok(backOnTitle.inTitle && backOnTitle.beforeButtons && backOnTitle.filled === 2,
+        'タイトルへ戻ると、スタンプカードも「はじめる」の上に戻る');
+      ok(backOnTitle.running === 0, `タイトルではスタンプを押し直さない (動き ${backOnTitle.running} 件)`);
       await ctx.close();
     }
 
@@ -1284,7 +1354,6 @@ async function run() {
         const total = window.__app.state().session.steps.length;
         for (let i = 0; i < total; i++) window.__app.complete();
       });
-      await page.locator('#btnAgain').tap();
       await page.waitForTimeout(80);
       const calm = await page.evaluate(() => ({
         running: document.getAnimations().length,
@@ -1411,6 +1480,12 @@ async function run() {
       ok(locked.length > 0 && locked.every(Boolean),
         `まだのごほうびは押せない (${locked.join(',')})`);
 
+      // 押せない理由だけでなく、いつもらえるかも読める (「まだ」だけでは、どうすればよいか分からない)
+      const hints = await page.evaluate(() =>
+        Array.from(document.querySelectorAll('#screenCustom .chip:disabled')).map((b) => b.textContent));
+      ok(hints.length === 5 && hints.every((t) => /カード[2-6]枚で$/.test(t)),
+        `まだのごほうびには、カード何枚でもらえるかが書いてある (${hints.join(' / ')})`);
+
       // 20 個たまると飾りが 1 つ使える。きせかえ画面にいるまま増やす
       await page.evaluate(() => window.__app.setStamps(20));
       await page.waitForTimeout(80);
@@ -1517,6 +1592,281 @@ async function run() {
       ok(fit.bottom <= fit.vh, `${label}: はじめるが収まる (下端 ${fit.bottom} / 画面 ${fit.vh})`);
       await ctx.close();
     }
+
+    // ------------------------------------------------ キーボードで最後まで行けるか
+    // 画面が替わると、フォーカスのあったボタンが消えて行き場を失っていた。
+    // 「できた」は連打よけで一瞬押せなくなるので、そのたびにフォーカスも外れていた
+    section('キーボードだけで、はじめるから完了まで押し進められる');
+    {
+      const ctx = await browser.newContext({ viewport: { width: 900, height: 900 } });
+      const page = await ctx.newPage();
+      page.on('pageerror', (e) => errors.push('keyboard: ' + e.message));
+      await page.goto(URL);
+      await page.waitForFunction(() => window.__app);
+      const focused = () => page.evaluate(() => document.activeElement && document.activeElement.id);
+      const cooldown = await page.evaluate(() => window.__app.tapCooldownMs);
+      await page.focus('#btnStart');
+      await page.keyboard.press('Enter');
+      ok(await focused() === 'btnDone', `はじめると、フォーカスが「できた」へ移る (${await focused()})`);
+      await page.keyboard.press('Enter');
+      await page.waitForTimeout(cooldown + 80);
+      const afterOne = { id: await focused(), index: await page.evaluate(() => window.__app.state().session.index) };
+      ok(afterOne.id === 'btnDone' && afterOne.index === 1,
+        `「できた」を押したあとも、フォーカスが「できた」に残る (${afterOne.id} / ${afterOne.index + 1} 種目め)`);
+      await page.keyboard.press('Enter');
+      await page.waitForTimeout(cooldown + 80);
+      const afterTwo = await page.evaluate(() => window.__app.state().session.index);
+      ok(afterTwo === 2, `そのまま続けて押せる (${afterTwo + 1} 種目め)`);
+      await page.evaluate(() => { const s = window.__app.state().session; for (let i = s.index; i < s.steps.length - 1; i++) window.__app.complete(); });
+      await page.keyboard.press('Enter');
+      await page.waitForTimeout(80);
+      const onDone = { id: await focused(), screen: await page.evaluate(() => window.__app.state().screen) };
+      ok(onDone.screen === 'done' && onDone.id === 'btnAgain', `完了画面では「タイトルへ」にフォーカスが移る (${onDone.id})`);
+      await page.keyboard.press('Enter');
+      ok(await focused() === 'btnStart', `タイトルへ戻ると「はじめる」にフォーカスが移る (${await focused()})`);
+      const ring = await page.evaluate(() => getComputedStyle(document.activeElement).outlineStyle);
+      ok(ring !== 'none', `キーボードで動かしているときは、フォーカスの枠が見える (${ring})`);
+      await ctx.close();
+
+      // 指で使っているときは、フォーカスを動かさない (「できた」に枠が出たままにならない)
+      const touch = await browser.newContext({ ...devices['iPhone 13'] });
+      const tp = await touch.newPage();
+      await tp.goto(URL);
+      await tp.waitForFunction(() => window.__app);
+      await tp.locator('#btnStart').tap();
+      await tp.waitForTimeout(80);
+      const byFinger = await tp.evaluate(() => ({
+        ring: getComputedStyle(document.getElementById('btnDone')).outlineStyle,
+        active: document.activeElement.id || document.activeElement.tagName
+      }));
+      ok(byFinger.ring === 'none' && byFinger.active !== 'btnDone',
+        `指で始めたときは「できた」にフォーカスも枠も移さない (枠 ${byFinger.ring} / フォーカス ${byFinger.active})`);
+      await touch.close();
+    }
+
+    // ------------------------------------------------ 絵の置き場所
+    // 寝る・四つん這いの絵は背が低く、symbol の枠の下半分にしか描かれていない。
+    // そのまま出すと絵だけ下がって見え (12 番で指摘された)、上に大きな空きができる。
+    // ステップの全コマをまとめた範囲のまん中を、枠のまん中に合わせて出す
+    section('どの種目の絵も、枠のまん中に置かれている (背の低い絵だけ下がって見えない)');
+    {
+      const ctx = await browser.newContext({ viewport: { width: 393, height: 852 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
+      const page = await ctx.newPage();
+      page.on('pageerror', (e) => errors.push('center: ' + e.message));
+      await page.goto(URL);
+      await page.waitForFunction(() => window.__app);
+      await page.evaluate(() => window.__app.start());
+      const stepCount = await page.evaluate(() => window.__app.state().session.steps.length);
+      const off = [];
+      let worst = 0;
+      for (let i = 0; i < stepCount; i++) {
+        const m = await page.evaluate(() => {
+          const s = window.__app.state().session;
+          const shots = [...document.querySelectorAll('#illustrationRow .illustration')];
+          let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+          shots.forEach((svg) => {
+            const b = svg.firstChild.getBBox();
+            x0 = Math.min(x0, b.x); y0 = Math.min(y0, b.y); x1 = Math.max(x1, b.x + b.width); y1 = Math.max(y1, b.y + b.height);
+          });
+          const boxes = [...new Set(shots.map((svg) => svg.getAttribute('viewBox')))];
+          const vb = (boxes[0] || '').split(' ').map(Number);
+          return {
+            art: s.steps[s.index].art, boxes: boxes.length, size: vb[2] + 'x' + vb[3],
+            dx: (x0 + x1) / 2 - (vb[0] + vb[2] / 2), dy: (y0 + y1) / 2 - (vb[1] + vb[3] / 2)
+          };
+        });
+        worst = Math.max(worst, Math.abs(m.dx), Math.abs(m.dy));
+        if (m.boxes !== 1 || m.size !== '120x120' || Math.abs(m.dx) > 0.6 || Math.abs(m.dy) > 0.6) {
+          off.push(`${m.art} (ずれ 横 ${m.dx.toFixed(1)} / 縦 ${m.dy.toFixed(1)}・枠 ${m.boxes} 種類・${m.size})`);
+        }
+        if (i < stepCount - 1) await page.evaluate(() => window.__app.complete());
+      }
+      ok(off.length === 0,
+        `${stepCount} ステップとも、絵のまん中が枠のまん中にある (最大ずれ ${worst.toFixed(2)}・全コマ同じ枠・大きさは 120 のまま)${off.length ? ' → ' + off.join(', ') : ''}`);
+
+      // 実際の画面でも確かめる。四つん這いの絵は、以前は枠のまん中から 22/120 (約 59px) 下がっていた
+      await page.evaluate(() => window.__app.restart());
+      await page.evaluate(() => window.__app.start());
+      ok(await goToArt(page, 'birdDog'), '「四つん這いで対角に伸ばす」のステップまで進める');
+      const onScreen = await page.evaluate(() => {
+        const shots = [...document.querySelectorAll('#illustrationRow .illustration')];
+        let top = Infinity, bottom = -Infinity;
+        shots.forEach((svg) => { const r = svg.firstChild.getBoundingClientRect(); top = Math.min(top, r.top); bottom = Math.max(bottom, r.bottom); });
+        const frame = shots[0].getBoundingClientRect();
+        return { above: Math.round(top - frame.top), below: Math.round(frame.bottom - bottom) };
+      });
+      ok(Math.abs(onScreen.above - onScreen.below) <= 3,
+        `四つん這いの絵の上と下の空きが同じ (上 ${onScreen.above}px / 下 ${onScreen.below}px)`);
+      await ctx.close();
+    }
+
+    // ------------------------------------------------ いまどちら側か
+    // 左右をまとめた種目は、絵が左の動き → 右の動きと入れ替わる。側バッジは
+    // 「左 → 右」と順番を出すだけで、いま絵がどちら側なのかは分からなかった
+    section('左右をまとめた種目は、絵がいま見せている側を側バッジで濃く見せる');
+    {
+      const ctx = await browser.newContext({ ...devices['iPhone 13'] });
+      const page = await ctx.newPage();
+      page.on('pageerror', (e) => errors.push('side-now: ' + e.message));
+      await page.goto(URL);
+      await page.waitForFunction(() => window.__app);
+      await page.evaluate(() => window.__app.start());
+      ok(await goToArt(page, 'sideKnee'), '「横向きの膝」のステップまで進める');
+      const at = (ms) => page.evaluate((ms) => {
+        document.getAnimations().forEach((a) => { a.pause(); a.currentTime = ms; });
+        const labels = [...document.querySelectorAll('#side .sideNow')].map((el) =>
+          el.textContent + ':' + Number(getComputedStyle(el).opacity).toFixed(1));
+        const shown = [...document.querySelectorAll('#illustrationRow .illustration')]
+          .filter((svg) => getComputedStyle(svg).opacity === '1');
+        return { labels: labels.join(' '), shown: shown.length, mirrored: shown.length === 1 && shown[0].classList.contains('mirror'),
+          text: document.getElementById('side').textContent };
+      }, ms);
+      const flipMs = await page.evaluate(() => window.__app.flipMs);
+      const frames = await page.evaluate(() => { const s = window.__app.state().session; return s.steps[s.index].frames.length; });
+      const half = flipMs * frames / 2;
+      const first = await at(flipMs / 2);
+      const lastLeft = await at(half - flipMs / 2);
+      const firstRight = await at(half + flipMs / 2);
+      const last = await at(half * 2 - flipMs / 2);
+      ok(first.text === '左 → 右', `側バッジの文字は「左 → 右」のまま (${first.text})`);
+      ok(first.labels === '左:1.0 右:0.4' && !first.mirrored && lastLeft.labels === '左:1.0 右:0.4' && !lastLeft.mirrored,
+        `左の動きのあいだは「左」が濃い (${first.labels} … ${lastLeft.labels})`);
+      ok(firstRight.labels === '左:0.4 右:1.0' && firstRight.mirrored && last.labels === '左:0.4 右:1.0' && last.mirrored,
+        `右の動き (裏返した絵) に入ると「右」が濃くなる (${firstRight.labels} … ${last.labels})`);
+      ok([first, lastLeft, firstRight, last].every((m) => m.shown === 1), '絵はいつも 1 コマだけ見えている');
+      await ctx.close();
+
+      // 動きを減らす設定では絵が最初の側だけなので、どちらも薄くしない
+      const calm = await browser.newContext({ ...devices['iPhone 13'], reducedMotion: 'reduce' });
+      const cp = await calm.newPage();
+      await cp.goto(URL);
+      await cp.waitForFunction(() => window.__app);
+      await cp.evaluate(() => window.__app.start());
+      await goToArt(cp, 'sideKnee');
+      const still = await cp.evaluate(() => ({
+        running: document.getAnimations().length,
+        opacity: [...document.querySelectorAll('#side .sideNow')].map((el) => getComputedStyle(el).opacity).join(' ')
+      }));
+      ok(still.running === 0 && still.opacity === '1 1',
+        `動きを減らす設定では側バッジも動かさない (動き ${still.running} 件 / 濃さ ${still.opacity})`);
+      await calm.close();
+    }
+
+    // ------------------------------------------------ 文の折り返し
+    // タイトルのひとことは「…始めましょ / う。」、スタンプカードの説明は
+    // 「…10 個 / でカードが…」「…新しいカードで / す。」と、語の途中で行が変わっていた
+    section('タイトル・完了の文は、句の途中で行が変わらない');
+    for (const [w, h] of [[393, 852], [375, 667], [320, 568]]) {
+      const ctx = await browser.newContext({ viewport: { width: w, height: h }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
+      const page = await ctx.newPage();
+      page.on('pageerror', (e) => errors.push('phrases: ' + e.message));
+      await page.goto(URL);
+      await page.waitForFunction(() => window.__app);
+      const split = () => page.evaluate(() => ['warmupText', 'stampNote'].flatMap((id) => {
+        const el = document.getElementById(id);
+        if (!el.getClientRects().length) return [];
+        const lh = parseFloat(getComputedStyle(el).lineHeight);
+        const phrases = [...el.querySelectorAll('.phrase')];
+        if (!phrases.length) return [id + ': 句に分かれていない'];
+        return phrases.filter((p) => p.getBoundingClientRect().height > lh * 1.5).map((p) => p.textContent);
+      }));
+      const bad = [];
+      const check = async (label) => { const b = await split(); if (b.length) bad.push(`${label}: ${b.join(' / ')}`); };
+      await check('はじめて');
+      for (const n of [1, 7, 10, 30]) { await page.evaluate((n) => window.__app.setStamps(n), n); await check(`スタンプ ${n} 個`); }
+      await page.evaluate(() => { window.__app.start(); for (let i = 0; i < 8; i++) window.__app.complete(); window.__app.pause(); });
+      await check('途中でやめた');
+      // 完了画面 (ふつうの回と、カードがうまってごほうびをもらう回)
+      await page.evaluate(() => { window.__app.setStamps(8); window.__app.start(); const n = window.__app.state().session.steps.length; for (let i = 0; i < n; i++) window.__app.complete(); });
+      await check('完了');
+      await page.evaluate(() => { window.__app.restart(); window.__app.start(); const n = window.__app.state().session.steps.length; for (let i = 0; i < n; i++) window.__app.complete(); });
+      const reward = await page.evaluate(() => document.getElementById('stampNote').textContent);
+      await check('完了 (ごほうび)');
+      ok(bad.length === 0 && reward.includes('をもらいました'),
+        `幅 ${w}: 7 つの場面とも、句の途中で折れない${bad.length ? ' → ' + bad.join(' | ') : ''}`);
+      await ctx.close();
+    }
+
+    // ------------------------------------------------ タイトル・完了・きせかえが収まるか
+    // 以前はカードを縦のまん中に寄せていたので、カードが画面より高いと上が見出しの下に
+    // もぐって切れ、スクロールしても見えなかった (下端だけ測ると収まって見える)。
+    // タイトルと完了は 1 画面に収め、きせかえは上から順に見えるようにする
+    section('タイトル・完了画面は 1 画面に収まり、どの画面も上が切れない');
+    for (const [w, h, top = 0, bottom = 0] of [[393, 852, 54, 34], [375, 667, 20, 0], [320, 568, 20, 0], [320, 568], [844, 390]]) {
+      const ctx = await browser.newContext({ viewport: { width: w, height: h }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
+      const page = await ctx.newPage();
+      page.on('pageerror', (e) => errors.push('fit: ' + e.message));
+      await page.goto(URL);
+      await page.waitForFunction(() => window.__app);
+      if (top || bottom) {
+        await page.addStyleTag({ content: `#app { padding-top: ${top}px !important; padding-bottom: ${bottom}px !important; }
+          #screenRun { --usable-h: calc(100dvh - ${top + bottom}px) !important; }` });
+      }
+      const measure = () => page.evaluate(() => {
+        const stage = document.getElementById('stage');
+        stage.scrollTop = 0;
+        const card = [...document.querySelectorAll('.screen')].find((el) => el.getClientRects().length);
+        return { scroll: stage.scrollHeight - stage.clientHeight,
+          above: Math.round(card.getBoundingClientRect().top - stage.getBoundingClientRect().top),
+          topbar: Math.round(document.getElementById('topbar').getBoundingClientRect().height) };
+      });
+      const label = `${w}x${h}${top || bottom ? ` セーフエリア上${top}下${bottom}` : ''}`;
+      const bad = [];
+      const fits = async (name) => { const m = await measure(); if (m.scroll > 0 || m.above < 0) bad.push(`${name} (${m.scroll}px あふれる / 上 ${m.above}px)`); };
+      await fits('タイトル');
+      await page.evaluate(() => window.__app.setStamps(60));
+      await fits('タイトル (7 色・きせかえあり)');
+      await page.evaluate(() => { window.__app.setStamps(9); window.__app.start(); for (let i = 0; i < 8; i++) window.__app.complete(); window.__app.pause(); });
+      await fits('タイトル (つづきから)');
+      await page.evaluate(() => { window.__app.start(); const n = window.__app.state().session.steps.length; for (let i = 0; i < n; i++) window.__app.complete(); });
+      await fits('完了 (ごほうび)');
+      ok(bad.length === 0, `${label}: タイトル 3 場面と完了画面がスクロールなしで収まる${bad.length ? ' → ' + bad.join(', ') : ''}`);
+
+      // きせかえは項目が多く、小さい画面では収まらない。上から順に見えればよい
+      await page.evaluate(() => window.__app.restart());
+      await page.evaluate(() => document.getElementById('btnCustom').click());
+      const custom = await measure();
+      ok(custom.above >= 0, `${label}: きせかえ画面の上が見出しの下にもぐらない (上の余白 ${custom.above}px)`);
+      ok(custom.topbar <= 70, `${label}: 見出しが 1 行に収まっている (${custom.topbar}px)`);
+      await ctx.close();
+    }
+
+    // ------------------------------------------------ 横向きの 2 列
+    // 縦に積むと絵が 64px まで小さくなる。左に絵、右に文字とボタンを置く
+    section('横向きでは左に絵・右に文字の 2 列になり、絵が大きく見える');
+    for (const [w, h] of [[844, 390], [667, 375]]) {
+      const ctx = await browser.newContext({ viewport: { width: w, height: h }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
+      const page = await ctx.newPage();
+      page.on('pageerror', (e) => errors.push('landscape-2col: ' + e.message));
+      await page.goto(URL);
+      await page.waitForFunction(() => window.__app);
+      await page.evaluate(() => window.__app.start());
+      const stepCount = await page.evaluate(() => window.__app.state().session.steps.length);
+      const bad = [];
+      let art = 0;
+      for (let i = 0; i < stepCount; i++) {
+        const m = await page.evaluate(() => {
+          const box = (sel) => document.querySelector(sel).getBoundingClientRect();
+          const stage = document.getElementById('stage');
+          const pic = box('#illustrationRow .illustration');
+          const name = document.getElementById('exerciseName');
+          const lh = parseFloat(getComputedStyle(name).lineHeight);
+          const s = window.__app.state().session;
+          return { art: s.steps[s.index].art, pic: Math.round(pic.width), beside: pic.right <= box('#exerciseName').left && pic.right <= box('#btnBack').left,
+            scroll: stage.scrollHeight - stage.clientHeight, lines: Math.round(name.scrollHeight / lh),
+            split: [...name.querySelectorAll('.phrase')].some((p) => p.getBoundingClientRect().height > lh * 1.5) };
+        });
+        art = m.pic;
+        if (!m.beside || m.scroll > 0 || m.lines > 2 || m.split) {
+          bad.push(`${m.art} (${m.beside ? '' : '絵が横に並んでいない '}${m.scroll > 0 ? m.scroll + 'px あふれる ' : ''}${m.lines} 行${m.split ? ' 句の中で折れ' : ''})`);
+        }
+        if (i < stepCount - 1) await page.evaluate(() => window.__app.complete());
+      }
+      ok(bad.length === 0, `${w}x${h}: ${stepCount} ステップとも 2 列で収まり、種目名は 2 行以内${bad.length ? ' → ' + bad.join(', ') : ''}`);
+      ok(art >= 200, `${w}x${h}: 絵が 200px 以上ある (${art}px。縦に積んでいたときは 64px)`);
+      await ctx.close();
+    }
+
 
     // ------------------------------------------------ アイコン (用意していれば)
     section('アイコン');
