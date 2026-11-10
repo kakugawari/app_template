@@ -98,6 +98,7 @@
     </g>
     <symbol id="kneeFall-before" viewBox="0 0 120 120">
       <use href="#matTopBase"/>
+      <path class="trail" d="M67 70 L34 86 L67 100" stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/><path class="trail" d="M53 70 L20 86 L53 100" stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/>
       <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
         <line x1="49" y1="42" x2="28" y2="52"/>
         <line x1="71" y1="42" x2="92" y2="52"/>
@@ -111,6 +112,7 @@
     </symbol>
     <symbol id="kneeFall-after" viewBox="0 0 120 120">
       <use href="#matTopBase"/>
+      <path class="trail" d="M53 70 L86 86 L53 100" stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/><path class="trail" d="M67 70 L100 86 L67 100" stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/>
       <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
         <line x1="71" y1="42" x2="92" y2="52"/>
         <line x1="49" y1="42" x2="28" y2="52"/>
@@ -142,6 +144,7 @@
       <use href="#bedBase"/>
       <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
         <path class="legLower" d="M72 82 L92 74 L108 84"/>
+        <path class="trail" d="M72 76 L92 66 L108 80" opacity=".25"/>
         <path class="legUpper" d="M72 75 L90 48 L108 80"/>
         <line x1="38" y1="68" x2="16" y2="56"/>
       </g>
@@ -167,6 +170,7 @@
       <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
         <line x1="74" y1="78" x2="92" y2="82"/>
         <line x1="92" y1="82" x2="108" y2="86"/>
+        <path class="trail" d="M46 66 L30 90" opacity=".25"/>
         <line x1="44" y1="68" x2="44" y2="36"/>
       </g>
       <circle cx="20" cy="76" r="11" fill="currentColor"/>
@@ -177,6 +181,7 @@
          (隣の「体を倒す」と同じ向き。以前は真上から見た絵で、並ぶと見え方が
          そろっていなかった)。
          脚・腰・椅子は正面を向いたまま動かさない (chairLeanLegs を共有)。
+         ボールの通り道を、体の後ろに薄い弧で残す (3 コマとも同じ弧)。
          胸から上だけがひねられ、抱えたボールが横へ回る。回した側の肩が
          奥へ入るので、胴は少し細く描く (24 → 20)。胴の前を横切る腕は
          カードの地色のふちで浮かせる (胴と同じ色なので、そのままだと消える)。
@@ -184,55 +189,59 @@
          left / right は、隣の「倒す」と同じく画面の左 / 右へ回る向き。
          center = 正面でボールを抱えた姿勢 / left・right = 画面の左・右へひねった姿勢 -->
     <symbol id="chairTwist-center" viewBox="0 0 120 120">
-      <use href="#chairFrontBase"/><use href="#chairLeanLegs"/><circle cx="60" cy="24" r="11" fill="currentColor"/><rect x="48" y="38" width="24" height="42" rx="12" fill="currentColor"/><path d="M50 46 L45 62" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M70 46 L75 62" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle class="ball" cx="60" cy="64" r="15" stroke="currentColor" stroke-width="5"/>
+      <use href="#chairFrontBase"/><use href="#chairLeanLegs"/><path class="trail" d="M28 52 Q60 68 92 52" stroke-width="5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/><circle cx="60" cy="16" r="11" fill="currentColor"/><rect x="48" y="30" width="24" height="42" rx="12" fill="currentColor"/><path d="M50 38 L45 54" stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M70 38 L75 54" stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle class="ball" cx="60" cy="56" r="15" stroke="currentColor" stroke-width="5"/>
     </symbol>
     <symbol id="chairTwist-left" viewBox="0 0 120 120">
-      <use href="#chairFrontBase"/><use href="#chairLeanLegs"/><circle cx="60" cy="24" r="11" fill="currentColor"/><rect x="50" y="38" width="20" height="42" rx="10" fill="currentColor"/><path d="M68 46 L66 56 L46 52" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M52 46 L58 58 L48 66" style="stroke: var(--bg-2)" stroke-width="11" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M52 46 L58 58 L48 66" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle class="ball" cx="38" cy="60" r="14" stroke="currentColor" stroke-width="5"/>
+      <use href="#chairFrontBase"/><use href="#chairLeanLegs"/><path class="trail" d="M28 52 Q60 68 92 52" stroke-width="5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/><circle cx="60" cy="16" r="11" fill="currentColor"/><rect x="50" y="30" width="20" height="42" rx="10" fill="currentColor"/><path d="M68 38 L66 48 L46 44" stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M52 38 L58 50 L48 58" style="stroke: var(--bg-2)" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M52 38 L58 50 L48 58" stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle class="ball" cx="38" cy="52" r="14" stroke="currentColor" stroke-width="5"/>
     </symbol>
     <symbol id="chairTwist-right" viewBox="0 0 120 120">
-      <use href="#chairFrontBase"/><use href="#chairLeanLegs"/><circle cx="60" cy="24" r="11" fill="currentColor"/><rect x="50" y="38" width="20" height="42" rx="10" fill="currentColor"/><path d="M52 46 L54 56 L74 52" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M68 46 L62 58 L72 66" style="stroke: var(--bg-2)" stroke-width="11" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M68 46 L62 58 L72 66" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle class="ball" cx="82" cy="60" r="14" stroke="currentColor" stroke-width="5"/>
+      <use href="#chairFrontBase"/><use href="#chairLeanLegs"/><path class="trail" d="M28 52 Q60 68 92 52" stroke-width="5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/><circle cx="60" cy="16" r="11" fill="currentColor"/><rect x="50" y="30" width="20" height="42" rx="10" fill="currentColor"/><path d="M52 38 L54 48 L74 44" stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M68 38 L62 50 L72 58" style="stroke: var(--bg-2)" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M68 38 L62 50 L72 58" stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle class="ball" cx="82" cy="52" r="14" stroke="currentColor" stroke-width="5"/>
     </symbol>
 
     <!-- 4: 椅子に浅く座り、ボールを抱えて体を倒す。
          左右への傾きは真上からだと見えないので、正面から見た構図にする。
-         脚と椅子は動かさず、腰から上だけを腰の位置を軸に傾ける。 -->
+         脚と椅子は動かさず、腰から上だけを腰の位置 (60,72) を軸に傾ける。
+         頭の通り道を、頭の上に薄い弧で残す (3 コマとも同じ弧)。 -->
+    <!-- 正面から見た椅子 (19・20・23・24 番)。以前は座面と脚だけの台で、人の脚も
+         胴から座面までの短い棒 2 本だったので、台の上に立っているように見えた。
+         背もたれを胴の後ろに描き、人の脚は「座面の前へ出た膝 (丸) → 床まで下りる
+         すね → 足」と描いて、腰かけていることが分かるようにする。
+         胴は y=30〜72、座面は y=76、足は床 (y=112) の上 -->
     <g id="chairFrontBase" stroke="currentColor" stroke-width="4" opacity=".45"
-       fill="none" stroke-linecap="round">
+       fill="none" stroke-linecap="round" stroke-linejoin="round">
       <line x1="14" y1="112" x2="106" y2="112"/>
-      <line x1="32" y1="94" x2="88" y2="94"/>
-      <line x1="36" y1="94" x2="34" y2="111"/>
-      <line x1="84" y1="94" x2="86" y2="111"/>
+      <path class="chairBack" d="M36 76 L36 38 L84 38 L84 76"/>
+      <line class="chairSeat" x1="30" y1="76" x2="90" y2="76"/>
+      <line x1="34" y1="76" x2="32" y2="111"/>
+      <line x1="86" y1="76" x2="88" y2="111"/>
     </g>
     <!-- 倒す中身。腰から上をひとまとめにして 3 つの姿勢で使い回す -->
     <g id="chairLeanBody">
-      <circle cx="60" cy="24" r="11" fill="currentColor"/>
-      <rect x="48" y="38" width="24" height="42" rx="12" fill="currentColor"/>
+      <circle cx="60" cy="16" r="11" fill="currentColor"/>
+      <rect x="48" y="30" width="24" height="42" rx="12" fill="currentColor"/>
       <g stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round">
-        <line x1="50" y1="46" x2="45" y2="62"/>
-        <line x1="70" y1="46" x2="75" y2="62"/>
+        <line x1="50" y1="38" x2="45" y2="54"/>
+        <line x1="70" y1="38" x2="75" y2="54"/>
       </g>
-      <circle class="ball" cx="60" cy="64" r="15" stroke="currentColor" stroke-width="5"/>
+      <circle class="ball" cx="60" cy="56" r="15" stroke="currentColor" stroke-width="5"/>
     </g>
     <!-- 脚。倒しても動かさない -->
-    <g id="chairLeanLegs" stroke="currentColor" stroke-width="6" fill="none"
-       stroke-linecap="round" stroke-linejoin="round">
-      <line x1="53" y1="80" x2="53" y2="94"/>
-      <line x1="67" y1="80" x2="67" y2="94"/>
+    <g id="chairLeanLegs">
+      <g stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path class="thigh" d="M54 71 L50 79" stroke-width="8"/><path class="thigh" d="M66 71 L70 79" stroke-width="8"/>
+        <path class="shin" d="M50 79 L50 105" stroke-width="6"/><path class="shin" d="M70 79 L70 105" stroke-width="6"/>
+      </g>
+      <circle class="knee" cx="50" cy="79" r="6" fill="currentColor"/><circle class="knee" cx="70" cy="79" r="6" fill="currentColor"/>
+      <ellipse class="foot" cx="50" cy="106" rx="6" ry="3.5" fill="currentColor"/><ellipse class="foot" cx="70" cy="106" rx="6" ry="3.5" fill="currentColor"/>
     </g>
     <symbol id="chairLean-center" viewBox="0 0 120 120">
-      <use href="#chairFrontBase"/>
-      <use href="#chairLeanLegs"/>
-      <use href="#chairLeanBody"/>
+      <use href="#chairFrontBase"/><use href="#chairLeanLegs"/><path class="trail" d="M31.3 10.4 A68 68 0 0 1 88.7 10.4" stroke-width="5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/><use href="#chairLeanBody"/>
     </symbol>
     <symbol id="chairLean-left" viewBox="0 0 120 120">
-      <use href="#chairFrontBase"/>
-      <use href="#chairLeanLegs"/>
-      <g transform="rotate(-25 60 80)"><use href="#chairLeanBody"/></g>
+      <use href="#chairFrontBase"/><use href="#chairLeanLegs"/><path class="trail" d="M31.3 10.4 A68 68 0 0 1 88.7 10.4" stroke-width="5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/><g transform="rotate(-25 60 72)"><use href="#chairLeanBody"/></g>
     </symbol>
     <symbol id="chairLean-right" viewBox="0 0 120 120">
-      <use href="#chairFrontBase"/>
-      <use href="#chairLeanLegs"/>
-      <g transform="rotate(25 60 80)"><use href="#chairLeanBody"/></g>
+      <use href="#chairFrontBase"/><use href="#chairLeanLegs"/><path class="trail" d="M31.3 10.4 A68 68 0 0 1 88.7 10.4" stroke-width="5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/><g transform="rotate(25 60 72)"><use href="#chairLeanBody"/></g>
     </symbol>
 
     <!-- 5: 椅子に浅く座り、ボールを持って上げ下げする。
@@ -261,6 +270,7 @@
       </g>
       <circle cx="62" cy="24" r="11" fill="currentColor"/>
       <rect x="54" y="35" width="16" height="41" rx="8" fill="currentColor"/>
+      <circle class="trail" cx="84" cy="46" r="14" stroke="currentColor" stroke-width="5" fill="none" opacity=".25"/>
       <circle cx="96" cy="18" r="14" stroke="currentColor" stroke-width="5" fill="none"/>
     </symbol>
 
@@ -297,6 +307,7 @@
       <circle cx="62" cy="24" r="11" fill="currentColor"/>
       <rect x="54" y="35" width="16" height="41" rx="8" fill="currentColor"/>
       <g stroke="currentColor" stroke-width="5" fill="none" stroke-linecap="round">
+        <circle class="trail" cx="78" cy="95" r="9" opacity=".25"/>
         <circle cx="98" cy="95" r="9"/>
         <line x1="107" y1="95" x2="112" y2="95"/>
         <line x1="89" y1="95" x2="84" y2="95"/>
@@ -348,7 +359,7 @@
     <symbol id="hipTwist-after" viewBox="0 0 120 120">
       <use href="#matTopBase"/>
       <!-- 動く前の足。ここから反対側へ渡る -->
-      <line x1="66" y1="70" x2="69" y2="106" stroke="currentColor" stroke-width="6"
+      <line class="trail" x1="66" y1="70" x2="69" y2="106" stroke="currentColor" stroke-width="6"
         stroke-linecap="round" opacity=".25"/>
       <!-- 下になる足は動かさない -->
       <line x1="54" y1="70" x2="51" y2="106" stroke="currentColor" stroke-width="6"
@@ -374,7 +385,7 @@
       <g transform="rotate(90 60 60)"><use href="#matTopBase"/></g><rect x="9" y="40" width="20" height="32" rx="7" stroke="currentColor" stroke-width="3" fill="none" opacity=".45"/><path d="M70 62 L108 64" stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M70 56 L88 82 L106 76" stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect x="30" y="48" width="42" height="20" rx="10" fill="currentColor"/><circle cx="20" cy="57" r="11" fill="currentColor"/><path d="M38 62 L44 96" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M44 62 L52 96" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
     <symbol id="sideOpen-after" viewBox="0 0 120 120">
-      <g transform="rotate(90 60 60)"><use href="#matTopBase"/></g><rect x="9" y="40" width="20" height="32" rx="7" stroke="currentColor" stroke-width="3" fill="none" opacity=".45"/><path d="M70 62 L108 64" stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M70 56 L88 82 L106 76" stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M52 96 Q72 60 46 18" stroke="currentColor" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/><rect x="30" y="48" width="42" height="20" rx="10" fill="currentColor"/><circle cx="20" cy="57" r="11" fill="currentColor"/><path d="M38 62 L44 96" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M44 54 L46 18" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <g transform="rotate(90 60 60)"><use href="#matTopBase"/></g><rect x="9" y="40" width="20" height="32" rx="7" stroke="currentColor" stroke-width="3" fill="none" opacity=".45"/><path d="M70 62 L108 64" stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M70 56 L88 82 L106 76" stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path class="trail" d="M52 96 Q72 60 46 18" stroke="currentColor" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/><rect x="30" y="48" width="42" height="20" rx="10" fill="currentColor"/><circle cx="20" cy="57" r="11" fill="currentColor"/><path d="M38 62 L44 96" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M44 54 L46 18" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
 
     <!-- 猫のポーズ。横から見た構図 (頭が右)。体は catRock と同じ寸法で描く:
@@ -457,48 +468,53 @@
     <g id="railBase" stroke="currentColor" stroke-width="4" opacity=".45" fill="none" stroke-linecap="round">
       <line x1="104" y1="40" x2="104" y2="110"/><line x1="12" y1="110" x2="110" y2="110"/></g>
 
-    <!-- 3〜5 番 (仰向けで膝を立てて腕を動かす種目) は横から見た構図 (頭が左)。
-         真上から見ると立てた膝が短い脚にしか見えず、「膝を立てる」が伝わらなかった。
-         動かないもの: 頭・胴・膝を立てた脚 (bentKneesSide にまとめて、3 種目で同じ体)。腕だけが動く。
-         床は奥行きのある帯 (奥の縁・手前の縁)。本人の右手が手前 (濃く)、左手が奥 (薄く)。
-         下ろした腕は体の横に沿うので、胴に隠れて見えない -->
-    <g id="matSideBase" stroke="currentColor" stroke-width="4" opacity=".45" fill="none" stroke-linecap="round">
-      <line x1="6" y1="68" x2="114" y2="68"/><line x1="6" y1="92" x2="114" y2="92"/></g>
-    <g id="bentKneesSide">
-      <path class="leg" d="M74 76 L90 50 L106 80" stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".45"/>
-      <path class="leg" d="M76 78 L92 52 L108 82" stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-      <rect x="38" y="70" width="40" height="13" rx="6.5" fill="currentColor"/>
-      <circle cx="28" cy="75" r="10" fill="currentColor"/></g>
+    <!-- 3〜5 番 (仰向けで膝を立てて腕を動かす種目) は、真上から見て体を横長 (頭が左) に置く
+         (8・9 番と同じ置き方)。腕が床の上をどう動くかは、真上からがいちばん分かりやすい。
+         いちど横から見た絵にしたが (膝の「∧」は分かる)、腕の動きが分かりにくかった。
+         動かないもの: 頭・胴・脚 (supineTop にまとめて、3 種目で同じ体)。腕だけが動く。
+         立てた膝は真上からだと脚が短く見えるだけなので、太もも (太い) → 膝 (丸) →
+         すね (細い) → 足 と描き分けて、膝がいちばん手前にあることを示す。
+         画面の上の腕が本人の左、下の腕が本人の右。動いた腕の通り道を薄い弧で残す -->
+    <g id="matTopWide"><g transform="rotate(90 60 60)"><use href="#matTopBase"/></g><rect x="9" y="42" width="20" height="32" rx="7" stroke="currentColor" stroke-width="3" fill="none" opacity=".45"/></g>
+    <g id="supineTop">
+      <g stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path class="shin" d="M88 46 L101 46" stroke-width="5"/><path class="shin" d="M88 70 L101 70" stroke-width="5"/>
+        <path class="thigh" d="M70 52 L88 46" stroke-width="8"/><path class="thigh" d="M70 64 L88 70" stroke-width="8"/>
+      </g>
+      <ellipse class="foot" cx="103" cy="46" rx="5.5" ry="4" fill="currentColor"/><ellipse class="foot" cx="103" cy="70" rx="5.5" ry="4" fill="currentColor"/>
+      <circle class="knee" cx="88" cy="46" r="6" fill="currentColor"/><circle class="knee" cx="88" cy="70" r="6" fill="currentColor"/>
+      <rect x="30" y="46" width="42" height="24" rx="12" fill="currentColor"/>
+      <circle cx="20" cy="58" r="11" fill="currentColor"/></g>
 
     <!-- 仰向けで膝を立て、両手で万歳する
          before = 腕を体の横に下ろした姿勢 / after = 両腕を頭の上へ伸ばした姿勢 -->
     <symbol id="armRaise-before" viewBox="0 0 120 120">
-      <use href="#matSideBase"/><use href="#bentKneesSide"/>
+      <use href="#matTopWide"/><use href="#supineTop"/><path class="arm-left" d="M38 47 L67.5 41.8" stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path class="arm-right" d="M38 69 L67.5 74.2" stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
     <symbol id="armRaise-after" viewBox="0 0 120 120">
-      <use href="#matSideBase"/><path class="arm-far" d="M46 76 L14 54" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" opacity=".45"/><use href="#bentKneesSide"/><path class="arm-near" d="M46 76 L14 56" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <use href="#matTopWide"/><path class="trail" d="M67.5 41.8 A30 30 0 0 0 12.8 30.7" stroke-width="5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/><path class="trail" d="M67.5 74.2 A30 30 0 0 1 12.8 85.3" stroke-width="5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/><use href="#supineTop"/><path class="arm-left" d="M38 47 L12.8 30.7" stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path class="arm-right" d="M38 69 L12.8 85.3" stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
 
-    <!-- 仰向けで膝を立て、左右交互に万歳する。左手 (奥) から始める
-         down = 両腕を下ろした姿勢 / left = 左手 (奥・薄い) だけ上げた姿勢 / right = 右手 (手前・濃い) だけ上げた姿勢 -->
+    <!-- 仰向けで膝を立て、左右交互に万歳する。左手 (画面の上の腕) から始める
+         down = 両腕を下ろした姿勢 / left = 左手だけ上げた姿勢 / right = 右手だけ上げた姿勢 -->
     <symbol id="armAlt-down" viewBox="0 0 120 120">
-      <use href="#matSideBase"/><use href="#bentKneesSide"/>
+      <use href="#matTopWide"/><use href="#supineTop"/><path class="arm-left" d="M38 47 L67.5 41.8" stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path class="arm-right" d="M38 69 L67.5 74.2" stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
     <symbol id="armAlt-left" viewBox="0 0 120 120">
-      <use href="#matSideBase"/><path class="arm-far" d="M46 76 L14 54" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" opacity=".45"/><use href="#bentKneesSide"/>
+      <use href="#matTopWide"/><path class="trail" d="M67.5 41.8 A30 30 0 0 0 12.8 30.7" stroke-width="5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/><use href="#supineTop"/><path class="arm-left" d="M38 47 L12.8 30.7" stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path class="arm-right" d="M38 69 L67.5 74.2" stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
     <symbol id="armAlt-right" viewBox="0 0 120 120">
-      <use href="#matSideBase"/><use href="#bentKneesSide"/><path class="arm-near" d="M46 76 L14 56" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <use href="#matTopWide"/><path class="trail" d="M67.5 74.2 A30 30 0 0 1 12.8 85.3" stroke-width="5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/><use href="#supineTop"/><path class="arm-left" d="M38 47 L67.5 41.8" stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path class="arm-right" d="M38 69 L12.8 85.3" stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
 
     <!-- 仰向けで膝を立て、両手をできるだけ広げてから胸の前で合わせる
-         広げた腕は床の上を横へ伸びるので、横からは手前の床・奥の床へ向かう短い腕に見える
-         before = 両腕を横へ広げた姿勢 / after = 天井へ伸ばして胸の前で両手を合わせた姿勢 -->
+         合わせた腕は天井へ伸びているので、真上からは短く見える。広げていた腕を薄く残す
+         before = 両腕を横へ広げた姿勢 / after = 胸の前で両手を合わせた姿勢 -->
     <symbol id="armHug-before" viewBox="0 0 120 120">
-      <use href="#matSideBase"/><path class="arm-far" d="M46 76 L42 64" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" opacity=".45"/><use href="#bentKneesSide"/><path class="arm-near" d="M46 76 L42 90" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <use href="#matTopWide"/><use href="#supineTop"/><path class="arm-left" d="M38 47 L40.1 17.1" stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path class="arm-right" d="M38 69 L40.1 98.9" stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
     <symbol id="armHug-after" viewBox="0 0 120 120">
-      <use href="#matSideBase"/><path class="arm-far" d="M46 76 L48 38" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" opacity=".45"/><use href="#bentKneesSide"/><path class="arm-near" d="M46 76 L48 38" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <use href="#matTopWide"/><path class="trail" d="M38 47 L40.1 17.1" stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/><path class="trail" d="M38 69 L40.1 98.9" stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/><use href="#supineTop"/><path d="M41 50 L45 58 L41 66" style="stroke: var(--bg-2)" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path class="arm-together" d="M41 50 L45 58 L41 66" stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
 
     <!-- 横向きに寝て膝をくの字に曲げて固め、上の肩だけを後ろへ動かして肩甲骨を広げる。
@@ -510,7 +526,7 @@
       <g transform="rotate(90 60 60)"><use href="#matTopBase"/></g><rect x="9" y="40" width="20" height="32" rx="7" stroke="currentColor" stroke-width="3" fill="none" opacity=".45"/><path d="M70 62 L92 74 L108 66" stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M70 56 L86 84 L106 82" stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect x="30" y="48" width="42" height="20" rx="10" fill="currentColor"/><circle cx="20" cy="57" r="11" fill="currentColor"/><path d="M38 62 L44 96" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M44 62 L52 96" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
     <symbol id="shoulderBack-after" viewBox="0 0 120 120">
-      <g transform="rotate(90 60 60)"><use href="#matTopBase"/></g><rect x="9" y="40" width="20" height="32" rx="7" stroke="currentColor" stroke-width="3" fill="none" opacity=".45"/><path d="M70 62 L92 74 L108 66" stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M70 56 L86 84 L106 82" stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M44 62 L52 96" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/><rect x="30" y="48" width="42" height="20" rx="10" fill="currentColor"/><circle cx="20" cy="57" r="11" fill="currentColor"/><path d="M38 62 L44 96" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M42 54 L44 88" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <g transform="rotate(90 60 60)"><use href="#matTopBase"/></g><rect x="9" y="40" width="20" height="32" rx="7" stroke="currentColor" stroke-width="3" fill="none" opacity=".45"/><path d="M70 62 L92 74 L108 66" stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M70 56 L86 84 L106 82" stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path class="trail" d="M44 62 L52 96" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/><rect x="30" y="48" width="42" height="20" rx="10" fill="currentColor"/><circle cx="20" cy="57" r="11" fill="currentColor"/><path d="M38 62 L44 96" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M42 54 L44 88" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
 
     <!-- 四つん這いで、片手を前に出し、反対側の足を後ろへ伸ばす。横から見た構図
@@ -541,15 +557,17 @@
     <!-- 階段の 1 段目に横向きで片足で立ち、段から外に出した足を前後に振る。横から見た構図。
          立っている足は動かさない。振る足は段の外にあるので、段より下まで下がる。
          前後同じくらいに振る
+         足の通り道を薄い弧で残し、反対へ振ったときの脚も薄く残す (止まった絵を
+         入れ替えるだけでは、足を振っているように見えなかった)
          center = 下ろした姿勢 / front = 前へ振った姿勢 / back = 後ろへ振った姿勢 -->
     <symbol id="stairSwing-center" viewBox="0 0 120 120">
-      <use href="#stepBase"/><g stroke-width="7" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M52 60.6 L52 98"/></g><g stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M50 98 L58 98"/></g><g stroke-width="7" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M52 60.6 L52 98"/></g><g stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M50 98 L58 98"/></g><line x1="52" y1="60.6" x2="52" y2="38.5" stroke="currentColor" stroke-width="18" stroke-linecap="round"/><circle cx="52" cy="24.9" r="10" fill="currentColor"/><g stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M52 35.1 L54.8 55.3"/></g>
+      <use href="#stepBase"/><path class="trail" d="M39 83.1 A26 26 0 0 0 65 83.1" stroke-width="5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/><path class="trail" d="M52 60.6 L33.3 93" stroke-width="7" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/><path class="trail" d="M52 60.6 L70.7 93" stroke-width="7" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/><g stroke-width="7" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M52 60.6 L52 98"/></g><g stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M50 98 L58 98"/></g><g stroke-width="7" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M52 60.6 L52 98"/></g><g stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M50 98 L58 98"/></g><line x1="52" y1="60.6" x2="52" y2="38.5" stroke="currentColor" stroke-width="18" stroke-linecap="round"/><circle cx="52" cy="24.9" r="10" fill="currentColor"/><g stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M52 35.1 L54.8 55.3"/></g>
     </symbol>
     <symbol id="stairSwing-front" viewBox="0 0 120 120">
-      <use href="#stepBase"/><g stroke-width="7" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M52 60.6 L70.7 93"/></g><g stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M68.7 93 L76.7 93"/></g><g stroke-width="7" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M52 60.6 L52 98"/></g><g stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M50 98 L58 98"/></g><line x1="52" y1="60.6" x2="52" y2="38.5" stroke="currentColor" stroke-width="18" stroke-linecap="round"/><circle cx="52" cy="24.9" r="10" fill="currentColor"/><g stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M52 35.1 L54.8 55.3"/></g>
+      <use href="#stepBase"/><path class="trail" d="M39 83.1 A26 26 0 0 0 65 83.1" stroke-width="5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/><path class="trail" d="M52 60.6 L33.3 93" stroke-width="7" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/><g stroke-width="7" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M52 60.6 L70.7 93"/></g><g stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M68.7 93 L76.7 93"/></g><g stroke-width="7" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M52 60.6 L52 98"/></g><g stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M50 98 L58 98"/></g><line x1="52" y1="60.6" x2="52" y2="38.5" stroke="currentColor" stroke-width="18" stroke-linecap="round"/><circle cx="52" cy="24.9" r="10" fill="currentColor"/><g stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M52 35.1 L54.8 55.3"/></g>
     </symbol>
     <symbol id="stairSwing-back" viewBox="0 0 120 120">
-      <use href="#stepBase"/><g stroke-width="7" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M52 60.6 L33.3 93"/></g><g stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M31.3 93 L39.3 93"/></g><g stroke-width="7" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M52 60.6 L52 98"/></g><g stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M50 98 L58 98"/></g><line x1="52" y1="60.6" x2="52" y2="38.5" stroke="currentColor" stroke-width="18" stroke-linecap="round"/><circle cx="52" cy="24.9" r="10" fill="currentColor"/><g stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M52 35.1 L54.8 55.3"/></g>
+      <use href="#stepBase"/><path class="trail" d="M39 83.1 A26 26 0 0 0 65 83.1" stroke-width="5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/><path class="trail" d="M52 60.6 L70.7 93" stroke-width="7" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/><g stroke-width="7" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M52 60.6 L33.3 93"/></g><g stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M31.3 93 L39.3 93"/></g><g stroke-width="7" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M52 60.6 L52 98"/></g><g stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M50 98 L58 98"/></g><line x1="52" y1="60.6" x2="52" y2="38.5" stroke="currentColor" stroke-width="18" stroke-linecap="round"/><circle cx="52" cy="24.9" r="10" fill="currentColor"/><g stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M52 35.1 L54.8 55.3"/></g>
     </symbol>
 
     <!-- 肩幅に立ち、膝を少しだけ曲げる浅いスクワット。横から見た構図 (右向き)。
@@ -597,10 +615,10 @@
          内向き → 外向きに回ったことを見せる
          before = 腕を斜めに開いた姿勢 / after = 腕を外へ回して後ろへ開いた姿勢 -->
     <symbol id="armOpen-before" viewBox="0 0 120 120">
-      <use href="#chairFrontBase"/><use href="#chairLeanLegs"/><circle cx="60" cy="24" r="11" fill="currentColor"/><rect x="48" y="38" width="24" height="42" rx="12" fill="currentColor"/><g stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M50 44 L34 70"/><path d="M70 44 L86 70"/></g><line x1="34" y1="70" x2="39" y2="74" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><line x1="86" y1="70" x2="81" y2="74" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+      <use href="#chairFrontBase"/><use href="#chairLeanLegs"/><circle cx="60" cy="16" r="11" fill="currentColor"/><rect x="48" y="30" width="24" height="42" rx="12" fill="currentColor"/><path d="M50 36 L34 62" stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M70 36 L86 62" stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="34" y1="62" x2="39" y2="66" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><line x1="86" y1="62" x2="81" y2="66" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
     </symbol>
     <symbol id="armOpen-after" viewBox="0 0 120 120">
-      <use href="#chairFrontBase"/><use href="#chairLeanLegs"/><circle cx="60" cy="24" r="11" fill="currentColor"/><rect x="48" y="38" width="24" height="42" rx="12" fill="currentColor"/><path d="M50 44 L34 70" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" opacity=".25"/><path d="M70 44 L86 70" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" opacity=".25"/><g stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M50 44 L24 64"/><path d="M70 44 L96 64"/></g><line x1="24" y1="64" x2="18" y2="61" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><line x1="96" y1="64" x2="102" y2="61" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+      <use href="#chairFrontBase"/><use href="#chairLeanLegs"/><circle cx="60" cy="16" r="11" fill="currentColor"/><rect x="48" y="30" width="24" height="42" rx="12" fill="currentColor"/><path class="trail" d="M50 36 L34 62" stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/><path class="trail" d="M70 36 L86 62" stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/><path d="M50 36 L24 56" stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M70 36 L96 56" stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="24" y1="56" x2="18" y2="53" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><line x1="96" y1="56" x2="102" y2="53" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
     </symbol>
 
     <!-- 座って肘を脇につけたまま、前腕を外へ回して開く。肩甲骨を意識する。
@@ -608,10 +626,10 @@
          正面からは短く見え、外へ回すと横に伸びて見える
          before = 前腕を前へ向けた姿勢 / after = 前腕を外へ開いた姿勢 -->
     <symbol id="armRotate-before" viewBox="0 0 120 120">
-      <use href="#chairFrontBase"/><use href="#chairLeanLegs"/><circle cx="60" cy="24" r="11" fill="currentColor"/><rect x="48" y="38" width="24" height="42" rx="12" fill="currentColor"/><g stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M50 44 L46 66 L54 72"/><path d="M70 44 L74 66 L66 72"/></g>
+      <use href="#chairFrontBase"/><use href="#chairLeanLegs"/><circle cx="60" cy="16" r="11" fill="currentColor"/><rect x="48" y="30" width="24" height="42" rx="12" fill="currentColor"/><path d="M50 36 L46 58 L54 64" stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M70 36 L74 58 L66 64" stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
     <symbol id="armRotate-after" viewBox="0 0 120 120">
-      <use href="#chairFrontBase"/><use href="#chairLeanLegs"/><circle cx="60" cy="24" r="11" fill="currentColor"/><rect x="48" y="38" width="24" height="42" rx="12" fill="currentColor"/><g stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M50 44 L46 66 L26 62"/><path d="M70 44 L74 66 L94 62"/></g>
+      <use href="#chairFrontBase"/><use href="#chairLeanLegs"/><circle cx="60" cy="16" r="11" fill="currentColor"/><rect x="48" y="30" width="24" height="42" rx="12" fill="currentColor"/><path class="trail" d="M50 68 Q32 70 24 60" stroke-width="5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/><path class="trail" d="M70 68 Q88 70 96 60" stroke-width="5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/><path d="M50 36 L46 58 L26 54" stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M70 36 L74 58 L94 54" stroke-width="6" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
 
   </defs>

@@ -610,9 +610,9 @@ async function run() {
 
     // 片足を反対の足にのせる種目 (hipTwist) だけ、胴の下に腰の丸を別に描いていて、
     // ほかの仰向けの種目に無い塊が目立っていた。仰向けの絵は、同じ向きから見るものどうし
-    // (真上から: 1・2 番 / 横から: 3〜5 番) で同じ体にそろえる
+    // (真上から縦長に: 1・2 番 / 真上から横長に: 3〜5 番) で同じ体にそろえる
     section('仰向けの種目は、同じ向きから見る絵どうしで同じ体 (胴は 1 つ、腰の塊なし) で描く');
-    const supineGroups = { '22x36': ['kneeFall', 'hipTwist'], '40x13': ['armRaise', 'armAlt', 'armHug'] };
+    const supineGroups = { '22x36': ['kneeFall', 'hipTwist'], '42x24': ['armRaise', 'armAlt', 'armHug'] };
     const supine = await phone.evaluate((groups) => {
       const ids = Object.entries(groups).flatMap(([want, arts]) => arts
         .flatMap((art) => [...document.querySelectorAll(`symbol[id^="${art}-"]`)].map((el) => ({ id: el.id, want }))));
@@ -634,31 +634,133 @@ async function run() {
     ok(supine.length >= 10 && oddBody.length === 0,
       `仰向けの ${supine.length} コマとも胴は 1 つで同じ大きさ${oddBody.length ? ' → ' + oddBody.map((s) => `${s.id} (${s.n} 個: ${s.size})`).join(', ') : ''}`);
 
-    // 3〜5 番 (仰向けで膝を立てる種目) は以前、真上から見た絵で、立てた膝が
-    // 短い脚にしか見えなかった。横から見て、膝が腰と足より高く「∧」に立っていること、
-    // 腕を動かすコマでも脚は同じ形のままであることを見張る
-    section('仰向けで膝を立てる 3〜5 番は、横から見て膝が立っている');
-    const kneesUp = await phone.evaluate(() => {
+    // 3〜5 番 (仰向けで膝を立てて腕を動かす種目) は、8・9 番と同じく真上から見て
+    // 体を横長に置く。いちど横から見た絵にしたが、腕が床の上をどう動くかが
+    // 分かりにくかった。立てた膝は真上からだと脚が短く見えるだけなので、
+    // 太もも (太い) → 膝 (丸) → すね (細い) → 足 と描き分ける
+    section('仰向けで膝を立てる 3〜5 番は、真上から見た横長の体で、腕の動きが見える');
+    const supineTop = await phone.evaluate(() => {
       const pts = (el) => (el.getAttribute('d').match(/-?\d+(\.\d+)?/g) || []).map(Number)
         .reduce((a, n, i, all) => (i % 2 ? a : a.concat([[n, all[i + 1]]])), []);
-      // <use> で呼んだ部品の中の .leg も拾う
-      const legsOf = (el) => [...el.children].flatMap((c) => {
-        if (c.tagName === 'use') { const ref = document.querySelector(c.getAttribute('href')); return ref ? legsOf(ref) : []; }
-        return (c.classList.contains('leg') ? [c] : []).concat(legsOf(c));
-      });
-      return ['armRaise', 'armAlt', 'armHug']
+      const body = document.getElementById('supineTop');
+      const num = (el, name) => Number(el.getAttribute(name));
+      const torso = body.querySelector('rect');
+      const knees = [...body.querySelectorAll('.knee')];
+      const thighs = [...body.querySelectorAll('.thigh')];
+      const shins = [...body.querySelectorAll('.shin')];
+      const frames = ['armRaise', 'armAlt', 'armHug']
         .flatMap((art) => [...document.querySelectorAll(`symbol[id^="${art}-"]`)])
         .map((sym) => {
-          const legs = legsOf(sym).map(pts);
-          const up = legs.length >= 1 && legs.every(([hip, knee, foot]) =>
-            foot && knee[1] < hip[1] - 15 && knee[1] < foot[1] - 15 && Math.abs(foot[1] - hip[1]) < 8);
-          return { id: sym.id, ok: up, legs: legs.map((l) => l.map((p) => p.join(',')).join(' ')).join(' / ') || '脚が無い' };
+          const hand = (cls) => { const el = sym.querySelector('.' + cls); return el ? pts(el) : null; };
+          return { id: sym.id, usesBody: !!sym.querySelector('use[href="#supineTop"]'), left: hand('arm-left'), right: hand('arm-right'),
+            together: !!sym.querySelector('.arm-together') };
         });
+      return {
+        torso: num(torso, 'width') + 'x' + num(torso, 'height'),
+        knees: knees.length, feet: body.querySelectorAll('.foot').length,
+        kneeR: knees.map((k) => num(k, 'r')),
+        thighW: thighs.map((t) => num(t, 'stroke-width')), shinW: shins.map((t) => num(t, 'stroke-width')),
+        legLen: thighs.map((t) => { const [hip, knee] = pts(t); return Math.round(Math.hypot(knee[0] - hip[0], knee[1] - hip[1])); }),
+        frames
+      };
     });
-    const flat = kneesUp.filter((k) => !k.ok);
-    ok(kneesUp.length === 7 && flat.length === 0,
-      `3〜5 番の ${kneesUp.length} コマとも膝が腰と足より 15 以上高い${flat.length ? ' → ' + flat.map((k) => `${k.id} (${k.legs})`).join(', ') : ''}`);
-    ok(new Set(kneesUp.map((k) => k.legs)).size === 1, '3〜5 番の脚は、どのコマも同じ形 (腕だけが動く)');
+    {
+      const t = supineTop;
+      const [tw, th] = t.torso.split('x').map(Number);
+      ok(tw > th, `胴が横長 (${t.torso})`);
+      ok(t.knees === 2 && t.feet === 2 && t.thighW.every((w) => w > Math.max(...t.shinW)) && t.kneeR.every((r, i) => r * 2 > t.thighW[i]),
+        `太もも (太さ ${t.thighW.join('/')}) → 膝の丸 (直径 ${t.kneeR.map((r) => r * 2).join('/')}) → すね (太さ ${t.shinW.join('/')}) → 足、と描き分けている`);
+      ok(t.frames.length === 7 && t.frames.every((f) => f.usesBody), '3〜5 番の 7 コマとも同じ体 (腕だけが動く)');
+      const f = Object.fromEntries(t.frames.map((x) => [x.id, x]));
+      // 腕は [肩, 手]。頭は左なので、手が肩より左なら「頭の上へ上げた」、右なら「下ろした」
+      const up = (a) => a && a[1][0] < a[0][0] - 15;
+      const down = (a) => a && a[1][0] > a[0][0] + 15;
+      const wide = (a) => a && Math.abs(a[1][1] - a[0][1]) > 22;
+      ok(down(f['armRaise-before'].left) && down(f['armRaise-before'].right) && up(f['armRaise-after'].left) && up(f['armRaise-after'].right),
+        '3 番: 下ろした両腕が、頭の上へ上がる');
+      const leftIsUpper = f['armAlt-left'].left[0][1] < f['armAlt-left'].right[0][1];
+      ok(leftIsUpper && up(f['armAlt-left'].left) && down(f['armAlt-left'].right) && down(f['armAlt-right'].left) && up(f['armAlt-right'].right),
+        '4 番: 左のコマは左手 (画面の上の腕) だけ、右のコマは右手だけ上がる');
+      ok(wide(f['armHug-before'].left) && wide(f['armHug-before'].right) && f['armHug-after'].together,
+        '5 番: 横へ広げた両腕が、胸の上で合わさる');
+    }
+
+    // 正面から見た椅子 (19・20・23・24 番) は以前、座面と脚だけの台で、人の脚も胴から
+    // 座面までの短い棒だったので、台の上に立っているように見えた。背もたれがあり、
+    // 膝が座面の前へ出て、すねが床まで下りていること
+    section('正面から見た椅子の種目は、背もたれのある椅子に腰かけて足を床についている');
+    const seated = await phone.evaluate(() => {
+      const pts = (el) => (el.getAttribute('d').match(/-?\d+(\.\d+)?/g) || []).map(Number)
+        .reduce((a, n, i, all) => (i % 2 ? a : a.concat([[n, all[i + 1]]])), []);
+      const chair = document.getElementById('chairFrontBase');
+      const legs = document.getElementById('chairLeanLegs');
+      const back = chair.querySelector('.chairBack');
+      const backPts = back ? pts(back) : [];
+      const seat = chair.querySelector('.chairSeat');
+      const shins = [...legs.querySelectorAll('.shin')].map(pts);
+      const frames = ['chairTwist', 'chairLean', 'armOpen', 'armRotate']
+        .flatMap((art) => [...document.querySelectorAll(`symbol[id^="${art}-"]`)])
+        .filter((sym) => !sym.querySelector('use[href="#chairFrontBase"]') || !sym.querySelector('use[href="#chairLeanLegs"]'))
+        .map((sym) => sym.id);
+      return {
+        backH: backPts.length ? Math.max(...backPts.map((p) => p[1])) - Math.min(...backPts.map((p) => p[1])) : 0,
+        backW: backPts.length ? Math.max(...backPts.map((p) => p[0])) - Math.min(...backPts.map((p) => p[0])) : 0,
+        seatY: seat ? Number(seat.getAttribute('y1')) : null,
+        floorY: Number(chair.querySelector('line').getAttribute('y1')),
+        knees: [...legs.querySelectorAll('.knee')].map((k) => Number(k.getAttribute('cy'))),
+        shins: shins.map(([knee, ankle]) => ({ len: ankle[1] - knee[1], ankle: ankle[1] })),
+        feet: legs.querySelectorAll('.foot').length,
+        frames
+      };
+    });
+    ok(seated.backH >= 30 && seated.backW > 24,
+      `背もたれがあり、胴 (幅 24) より広い (高さ ${seated.backH}・幅 ${seated.backW})`);
+    ok(seated.knees.length === 2 && seated.knees.every((y) => Math.abs(y - seated.seatY) <= 6),
+      `膝が座面の高さにある (膝 y ${seated.knees.join('/')}・座面 y ${seated.seatY})`);
+    ok(seated.shins.length === 2 && seated.feet === 2 && seated.shins.every((sh) => sh.len >= 24 && seated.floorY - sh.ankle <= 8),
+      `すねが床まで下りている (すねの長さ ${seated.shins.map((sh) => sh.len).join('/')}・床まで ${seated.shins.map((sh) => seated.floorY - sh.ankle).join('/')}。以前は 14 で床に届いていなかった)`);
+    ok(seated.frames.length === 0, `19・20・23・24 番の全コマが、同じ椅子と脚を使っている${seated.frames.length ? ' → ' + seated.frames.join(', ') : ''}`);
+
+    // 動きの軌跡。15 番 (階段で足を前後に振る) は、止まった絵を 3 枚入れ替えるだけでは
+    // 足を振っているように見えなかった。動く部分の通り道や、動く前の位置を薄く残す
+    section('動く部分の通り道 (軌跡) を、薄い線で残している');
+    const trails = await phone.evaluate(() => {
+      const pts = (el) => (el.getAttribute('d').match(/-?\d+(\.\d+)?/g) || []).map(Number)
+        .reduce((a, n, i, all) => (i % 2 ? a : a.concat([[n, all[i + 1]]])), []);
+      const inSymbol = (sym) => [...sym.querySelectorAll('.trail')];
+      const all = [...document.querySelectorAll('#sprite .trail')];
+      const perArt = {};
+      document.querySelectorAll('#sprite symbol').forEach((sym) => {
+        const art = sym.id.split('-')[0];
+        const n = inSymbol(sym).length;
+        if (n) perArt[art] = (perArt[art] || 0) + n;
+      });
+      const swing = ['center', 'front', 'back'].map((f) => {
+        const sym = document.getElementById('stairSwing-' + f);
+        const t = inSymbol(sym);
+        const arc = t.find((el) => /A/.test(el.getAttribute('d')));
+        const ends = arc ? pts(arc) : [];
+        return { frame: f, n: t.length, arcFrom: ends[0] ? ends[0][0] : null, arcTo: ends.length ? ends[ends.length - 1][0] : null,
+          ghostX: t.filter((el) => el !== arc).map((el) => pts(el)[1][0]) };
+      });
+      return {
+        opacity: [...new Set(all.map((el) => el.getAttribute('opacity') || (el.closest('[opacity]') && el.closest('[opacity]').getAttribute('opacity'))))],
+        arts: Object.keys(perArt).sort(), swing
+      };
+    });
+    const wantTrails = ['armAlt', 'armHug', 'armOpen', 'armRaise', 'armRotate', 'chairLean', 'chairLift', 'chairTwist',
+      'footRoll', 'hipTwist', 'kneeFall', 'shoulderBack', 'sideArm', 'sideKnee', 'sideOpen', 'stairSwing'];
+    const missingTrails = wantTrails.filter((a) => !trails.arts.includes(a));
+    ok(missingTrails.length === 0, `${wantTrails.length} 種目に軌跡がある${missingTrails.length ? ' → 無い: ' + missingTrails.join(', ') : ''}`);
+    ok(trails.opacity.length === 1 && trails.opacity[0] === '.25', `軌跡はどれも同じ薄さ (${trails.opacity.join(' / ')}) で、本体の線と見分けがつく`);
+    {
+      const hipX = 52;
+      const [c, f, b] = trails.swing;
+      ok([c, f, b].every((s) => s.arcFrom < hipX - 8 && s.arcTo > hipX + 8),
+        `15 番: 3 コマとも、足の通り道の弧が腰の後ろから前までかかっている (x ${c.arcFrom} 〜 ${c.arcTo})`);
+      ok(c.ghostX.length === 2 && f.ghostX.length === 1 && f.ghostX[0] < hipX && b.ghostX.length === 1 && b.ghostX[0] > hipX,
+        '15 番: 前へ振ったコマには後ろの脚を、後ろへ振ったコマには前の脚を薄く残す (まん中のコマは前後とも)');
+    }
 
     // 猫のポーズで前後に揺れる種目。手・膝・かかとは床についたまま動かず、
     // 後ろではお尻がかかとにつき、前では肩が手より前へ出る
