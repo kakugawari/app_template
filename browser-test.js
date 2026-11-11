@@ -113,6 +113,21 @@ async function run() {
     ok(fit.wide <= 1, 'スマホ幅で横スクロールが出ない');
     ok(fit.title.length > 0, `見出しが出ている (${fit.title})`);
 
+    // ホーム画面から開いたとき、時計や電池の帯の下まで描く指定がそろっている
+    // (無いと、画面のいちばん上が theme-color の板になる。帯そのものは実機でしか見られない)
+    const bar = await phone.evaluate(() => {
+      const meta = (n) => (document.querySelector(`meta[name="${n}"]`) || {}).content || '';
+      return {
+        capable: meta('apple-mobile-web-app-capable'),
+        style: meta('apple-mobile-web-app-status-bar-style'),
+        cover: /viewport-fit=cover/.test(meta('viewport')),
+        theme: meta('theme-color')
+      };
+    });
+    ok(bar.capable === 'yes' && bar.style === 'black-translucent' && bar.cover,
+      `ホーム画面から開くと帯の下まで描く指定がある (${JSON.stringify(bar)})`);
+    ok(/^#[0-9a-f]{6}$/i.test(bar.theme), `帯の色 (theme-color) が決めてある (${bar.theme})`);
+
     // ------------------------------------------------ ここにアプリごとの確認を足す
     section('アプリの操作');
     await phone.locator('#btnAction').tap();

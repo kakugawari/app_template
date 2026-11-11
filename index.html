@@ -6,6 +6,12 @@
 <title>アプリの雛形</title>
 <meta name="description" content="ビルドなしで動くアプリの雛形">
 <meta name="theme-color" content="#151a2e">
+<!-- ホーム画面に追加して開いたとき、時計や電池の帯の下まで画面を描く。
+     無いと iOS は帯の下からページを始め、帯を theme-color の板で塗る (画面のいちばん上が別の色になる)。
+     上の安全域は styles.css の env(safe-area-inset-top) で空けてある。
+     iOS は追加したときの設定を覚えているので、前に追加したアイコンは作り直さないと変わらない -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="./styles.css">
 </head>
