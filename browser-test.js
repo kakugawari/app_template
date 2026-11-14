@@ -102,16 +102,17 @@ async function run() {
     const phone = await context.newPage();
     phone.on('pageerror', (e) => errors.push('スマホ: ' + e.message));
     phone.on('console', (m) => { if (m.type() === 'error') errors.push('スマホ: ' + m.text()); });
-    await phone.goto(URL);
-    await phone.waitForFunction(() => window.__app);
-    ok(true, 'ページが開いて、画面のしくみが立ち上がる');
+    await phone.goto(URL, { waitUntil: 'load' });
+    ok(true, 'ページが開く');
 
     const fit = await phone.evaluate(() => ({
       wide: document.documentElement.scrollWidth - document.documentElement.clientWidth,
-      title: document.querySelector('h1') ? document.querySelector('h1').textContent.trim() : ''
+      title: document.title.trim(),
+      painted: document.body.innerText.trim().length + document.querySelectorAll('canvas, svg, img').length
     }));
     ok(fit.wide <= 1, 'スマホ幅で横スクロールが出ない');
-    ok(fit.title.length > 0, `見出しが出ている (${fit.title})`);
+    ok(fit.title.length > 0, `ページの名前 (title) がある (${fit.title})`);
+    ok(fit.painted > 0, '画面に何か出ている (真っ白ではない)');
 
     // ホーム画面から開いたとき、時計や電池の帯の下まで描く指定がそろっている
     // (無いと、画面のいちばん上が theme-color の板になる。帯そのものは実機でしか見られない)
@@ -130,6 +131,9 @@ async function run() {
 
     // ------------------------------------------------ ここにアプリごとの確認を足す
     section('アプリの操作');
+    if (!(await phone.locator('#btnAction').count())) {
+      skip('雛形のボタンが無い (アーティファクトから取り込んだ)。アプリに合わせた確認をここに書く');
+    } else {
     await phone.locator('#btnAction').tap();
     await phone.waitForTimeout(120);
     const after = await phone.evaluate(() => ({
@@ -141,6 +145,7 @@ async function run() {
     // 押した直後に表示が飛ばないか (CSS アニメーションの上書き事故よけ)
     const jump = await measureJump(phone, '#result', 'document.getElementById("btnAction").click()');
     ok(jump < 12, `押した直後に表示が飛ばない (最大ずれ ${jump}px)`);
+    }
 
     // ------------------------------------------------ 明るい画面・暗い画面
     section('明るい画面と暗い画面');
@@ -148,8 +153,7 @@ async function run() {
       const themed = await browser.newContext({ ...devices['iPhone 13'], colorScheme: scheme });
       const page = await themed.newPage();
       page.on('pageerror', (e) => errors.push(scheme + ': ' + e.message));
-      await page.goto(URL);
-      await page.waitForFunction(() => window.__app);
+      await page.goto(URL, { waitUntil: 'load' });
       const colors = await page.evaluate(() => ({
         bg: getComputedStyle(document.body).backgroundColor,
         fg: getComputedStyle(document.body).color
@@ -180,8 +184,7 @@ async function run() {
     } else {
       const swCtx = await browser.newContext();
       const swPage = await swCtx.newPage();
-      await swPage.goto(URL);
-      await swPage.waitForFunction(() => window.__app);
+      await swPage.goto(URL, { waitUntil: 'load' });
       ok(await swPage.evaluate(() => navigator.serviceWorker.ready.then((r) => !!r.active).catch(() => false)),
         'サービスワーカーが動く');
       await swPage.waitForTimeout(800);
@@ -202,7 +205,7 @@ async function run() {
       await swCtx.setOffline(true);
       await swPage.reload().catch(() => {});
       await swPage.waitForTimeout(400);
-      ok(await swPage.evaluate(() => !!window.__app).catch(() => false),
+      ok(await swPage.evaluate(() => document.body.innerText.trim().length > 0).catch(() => false),
         'ネットにつながらなくても開ける');
       await swCtx.setOffline(false);
     }

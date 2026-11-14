@@ -1,0 +1,64 @@
+# main に入ったら、テストを流してから GitHub Pages に公開する。
+# プルリクエストではテストだけ流す (公開はしない)。
+#
+# はじめに 1 回だけ、リポジトリの Settings → Pages → Build and deployment の
+# Source を「GitHub Actions」にする。公開先は https://<持ち主>.github.io/<リポジトリ名>/
+name: test-and-publish
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm test
+      - name: ブラウザで動かすテスト
+        run: |
+          npm i --no-save playwright
+          npx playwright install --with-deps chromium
+          npm run test:ui
+
+  publish:
+    needs: test
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: 公開するファイルだけを集める (テストや手順書は出さない)
+        run: |
+          mkdir _site
+          for f in *; do
+            case "$f" in
+              _site|node_modules|CLAUDE.md|README.md|package.json|package-lock.json|serve.js|browser-test.js|import-artifact.js|*.test.js) ;;
+              *) cp -r "$f" _site/ ;;
+            esac
+          done
+          touch _site/.nojekyll
+          ls -la _site
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deploy
+        uses: actions/deploy-pages@v4
