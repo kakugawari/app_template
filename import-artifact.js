@@ -146,6 +146,10 @@ function splitArtifact(source) {
   if (!/<link\b[^>]*rel\s*=\s*["']?(?:shortcut )?icon/i.test(html)) {
     head('<link rel="icon" href="./icon.svg" type="image/svg+xml">');
   }
+  // iOS のホーム画面は SVG を使えない。PNG は make-icon.js で作る
+  if (!/<link\b[^>]*rel\s*=\s*["']?apple-touch-icon/i.test(html)) {
+    head('<link rel="apple-touch-icon" href="./apple-touch-icon.png">');
+  }
   if (!/<title\b/i.test(html)) {
     head('<title>アプリ</title>');
     warnings.push('<title> が無かったので「アプリ」にした');

@@ -50,7 +50,7 @@ jobs:
           mkdir _site
           for f in *; do
             case "$f" in
-              _site|node_modules|CLAUDE.md|README.md|package.json|package-lock.json|serve.js|browser-test.js|import-artifact.js|*.test.js) ;;
+              _site|node_modules|CLAUDE.md|README.md|package.json|package-lock.json|serve.js|browser-test.js|import-artifact.js|make-icon.js|*.test.js) ;;
               *) cp -r "$f" _site/ ;;
             esac
           done

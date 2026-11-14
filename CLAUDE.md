@@ -40,14 +40,17 @@
      `lucide-react`・`recharts`・Tailwind なども CDN からの読み込みに置き換える
    - **`window.claude.*`** (Claude の中でしか動かない機能) は公開先では動かない。
      保存は `localStorage` に置き換え、Claude に質問する機能は外すか、使う人に相談する
-5. **確かめる。** `npm test` と `npm run test:ui` を両方流し、`npm start` で開いて
+5. **ホーム画面のアイコンを作る。** `icon.svg` をそのアプリの絵にして `node make-icon.js` を流し、
+   `apple-touch-icon.png` を作る (iOS は SVG を使えない)。`index.html` に
+   `<link rel="apple-touch-icon" href="./apple-touch-icon.png">` があるか見る
+6. **確かめる。** `npm test` と `npm run test:ui` を両方流し、`npm start` で開いて
    iPhone 16 Plus の幅 (430pt) のスクリーンショットを撮って目で見る。
    `browser-test.js` の「ここにアプリごとの確認を足す」に、そのアプリの操作の確認を書く
-6. **作業用ブランチに push する。** main には直接入れない。
+7. **作業用ブランチに push する。** main には直接入れない。
    ブランチ名は、このセッションで指定されたものがあればそれ、無ければ `claude/` で始まる名前
-7. **プルリクエストを作るかを聞く。** 作ってと言われたら作る。
+8. **プルリクエストを作るかを聞く。** 作ってと言われたら作る。
    **マージは使う人がする。** 「マージして」とはっきり言われたときだけ、こちらでマージする
-8. **公開先を伝える。** main に入ると `.github/workflows/pages.yml` がテストを流してから
+9. **公開先を伝える。** main に入ると `.github/workflows/pages.yml` がテストを流してから
    GitHub Pages に出す。公開先は `https://<持ち主>.github.io/<リポジトリ名>/`。
    はじめての時だけ、Settings → Pages → Source を「GitHub Actions」にしてもらう
    (非公開のリポジトリで Pages を使うには有料プランが要る)。
@@ -84,6 +87,8 @@ browser-test.js           ブラウザで動かすテスト
 serve.js                  開発用サーバー
 import-artifact.js        アーティファクト (1 枚の HTML) を上の形に分ける
 import-artifact.test.js   その道具のテスト
+make-icon.js              icon.svg から iPhone のホーム画面用の PNG を作る
+apple-touch-icon.png      その PNG (180x180)
 .github/workflows/pages.yml  main に入ったらテストして GitHub Pages に公開する
 ```
 

@@ -122,3 +122,10 @@ test('上の安全域の余白が無ければ警告する', () => {
   const ok = splitArtifact('<style>body{padding-top:env(safe-area-inset-top)}</style><p>x</p>');
   assert.ok(!ok.warnings.some((w) => w.includes('safe-area-inset')));
 });
+
+test('ホーム画面用の PNG アイコンを指す (iOS は SVG を使えない)', () => {
+  const r = splitArtifact('<p>x</p>');
+  assert.match(r.html, /<link rel="apple-touch-icon" href="\.\/apple-touch-icon\.png">/);
+  const kept = splitArtifact('<html><head><link rel="apple-touch-icon" href="a.png"><title>t</title></head><body></body></html>');
+  assert.strictEqual((kept.html.match(/apple-touch-icon/g) || []).length, 1);
+});
