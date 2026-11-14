@@ -168,9 +168,10 @@ async function run() {
     await desk.goto(URL);
     const apple = await desk.evaluate(() =>
       document.querySelector('link[rel="apple-touch-icon"]')?.getAttribute('href'));
-    if (!apple) {
-      skip('ホーム画面用のアイコンはまだ無い (PWA にするときに用意する)');
-    } else {
+    // 対象は iPhone のホーム画面から開く使い方なので、無ければとばさずに落とす
+    // (とばしにしていたら、れんだメーターでアイコンが無いまま公開した。CLAUDE.md の落とし穴)
+    ok(!!apple, 'ホーム画面用のアイコン (apple-touch-icon) の指定がある');
+    if (apple) {
       // iOS は SVG のアイコンを使えない
       ok(apple.endsWith('.png'), `ホーム画面用アイコンが PNG (${apple})`);
       const res = await desk.request.get(URL + apple.replace('./', ''));
