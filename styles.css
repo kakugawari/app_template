@@ -28,7 +28,10 @@
 
 html, body {
   margin: 0;
-  height: 100%;
+  /* ホーム画面から開くと、% で数えた高さだけが上の安全域ぶん足りないことがある (CLAUDE.md の落とし穴)。
+     100vh と position: relative の両方を付けて、全画面の入れ物の基準を根っこにする */
+  height: 100vh;
+  position: relative;
   overflow: hidden;
   overscroll-behavior: none;
 }
