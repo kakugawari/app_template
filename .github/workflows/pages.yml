@@ -35,7 +35,8 @@ jobs:
 
   publish:
     needs: test
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    # 雛形 (app_template) そのものは公開しない。Pages を有効にしていないので、ここで落ちる
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && github.event.repository.name != 'app_template'
     runs-on: ubuntu-latest
     permissions:
       pages: write
