@@ -31,6 +31,9 @@
 4. **分けて置く。** `node import-artifact.js <読んだ HTML> <リポジトリのフォルダ>`
    - `<style>` → `styles.css`、`<script>` → `app.js` (`type="module"` は `app.module.js`) に分け、
      iPhone のホーム画面用の指定 (下の落とし穴の表の最後の行) を足す
+   - 「〜を読み込んでいるのに、無い」と出たら、そのファイルを作る。アーティファクトは 1 枚なので、
+     `manifest.json`・アイコン・`sw.js` を読み込んでいても中には入っていない (人狼で踏んだ)。
+     アイコンは `node make-icon.js 名前.png:大きさ`、`sw.js` はネット優先で書く
    - 出た **注意はひとつずつ片づける** (theme-color を画面のいちばん上の色に合わせる、
      `env(safe-area-inset-*)` の余白を足す など)
    - 雛形の `core.js` / `core.test.js` は、使わないなら消してよい。
@@ -87,7 +90,7 @@ browser-test.js           ブラウザで動かすテスト
 serve.js                  開発用サーバー
 import-artifact.js        アーティファクト (1 枚の HTML) を上の形に分ける
 import-artifact.test.js   その道具のテスト
-make-icon.js              icon.svg から iPhone のホーム画面用の PNG を作る
+make-icon.js              icon.svg から PNG のアイコンを作る (名前:大きさ で何枚でも)
 apple-touch-icon.png      その PNG (180x180)
 .github/workflows/pages.yml  main に入ったらテストして GitHub Pages に公開する
 ```

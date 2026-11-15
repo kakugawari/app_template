@@ -193,11 +193,12 @@ async function run() {
       // 直したものが 1 回のリロードで出るか (キャッシュ優先だと古い画面が出る)
       const indexPath = path.join(ROOT, 'index.html');
       const original = fs.readFileSync(indexPath, 'utf8');
-      const marker = original.match(/<h1[^>]*>([^<]*)<\/h1>/);
-      fs.writeFileSync(indexPath, original.replace(marker[1], 'こうしんかくにん'));
+      // 画面を JS で描くアプリもあるので、<h1> ではなく <title> を書き換えて見る
+      const marker = original.match(/<title[^>]*>([^<]*)<\/title>/);
+      fs.writeFileSync(indexPath, original.replace(marker[0], '<title>こうしんかくにん</title>'));
       await swPage.reload();
       await swPage.waitForTimeout(400);
-      const title = await swPage.textContent('h1');
+      const title = await swPage.title();
       fs.writeFileSync(indexPath, original);
       ok(title.trim() === 'こうしんかくにん', `直したものが 1 回のリロードで出る (${title.trim()})`);
 

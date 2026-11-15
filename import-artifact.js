@@ -180,6 +180,19 @@ function splitArtifact(source) {
   };
 }
 
+/** HTML と JS が読み込む、このフォルダの中のファイルの名前を集める。 */
+function localRefs(text) {
+  const found = new Set();
+  const add = (u) => {
+    if (!u || /^(?:[a-z]+:|\/\/|#|data:)/i.test(u) || /[{}$`+]/.test(u)) return;
+    const clean = u.replace(/^\.\//, '').split(/[?#]/)[0];
+    if (clean && !clean.endsWith('/')) found.add(clean);
+  };
+  text.replace(/\b(?:href|src)\s*=\s*["']([^"']+)["']/gi, (m, u) => add(u));
+  text.replace(/serviceWorker\.register\(\s*["']([^"']+)["']/g, (m, u) => add(u));
+  return [...found];
+}
+
 function main(argv) {
   const [input, outDir = __dirname] = argv;
   if (!input) {
@@ -199,8 +212,13 @@ function main(argv) {
   if (result.moduleJs) write('app.module.js', result.moduleJs);
   else if (fs.existsSync(path.join(outDir, 'app.module.js'))) fs.unlinkSync(path.join(outDir, 'app.module.js'));
   for (const w of result.warnings) console.log('  \x1b[33m注意\x1b[0m ' + w);
+  // アーティファクトは 1 枚なのに、別のファイル (manifest.json・アイコン・sw.js など) を読み込むことがある
+  const missing = localRefs(result.html + result.js + result.moduleJs).filter((f) => !fs.existsSync(path.join(outDir, f)));
+  for (const f of missing) {
+    console.log('  \x1b[33m注意\x1b[0m ' + f + ' を読み込んでいるのに、無い。アーティファクトには入っていないので用意すること');
+  }
 }
 
 if (require.main === module) main(process.argv.slice(2));
 
-module.exports = { splitArtifact };
+module.exports = { splitArtifact, localRefs };
