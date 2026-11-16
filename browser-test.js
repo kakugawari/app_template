@@ -207,7 +207,8 @@ async function run() {
       await swCtx.setOffline(true);
       await swPage.reload().catch(() => {});
       await swPage.waitForTimeout(400);
-      ok(await swPage.evaluate(() => document.body.innerText.trim().length > 0).catch(() => false),
+      // 画面が絵だけで字が無いアプリもあるので、字の量ではなくページの名前で見る (はんにんダンスで踏んだ)
+      ok(await swPage.evaluate(() => document.title.length > 0 && document.body.children.length > 0).catch(() => false),
         'ネットにつながらなくても開ける');
       await swCtx.setOffline(false);
     }
